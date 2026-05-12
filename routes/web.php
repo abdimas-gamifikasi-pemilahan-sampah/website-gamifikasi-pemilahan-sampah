@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\File;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\SetoranController;
+use App\Http\Controllers\PembayaranController;
 
 Route::get('/', function () {
     return view('public.landing');
@@ -16,8 +18,13 @@ Route::get('/login', function () {
 Route::get('/sips/dashboard', function () { return view('sips.dashboard.index'); });
 Route::get('/sips/leaderboard', function () { return view('sips.leaderboard.index'); });
 Route::get('/sips/warga', function () { return view('sips.warga.index'); });
-Route::get('/sips/setoran/create', function () { return view('sips.setoran.create'); });
-Route::get('/sips/setoran', function () { return view('sips.setoran.index'); });
+Route::get('/sips/setoran', [SetoranController::class, 'index'])->name('sips.setoran.index');
+Route::get('/sips/setoran/create', [SetoranController::class, 'create'])->name('sips.setoran.create');
+Route::post('/sips/setoran', [SetoranController::class, 'store'])->name('sips.setoran.store');
+Route::get('/sips/setoran/{setoran}', [SetoranController::class, 'show'])->name('sips.setoran.show');
+Route::get('/sips/setoran/{setoran}/kwitansi', [SetoranController::class, 'kwitansi'])->name('sips.setoran.kwitansi');
+Route::post('/sips/setoran/{setoran}/bayar', [PembayaranController::class, 'store'])->name('sips.pembayaran.store');
+Route::get('/sips/pembayaran', [PembayaranController::class, 'index'])->name('sips.pembayaran.index');
 Route::get('/sips/tarif', function () { return view('sips.tarif.index'); });
 Route::get('/sips/hidden-links', function () {
     $basePath = resource_path('views/_unused_template');
