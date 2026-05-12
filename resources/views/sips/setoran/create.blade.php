@@ -123,7 +123,7 @@
                                 <ul class="text-muted mb-0 fs-13 ps-3">
                                     <li>Pastikan sampah sudah ditimbang dengan benar.</li>
                                     <li>Pembayaran dilakukan secara tunai setelah dicatat.</li>
-                                    <li>Pilih <strong>Dipilah</strong> jika warga sudah memisahkan jenis sampah.</li>
+                                    <li>Status pemilahan boleh diisi jika ingin dicatat sebagai informasi transaksi.</li>
                                 </ul>
                             </div>
                         </div>
@@ -148,7 +148,7 @@
         <div class="card-body py-3">
             <div class="row g-2 align-items-end">
                 <div class="col-md-5">
-                    <label class="form-label form-label-sm mb-1">Jenis Sampah</label>
+                    <label class="form-label form-label-sm mb-1">Item / Kategori</label>
                     <select name="items[__INDEX__][tarif_item_id]"
                             class="form-select form-select-sm tarif-select" required>
                         <option value="" disabled selected>-- Pilih jenis --</option>
@@ -171,18 +171,12 @@
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label form-label-sm mb-1">Status Pemilahan</label>
-                    <div class="btn-group w-100" role="group">
-                        <input type="radio" class="btn-check pemilahan-radio"
-                               name="items[__INDEX__][status_pemilahan]"
-                               id="dipilah-__INDEX__" value="dipilah" checked>
-                        <label class="btn btn-outline-success btn-sm" for="dipilah-__INDEX__">Dipilah</label>
-
-                        <input type="radio" class="btn-check pemilahan-radio"
-                               name="items[__INDEX__][status_pemilahan]"
-                               id="tidak_dipilah-__INDEX__" value="tidak_dipilah">
-                        <label class="btn btn-outline-warning btn-sm" for="tidak_dipilah-__INDEX__">Campur</label>
-                    </div>
+                    <label class="form-label form-label-sm mb-1">Status Pemilahan <span class="text-muted">(opsional)</span></label>
+                    <select name="items[__INDEX__][status_pemilahan]" class="form-select form-select-sm pemilahan-select">
+                        <option value="" selected>Tidak dicatat</option>
+                        <option value="dipilah">Dipilah</option>
+                        <option value="tidak_dipilah">Tidak dipilah</option>
+                    </select>
                 </div>
                 <div class="col-md-1 text-end">
                     <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeItem(this)" title="Hapus">
@@ -212,7 +206,7 @@
 
         row.querySelector('.tarif-select').addEventListener('change', recalc);
         row.querySelector('.berat-input').addEventListener('input', recalc);
-        row.querySelectorAll('.pemilahan-radio').forEach(r => r.addEventListener('change', recalc));
+        row.querySelector('.pemilahan-select').addEventListener('change', recalc);
 
         document.getElementById('items-container').appendChild(row);
         itemCount++;

@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('tarif_items', function (Blueprint $table) {
             $table->id();
             $table->string('nama_item');
-            $table->enum('tipe_sampah', ['organik', 'anorganik', 'b3']);
+            $table->enum('tipe_sampah', ['organik', 'anorganik']);
             $table->enum('status', ['aktif', 'arsip'])->default('aktif');
             $table->foreignId('dibuat_oleh_user_id')->constrained('users');
             $table->timestamps();

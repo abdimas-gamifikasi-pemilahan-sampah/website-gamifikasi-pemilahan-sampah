@@ -218,16 +218,6 @@ toggleButton?.addEventListener("click", () => {
     updateSimpleBar(htmlElement.getAttribute("data-layout"));
 });
 
-// horizontal toggle button
-const horizontalToggle = document.getElementById("toggleHorizontal");
-horizontalToggle?.addEventListener("click", () => {
-    if (window.innerWidth < 1200) {
-        // Toggle the data-vertical-layout value
-        const horizontalAside = document.getElementById("horizontal-aside");
-        horizontalAside.classList.toggle("show");
-    }
-});
-
 // Function to handle sidebar menu active links
 let currentUrl = window.location.pathname; // Get the current URL
 const menuLinks = document.querySelectorAll("#sidebar .pe-main-menu .pe-nav-link"); // Select all menu links

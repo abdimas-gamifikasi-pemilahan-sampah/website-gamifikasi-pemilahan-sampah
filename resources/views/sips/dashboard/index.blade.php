@@ -96,7 +96,7 @@
                 <div class="card-body">
                     <div class="mb-4">
                         <div class="d-flex justify-content-between mb-2">
-                            <span><span class="sips-stat-dot bg-success me-2"></span>Organik (Dipilah)</span>
+                            <span><span class="sips-stat-dot bg-success me-2"></span>Organik</span>
                             <strong>1.420 kg</strong>
                         </div>
                         <div class="progress" style="height: 10px;">
@@ -105,7 +105,7 @@
                     </div>
                     <div class="mb-4">
                         <div class="d-flex justify-content-between mb-2">
-                            <span><span class="sips-stat-dot bg-info me-2"></span>Anorganik (Dipilah)</span>
+                            <span><span class="sips-stat-dot bg-info me-2"></span>Anorganik</span>
                             <strong>1.170 kg</strong>
                         </div>
                         <div class="progress" style="height: 10px;">
@@ -114,7 +114,7 @@
                     </div>
                     <div class="mb-4">
                         <div class="d-flex justify-content-between mb-2">
-                            <span><span class="sips-stat-dot bg-warning me-2"></span>Campuran / Tidak Dipilah</span>
+                            <span><span class="sips-stat-dot bg-warning me-2"></span>Tidak Dipilah</span>
                             <strong>770 kg</strong>
                         </div>
                         <div class="progress" style="height: 10px;">
@@ -123,7 +123,7 @@
                     </div>
                     <div>
                         <div class="d-flex justify-content-between mb-2">
-                            <span><span class="sips-stat-dot bg-secondary me-2"></span>Residu / Belum Terpilah</span>
+                            <span><span class="sips-stat-dot bg-secondary me-2"></span>Status Tidak Dicatat</span>
                             <strong>120 kg</strong>
                         </div>
                         <div class="progress" style="height: 10px;">
@@ -277,9 +277,14 @@
                     <h5 class="card-title mb-0">Aksi Cepat</h5>
                 </div>
                 <div class="card-body">
-                    <a href="/sips/setoran/create" class="btn btn-primary w-100 mb-2">+ Catat Setoran Baru</a>
-                    <a href="/sips/warga" class="btn btn-light w-100 mb-2">Kelola Data Warga</a>
-                    <a href="/sips/tarif" class="btn btn-light w-100">Perbarui Tarif</a>
+                    <a href="{{ route('sips.setoran.create') }}" class="btn btn-primary w-100 mb-2">+ Catat Setoran Baru</a>
+                    @if(auth()->user()->isAdmin())
+                    <a href="{{ route('sips.warga.index') }}" class="btn btn-light w-100 mb-2">Kelola Data Warga</a>
+                    <a href="{{ route('sips.tarif.index') }}" class="btn btn-light w-100">Perbarui Tarif</a>
+                    @else
+                    <a href="{{ route('sips.setoran.index') }}" class="btn btn-light w-100 mb-2">Lihat Riwayat Setoran</a>
+                    <a href="{{ route('sips.pembayaran.index') }}" class="btn btn-light w-100">Lihat Pembayaran</a>
+                    @endif
                 </div>
             </div>
         </div>

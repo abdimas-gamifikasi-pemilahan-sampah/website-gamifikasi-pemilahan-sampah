@@ -74,7 +74,7 @@
                         <table class="table table-sm align-middle">
                             <thead class="table-light">
                                 <tr>
-                                    <th>Jenis Sampah</th>
+                                    <th>Tipe Utama</th>
                                     <th>Tipe</th>
                                     <th class="text-center">Status Pemilahan</th>
                                     <th class="text-end">Berat</th>
@@ -97,8 +97,10 @@
                                     <td class="text-center">
                                         @if($item->status_pemilahan === 'dipilah')
                                             <span class="badge bg-success-subtle text-success">Dipilah</span>
+                                        @elseif($item->status_pemilahan === 'tidak_dipilah')
+                                            <span class="badge bg-warning-subtle text-warning">Tidak Dipilah</span>
                                         @else
-                                            <span class="badge bg-warning-subtle text-warning">Campur</span>
+                                            <span class="badge bg-secondary-subtle text-secondary">Tidak Dicatat</span>
                                         @endif
                                     </td>
                                     <td class="text-end">{{ number_format($item->berat_kg, 1, ',', '.') }} kg</td>
@@ -194,10 +196,16 @@
                             {{ $setoran->items->where('status_pemilahan', 'dipilah')->count() }} item
                         </span>
                     </div>
-                    <div class="d-flex justify-content-between">
-                        <span class="text-muted">Campur</span>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Tidak Dipilah</span>
                         <span class="text-warning">
                             {{ $setoran->items->where('status_pemilahan', 'tidak_dipilah')->count() }} item
+                        </span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Tidak Dicatat</span>
+                        <span class="text-secondary">
+                            {{ $setoran->items->whereNull('status_pemilahan')->count() }} item
                         </span>
                     </div>
                 </div>

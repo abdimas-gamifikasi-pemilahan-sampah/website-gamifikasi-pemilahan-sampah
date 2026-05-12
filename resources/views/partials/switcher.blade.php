@@ -39,26 +39,8 @@
                     </div>
                     <div class="col-6">
                        <div class="border">
-                            <input id="customizer-layout02" name="data-layout" type="radio" value="horizontal" class="form-check-input">
+                            <input id="customizer-layout02" name="data-layout" type="radio" value="semibox" class="form-check-input">
                             <label class="form-check-label p-0 avatar-3xl w-100" for="customizer-layout02">
-                                <span class="d-flex h-100 flex-column ">
-                                    <span class="bg-light-subtle d-flex p-1 gap-1 align-items-center">
-                                        <span class="d-block p-1 bg-primary-subtle rounded me-1"></span>
-                                        <span class="d-block p-1 pb-0 px-2 bg-primary-subtle ms-auto"></span>
-                                        <span class="d-block p-1 pb-0 px-2 bg-primary-subtle"></span>
-                                    </span>
-                                    <span class="bg-light-subtle d-block p-1 border-primary-subtle border-top"></span>
-                                    <span class="d-block h-100 bg-primary-subtle my-2"> </span>
-                                    <span class="bg-light-subtle d-block p-1 mt-auto"></span>
-                                </span>
-                            </label>
-                        </div>
-                        <h5 class="fs-13 text-center mt-2">Horizontal</h5>
-                    </div>
-                    <div class="col-6">
-                       <div class="border">
-                            <input id="customizer-layout03" name="data-layout" type="radio" value="semibox" class="form-check-input">
-                            <label class="form-check-label p-0 avatar-3xl w-100" for="customizer-layout03">
                                 <span class="d-flex gap-1 h-100 p-1">
                                     <span class="flex-shrink-0">
                                         <span class="bg-light-subtle d-flex h-100 flex-column gap-1 p-1">
