@@ -33,3 +33,6 @@ cleanup_template.py
 preload.js
 doc_content.txt
 doc_content_utf8.txt
+
+/docs/dev-a-api-contract.md
+/docs/ringkasan-perubahan-dev-a.md

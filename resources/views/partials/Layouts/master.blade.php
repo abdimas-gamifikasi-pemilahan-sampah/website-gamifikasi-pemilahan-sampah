@@ -20,12 +20,18 @@
 
     @include('partials.header')
     @include('partials.sidebar')
-    @include('partials.horizontal')
 
     <main class="app-wrapper">
         <div class="container-fluid">
 
             @include('partials.page-title')
+
+            @if(session('error'))
+            <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+                <i class="ri-error-warning-line me-1"></i> {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            @endif
 
             @yield('content')
             @include('partials.switcher')

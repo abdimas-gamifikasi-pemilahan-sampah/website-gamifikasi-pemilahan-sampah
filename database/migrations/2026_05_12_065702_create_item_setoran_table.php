@@ -16,8 +16,8 @@ return new class extends Migration
             $table->foreignId('setoran_id')->constrained('setoran')->cascadeOnDelete();
             $table->foreignId('tarif_item_id')->constrained('tarif_items');
             $table->foreignId('riwayat_tarif_id')->constrained('riwayat_tarif');
-            $table->enum('tipe_sampah', ['organik', 'anorganik', 'b3']);
-            $table->enum('status_pemilahan', ['dipilah', 'tidak_dipilah']);
+            $table->enum('tipe_sampah', ['organik', 'anorganik']);
+            $table->enum('status_pemilahan', ['dipilah', 'tidak_dipilah'])->nullable();
             $table->decimal('berat_kg', 8, 2);
             $table->decimal('harga_per_kg_saat_itu', 10, 2);
             $table->decimal('subtotal', 12, 2);

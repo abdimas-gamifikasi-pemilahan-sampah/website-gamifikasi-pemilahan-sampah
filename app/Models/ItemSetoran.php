@@ -9,6 +9,8 @@ class ItemSetoran extends Model
 {
     protected $table = 'item_setoran';
 
+    public const STATUS_PEMILAHAN = ['dipilah', 'tidak_dipilah'];
+
     protected $fillable = [
         'setoran_id',
         'tarif_item_id',
@@ -19,6 +21,11 @@ class ItemSetoran extends Model
         'harga_per_kg_saat_itu',
         'subtotal',
     ];
+
+    public static function statusPemilahanOptions(): array
+    {
+        return self::STATUS_PEMILAHAN;
+    }
 
     protected function casts(): array
     {

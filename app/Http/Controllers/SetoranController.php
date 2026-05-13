@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ItemSetoran;
 use App\Models\Setoran;
 use App\Models\TarifItem;
 use App\Models\Warga;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class SetoranController extends Controller
 {
@@ -56,7 +58,7 @@ class SetoranController extends Controller
             'items'                         => ['required', 'array', 'min:1'],
             'items.*.tarif_item_id'         => ['required', 'exists:tarif_items,id'],
             'items.*.berat_kg'              => ['required', 'numeric', 'min:0.1'],
-            'items.*.status_pemilahan'      => ['required', 'in:dipilah,tidak_dipilah'],
+            'items.*.status_pemilahan'      => ['nullable', Rule::in(ItemSetoran::statusPemilahanOptions())],
         ], [
             'warga_id.required'             => 'Warga harus dipilih.',
             'tanggal_setoran.required'      => 'Tanggal setoran harus diisi.',
@@ -64,7 +66,6 @@ class SetoranController extends Controller
             'items.required'                => 'Minimal satu item sampah harus ditambahkan.',
             'items.*.tarif_item_id.required' => 'Jenis sampah harus dipilih.',
             'items.*.berat_kg.min'          => 'Berat minimal 0.1 kg.',
-            'items.*.status_pemilahan.required' => 'Status pemilahan harus dipilih.',
         ]);
 
         $setoran = DB::transaction(function () use ($validated) {
@@ -84,7 +85,7 @@ class SetoranController extends Controller
                     'tarif_item_id'         => $item['tarif_item_id'],
                     'riwayat_tarif_id'      => $riwayatTarif->id,
                     'tipe_sampah'           => $tarifItem->tipe_sampah,
-                    'status_pemilahan'      => $item['status_pemilahan'],
+                    'status_pemilahan'      => $item['status_pemilahan'] ?? null,
                     'berat_kg'              => $item['berat_kg'],
                     'harga_per_kg_saat_itu' => $riwayatTarif->harga_per_kg,
                     'subtotal'              => $subtotal,

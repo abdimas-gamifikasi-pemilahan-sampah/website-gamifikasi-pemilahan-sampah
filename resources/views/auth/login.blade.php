@@ -107,20 +107,43 @@
                                 <p class="text-muted mb-0">Kelola setoran, pembayaran, dan laporan dari dashboard admin.</p>
                             </div>
 
-                            <form>
+                            @if(session('success'))
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                {{ session('success') }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                            @endif
+
+                            @if ($errors->any())
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <strong>Login gagal.</strong>
+                                <ul class="mb-0 mt-2 ps-3">
+                                    @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                            @endif
+
+                            <form method="POST" action="{{ route('login.attempt') }}">
+                                @csrf
                                 <div class="row g-4">
                                     <div class="col-12">
-                                        <label for="username" class="form-label">Nama pengguna</label>
-                                        <input type="text" class="form-control form-control-lg" id="username" placeholder="Masukkan nama pengguna">
+                                        <label for="login" class="form-label">Nama pengguna atau email</label>
+                                        <input type="text" class="form-control form-control-lg @error('login') is-invalid @enderror"
+                                               id="login" name="login" value="{{ old('login') }}"
+                                               placeholder="Masukkan nama pengguna atau email" autofocus>
                                     </div>
                                     <div class="col-12">
                                         <label for="password" class="form-label">Kata sandi</label>
-                                        <input type="password" class="form-control form-control-lg" id="password" placeholder="Masukkan kata sandi">
+                                        <input type="password" class="form-control form-control-lg @error('password') is-invalid @enderror"
+                                               id="password" name="password" placeholder="Masukkan kata sandi">
                                     </div>
                                     <div class="col-12">
                                         <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
                                             <div class="form-check">
-                                                <input type="checkbox" class="form-check-input" id="rememberMe">
+                                                <input type="checkbox" class="form-check-input" id="rememberMe" name="remember" value="1" {{ old('remember') ? 'checked' : '' }}>
                                                 <label class="form-check-label" for="rememberMe">Ingat saya</label>
                                             </div>
                                             <a href="/" class="link-primary text-decoration-underline small">Kembali ke beranda publik</a>
@@ -134,6 +157,14 @@
                                     </div>
                                 </div>
                             </form>
+
+                            <div class="mt-4 pt-4 border-top">
+                                <h6 class="fw-semibold mb-2">Akun default pengembangan</h6>
+                                <div class="small text-muted">
+                                    <div><strong>Admin:</strong> `admin.sips` / `password123`</div>
+                                    <div><strong>Petugas:</strong> `petugas.sips` / `password123`</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

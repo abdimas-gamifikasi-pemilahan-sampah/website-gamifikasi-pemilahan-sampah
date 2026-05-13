@@ -1,0 +1,576 @@
+{
+  "info": {
+    "_postman_id": "1ce9814f-5a2b-4cc9-a4ec-4a93e2a9b6c1",
+    "name": "SIPS Dev A API",
+    "description": "Collection endpoint Dev A untuk autentikasi, master warga, dan master tarif. Jalankan request `Ambil CSRF & Session` terlebih dahulu agar Postman menyimpan cookie `laravel_session` dan `XSRF-TOKEN` seperti browser.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:8000"
+    },
+    {
+      "key": "login",
+      "value": "admin.sips"
+    },
+    {
+      "key": "password",
+      "value": "password123"
+    },
+    {
+      "key": "warga_id",
+      "value": "1"
+    },
+    {
+      "key": "tarif_item_id",
+      "value": "1"
+    },
+    {
+      "key": "xsrf_token",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Ambil CSRF & Session",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "let xsrfToken = pm.cookies.get('XSRF-TOKEN');",
+                  "if (!xsrfToken) {",
+                  "    const setCookie = pm.response.headers.all().filter(h => h.key.toLowerCase() === 'set-cookie');",
+                  "    const xsrfCookie = setCookie.find(h => h.value.includes('XSRF-TOKEN='));",
+                  "    if (xsrfCookie) {",
+                  "        const match = xsrfCookie.value.match(/XSRF-TOKEN=([^;]+)/);",
+                  "        if (match) {",
+                  "            xsrfToken = match[1];",
+                  "        }",
+                  "    }",
+                  "}",
+                  "if (xsrfToken) {",
+                  "    pm.collectionVariables.set('xsrf_token', decodeURIComponent(xsrfToken));",
+                  "    console.log('XSRF token updated');",
+                  "} else {",
+                  "    console.warn('XSRF token tidak ditemukan. Pastikan request /login sukses.');",
+                  "}",
+                  "pm.test('Status 200 untuk ambil session', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "text/html"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "login"
+              ]
+            },
+            "description": "Jalankan dulu request ini agar Postman menerima cookie `laravel_session` dan `XSRF-TOKEN` seperti browser."
+          }
+        },
+        {
+          "name": "Login API",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Login sukses', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "let xsrfToken = pm.cookies.get('XSRF-TOKEN') || pm.collectionVariables.get('xsrf_token');",
+                  "if (xsrfToken) {",
+                  "    pm.collectionVariables.set('xsrf_token', decodeURIComponent(xsrfToken));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-XSRF-TOKEN",
+                "value": "{{xsrf_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"login\": \"{{login}}\",\n  \"password\": \"{{password}}\",\n  \"remember\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Login session-based yang mengikuti perilaku web asli. Jalankan setelah `Ambil CSRF & Session`."
+          }
+        },
+        {
+          "name": "Me API",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "me"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Logout API",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-XSRF-TOKEN",
+                "value": "{{xsrf_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "logout"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Warga",
+      "item": [
+        {
+          "name": "List Warga",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/warga?search=&rw=&status_keanggotaan=aktif&per_page=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "warga"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": ""
+                },
+                {
+                  "key": "rw",
+                  "value": ""
+                },
+                {
+                  "key": "status_keanggotaan",
+                  "value": "aktif"
+                },
+                {
+                  "key": "per_page",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Warga",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-XSRF-TOKEN",
+                "value": "{{xsrf_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nama\": \"Warga Postman\",\n  \"no_kk\": \"3301010101099999\",\n  \"rt\": \"01\",\n  \"rw\": \"03\",\n  \"dusun\": \"Kenanga\",\n  \"no_hp\": \"081299999999\",\n  \"tanggal_terdaftar\": \"2026-05-12\",\n  \"status_keanggotaan\": \"aktif\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/warga",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "warga"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Detail Warga",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/warga/{{warga_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "warga",
+                "{{warga_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Warga",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-XSRF-TOKEN",
+                "value": "{{xsrf_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nama\": \"Budi Santoso Update\",\n  \"no_kk\": \"3301010101010001\",\n  \"rt\": \"01\",\n  \"rw\": \"01\",\n  \"dusun\": \"Melati\",\n  \"no_hp\": \"081211111111\",\n  \"tanggal_terdaftar\": \"2026-01-01\",\n  \"status_keanggotaan\": \"aktif\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/warga/{{warga_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "warga",
+                "{{warga_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Status Warga",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-XSRF-TOKEN",
+                "value": "{{xsrf_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status_keanggotaan\": \"non_aktif\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/warga/{{warga_id}}/status",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "warga",
+                "{{warga_id}}",
+                "status"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tarif",
+      "item": [
+        {
+          "name": "List Item Tarif",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/tarif/items?tipe=anorganik&status=aktif&search=",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "tarif",
+                "items"
+              ],
+              "query": [
+                {
+                  "key": "tipe",
+                  "value": "anorganik"
+                },
+                {
+                  "key": "status",
+                  "value": "aktif"
+                },
+                {
+                  "key": "search",
+                  "value": ""
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Item Tarif",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-XSRF-TOKEN",
+                "value": "{{xsrf_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nama_item\": \"Plastik HDPE\",\n  \"tipe_sampah\": \"anorganik\",\n  \"status\": \"aktif\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/tarif/items",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "tarif",
+                "items"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Detail Item Tarif",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/tarif/items/{{tarif_item_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "tarif",
+                "items",
+                "{{tarif_item_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Item Tarif",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-XSRF-TOKEN",
+                "value": "{{xsrf_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nama_item\": \"Sisa Makanan Premium\",\n  \"tipe_sampah\": \"organik\",\n  \"status\": \"aktif\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/tarif/items/{{tarif_item_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "tarif",
+                "items",
+                "{{tarif_item_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Tambah Riwayat Tarif",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-XSRF-TOKEN",
+                "value": "{{xsrf_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"harga_per_kg\": 1800,\n  \"tanggal_mulai\": \"2026-06-01\",\n  \"alasan_perubahan\": \"Penyesuaian harga pasar\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/tarif/items/{{tarif_item_id}}/harga",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "tarif",
+                "items",
+                "{{tarif_item_id}}",
+                "harga"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Lookup Harga Tarif",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/tarif/lookup?item_id={{tarif_item_id}}&tanggal=2026-06-15",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "tarif",
+                "lookup"
+              ],
+              "query": [
+                {
+                  "key": "item_id",
+                  "value": "{{tarif_item_id}}"
+                },
+                {
+                  "key": "tanggal",
+                  "value": "2026-06-15"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

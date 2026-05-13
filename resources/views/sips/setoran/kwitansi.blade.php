@@ -120,9 +120,13 @@
     <div class="item-row">
         <div class="item-name">
             {{ $item->tarifItem->nama_item }}<br>
-            <span class="{{ $item->status_pemilahan === 'dipilah' ? 'badge-dipilah' : 'badge-campur' }}">
-                {{ $item->status_pemilahan === 'dipilah' ? '✓ Dipilah' : '⚠ Campur' }}
-            </span>
+            @if($item->status_pemilahan === 'dipilah')
+            <span class="badge-dipilah">✓ Dipilah</span>
+            @elseif($item->status_pemilahan === 'tidak_dipilah')
+            <span class="badge-campur">⚠ Tidak Dipilah</span>
+            @else
+            <span class="text-muted">- Tidak dicatat</span>
+            @endif
             {{ number_format($item->berat_kg, 1, ',', '.') }} kg
             × Rp {{ number_format($item->harga_per_kg_saat_itu, 0, ',', '.') }}
         </div>
