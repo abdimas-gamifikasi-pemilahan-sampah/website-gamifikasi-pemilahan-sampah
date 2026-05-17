@@ -7,6 +7,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (DB::getDriverName() !== 'mysql') {
+            return;
+        }
+
         // Allow tarif_item_id, riwayat_tarif_id, tipe_sampah, harga_per_kg_saat_itu
         // to be NULL so "tidak_dipilah" items can be stored without a category or price.
         DB::statement("
@@ -20,6 +24,10 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (DB::getDriverName() !== 'mysql') {
+            return;
+        }
+
         DB::statement("
             ALTER TABLE item_setoran
                 MODIFY tarif_item_id         BIGINT UNSIGNED NOT NULL,
