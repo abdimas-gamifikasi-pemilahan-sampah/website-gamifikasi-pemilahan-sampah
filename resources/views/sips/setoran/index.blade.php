@@ -114,11 +114,7 @@
                     </div>
 
                     {{-- Pagination --}}
-                    <div class="mt-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
-                        <span class="text-muted fs-13">
-                            Menampilkan {{ $setoran->firstItem() }}–{{ $setoran->lastItem() }}
-                            dari {{ $setoran->total() }} transaksi
-                        </span>
+                    <div class="mt-4">
                         {{ $setoran->links() }}
                     </div>
                     @endif

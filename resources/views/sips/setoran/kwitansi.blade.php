@@ -119,16 +119,20 @@
     @foreach($setoran->items as $item)
     <div class="item-row">
         <div class="item-name">
-            {{ $item->tarifItem->nama_item }}<br>
-            @if($item->status_pemilahan === 'dipilah')
-            <span class="badge-dipilah">✓ Dipilah</span>
-            @elseif($item->status_pemilahan === 'tidak_dipilah')
-            <span class="badge-campur">⚠ Tidak Dipilah</span>
+            @if($item->status_pemilahan === 'tidak_dipilah')
+                Sampah Tidak Dipilah<br>
+                <span class="badge-campur">⚠ Tidak Dipilah</span>
+                {{ number_format($item->berat_kg, 1, ',', '.') }} kg
             @else
-            <span class="text-muted">- Tidak dicatat</span>
+                {{ $item->tarifItem?->nama_item ?? 'Item Sampah' }}<br>
+                @if($item->status_pemilahan === 'dipilah')
+                <span class="badge-dipilah">✓ Dipilah</span>
+                @else
+                <span style="font-size:10px;color:#777;">- Tidak dicatat</span>
+                @endif
+                {{ number_format($item->berat_kg, 1, ',', '.') }} kg
+                × Rp {{ number_format($item->harga_per_kg_saat_itu ?? 0, 0, ',', '.') }}
             @endif
-            {{ number_format($item->berat_kg, 1, ',', '.') }} kg
-            × Rp {{ number_format($item->harga_per_kg_saat_itu, 0, ',', '.') }}
         </div>
         <div class="item-sub">Rp {{ number_format($item->subtotal, 0, ',', '.') }}</div>
     </div>

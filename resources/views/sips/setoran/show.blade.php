@@ -74,9 +74,9 @@
                         <table class="table table-sm align-middle">
                             <thead class="table-light">
                                 <tr>
-                                    <th>Tipe Utama</th>
+                                    <th>Status Pemilahan</th>
+                                    <th>Kategori</th>
                                     <th>Tipe</th>
-                                    <th class="text-center">Status Pemilahan</th>
                                     <th class="text-end">Berat</th>
                                     <th class="text-end">Harga/kg</th>
                                     <th class="text-end">Subtotal</th>
@@ -85,16 +85,7 @@
                             <tbody>
                                 @foreach($setoran->items as $item)
                                 <tr>
-                                    <td class="fw-medium">{{ $item->tarifItem->nama_item }}</td>
                                     <td>
-                                        <span class="badge
-                                            @if($item->tipe_sampah === 'organik') bg-success-subtle text-success
-                                            @elseif($item->tipe_sampah === 'anorganik') bg-primary-subtle text-primary
-                                            @else bg-danger-subtle text-danger @endif">
-                                            {{ ucfirst($item->tipe_sampah) }}
-                                        </span>
-                                    </td>
-                                    <td class="text-center">
                                         @if($item->status_pemilahan === 'dipilah')
                                             <span class="badge bg-success-subtle text-success">Dipilah</span>
                                         @elseif($item->status_pemilahan === 'tidak_dipilah')
@@ -103,8 +94,26 @@
                                             <span class="badge bg-secondary-subtle text-secondary">Tidak Dicatat</span>
                                         @endif
                                     </td>
+                                    <td class="fw-medium">
+                                        {{ $item->tarifItem?->nama_item ?? '—' }}
+                                    </td>
+                                    <td>
+                                        @if($item->tipe_sampah === 'organik')
+                                            <span class="badge bg-success-subtle text-success">Organik</span>
+                                        @elseif($item->tipe_sampah === 'anorganik')
+                                            <span class="badge bg-primary-subtle text-primary">Anorganik</span>
+                                        @else
+                                            <span class="text-muted">—</span>
+                                        @endif
+                                    </td>
                                     <td class="text-end">{{ number_format($item->berat_kg, 1, ',', '.') }} kg</td>
-                                    <td class="text-end">Rp {{ number_format($item->harga_per_kg_saat_itu, 0, ',', '.') }}</td>
+                                    <td class="text-end">
+                                        @if($item->harga_per_kg_saat_itu !== null)
+                                            Rp {{ number_format($item->harga_per_kg_saat_itu, 0, ',', '.') }}
+                                        @else
+                                            <span class="text-muted">—</span>
+                                        @endif
+                                    </td>
                                     <td class="text-end fw-semibold">Rp {{ number_format($item->subtotal, 0, ',', '.') }}</td>
                                 </tr>
                                 @endforeach
@@ -196,16 +205,10 @@
                             {{ $setoran->items->where('status_pemilahan', 'dipilah')->count() }} item
                         </span>
                     </div>
-                    <div class="d-flex justify-content-between mb-2">
+                    <div class="d-flex justify-content-between">
                         <span class="text-muted">Tidak Dipilah</span>
                         <span class="text-warning">
                             {{ $setoran->items->where('status_pemilahan', 'tidak_dipilah')->count() }} item
-                        </span>
-                    </div>
-                    <div class="d-flex justify-content-between">
-                        <span class="text-muted">Tidak Dicatat</span>
-                        <span class="text-secondary">
-                            {{ $setoran->items->whereNull('status_pemilahan')->count() }} item
                         </span>
                     </div>
                 </div>

@@ -6,6 +6,10 @@ use App\Http\Controllers\PembayaranController;
 use App\Http\Controllers\WargaController;
 use App\Http\Controllers\TarifController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\LeaderboardController;
+use App\Http\Controllers\ImportController;
+use App\Http\Controllers\AnalitikController;
 
 Route::get('/', function () {
     return view('public.landing');
@@ -19,8 +23,9 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-    Route::get('/sips/dashboard', function () { return view('sips.dashboard.index'); })->name('sips.dashboard');
-    Route::get('/sips/leaderboard', function () { return view('sips.leaderboard.index'); })->name('sips.leaderboard');
+    Route::get('/sips/dashboard', [DashboardController::class, 'index'])->name('sips.dashboard');
+    Route::get('/sips/leaderboard', [LeaderboardController::class, 'sips'])->name('sips.leaderboard');
+    Route::get('/sips/analitik', [AnalitikController::class, 'index'])->name('sips.analitik.index');
 
     Route::middleware('role:admin')->group(function () {
         Route::get('/sips/warga', [WargaController::class, 'index'])->name('sips.warga.index');
@@ -39,6 +44,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/sips/tarif/{tarif}/harga/create', [TarifController::class, 'createPrice'])->name('sips.tarif.price.create');
         Route::post('/sips/tarif/{tarif}/harga', [TarifController::class, 'storePrice'])->name('sips.tarif.price.store');
         Route::patch('/sips/tarif/{tarif}/status', [TarifController::class, 'updateStatus'])->name('sips.tarif.status');
+
+        // Import (admin only)
+        Route::get('/sips/import', [ImportController::class, 'index'])->name('sips.import.index');
+        Route::post('/sips/import/preview', [ImportController::class, 'preview'])->name('sips.import.preview');
+        Route::post('/sips/import/confirm', [ImportController::class, 'confirm'])->name('sips.import.confirm');
     });
 
     Route::middleware('role:admin,petugas')->group(function () {
@@ -52,5 +62,5 @@ Route::middleware('auth')->group(function () {
     });
 });
 
-// Public user view
-Route::get('/leaderboard', function () { return view('public.leaderboard.index'); });
+// Public pages
+Route::get('/leaderboard', [LeaderboardController::class, 'index'])->name('public.leaderboard');

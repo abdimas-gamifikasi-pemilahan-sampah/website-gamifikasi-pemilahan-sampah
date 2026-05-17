@@ -56,42 +56,66 @@ class SetoranController extends Controller
             'tanggal_setoran'               => ['required', 'date', 'before_or_equal:today'],
             'catatan_kondisi'               => ['nullable', 'string', 'max:500'],
             'items'                         => ['required', 'array', 'min:1'],
-            'items.*.tarif_item_id'         => ['required', 'exists:tarif_items,id'],
+            'items.*.status_pemilahan'      => ['required', Rule::in(ItemSetoran::statusPemilahanOptions())],
+            'items.*.tarif_item_id'         => ['nullable', 'exists:tarif_items,id'],
             'items.*.berat_kg'              => ['required', 'numeric', 'min:0.1'],
-            'items.*.status_pemilahan'      => ['nullable', Rule::in(ItemSetoran::statusPemilahanOptions())],
         ], [
-            'warga_id.required'             => 'Warga harus dipilih.',
-            'tanggal_setoran.required'      => 'Tanggal setoran harus diisi.',
+            'warga_id.required'               => 'Warga harus dipilih.',
+            'tanggal_setoran.required'        => 'Tanggal setoran harus diisi.',
             'tanggal_setoran.before_or_equal' => 'Tanggal setoran tidak boleh lebih dari hari ini.',
-            'items.required'                => 'Minimal satu item sampah harus ditambahkan.',
-            'items.*.tarif_item_id.required' => 'Jenis sampah harus dipilih.',
-            'items.*.berat_kg.min'          => 'Berat minimal 0.1 kg.',
+            'items.required'                  => 'Minimal satu item sampah harus ditambahkan.',
+            'items.*.status_pemilahan.required' => 'Status pemilahan harus dipilih untuk setiap item.',
+            'items.*.berat_kg.min'            => 'Berat minimal 0.1 kg.',
         ]);
+
+        // Extra: dipilah items must have a tarif_item_id
+        foreach ($validated['items'] as $i => $item) {
+            if ($item['status_pemilahan'] === 'dipilah' && empty($item['tarif_item_id'])) {
+                return back()->withErrors([
+                    "items.$i.tarif_item_id" => 'Jenis sampah harus dipilih untuk sampah yang dipilah.',
+                ])->withInput();
+            }
+        }
 
         $setoran = DB::transaction(function () use ($validated) {
             $totalNilai = 0;
             $itemRows   = [];
 
             foreach ($validated['items'] as $item) {
-                $tarifItem    = TarifItem::find($item['tarif_item_id']);
-                $riwayatTarif = $tarifItem->tarifAktif();
+                if ($item['status_pemilahan'] === 'dipilah') {
+                    $tarifItem    = TarifItem::find($item['tarif_item_id']);
+                    $riwayatTarif = $tarifItem->tarifAktif();
 
-                abort_if(!$riwayatTarif, 422, "Tarif aktif tidak ditemukan untuk: {$tarifItem->nama_item}");
+                    abort_if(!$riwayatTarif, 422, "Tarif aktif tidak ditemukan untuk: {$tarifItem->nama_item}");
 
-                $subtotal    = round($item['berat_kg'] * $riwayatTarif->harga_per_kg, 2);
-                $totalNilai += $subtotal;
+                    $subtotal    = round($item['berat_kg'] * $riwayatTarif->harga_per_kg, 2);
+                    $totalNilai += $subtotal;
 
-                $itemRows[] = [
-                    'tarif_item_id'         => $item['tarif_item_id'],
-                    'riwayat_tarif_id'      => $riwayatTarif->id,
-                    'tipe_sampah'           => $tarifItem->tipe_sampah,
-                    'status_pemilahan'      => $item['status_pemilahan'] ?? null,
-                    'berat_kg'              => $item['berat_kg'],
-                    'harga_per_kg_saat_itu' => $riwayatTarif->harga_per_kg,
-                    'subtotal'              => $subtotal,
-                    'created_at'            => now(),
-                    'updated_at'            => now(),
-                ];
+                    $itemRows[] = [
+                        'tarif_item_id'         => $tarifItem->id,
+                        'riwayat_tarif_id'      => $riwayatTarif->id,
+                        'tipe_sampah'           => $tarifItem->tipe_sampah,
+                        'status_pemilahan'      => 'dipilah',
+                        'berat_kg'              => $item['berat_kg'],
+                        'harga_per_kg_saat_itu' => $riwayatTarif->harga_per_kg,
+                        'subtotal'              => $subtotal,
+                        'created_at'            => now(),
+                        'updated_at'            => now(),
+                    ];
+                } else {
+                    // tidak_dipilah: no category, no tarif, no value
+                    $itemRows[] = [
+                        'tarif_item_id'         => null,
+                        'riwayat_tarif_id'      => null,
+                        'tipe_sampah'           => null,
+                        'status_pemilahan'      => 'tidak_dipilah',
+                        'berat_kg'              => $item['berat_kg'],
+                        'harga_per_kg_saat_itu' => null,
+                        'subtotal'              => 0,
+                        'created_at'            => now(),
+                        'updated_at'            => now(),
+                    ];
+                }
             }
 
             $setoran = Setoran::create([

@@ -116,11 +116,7 @@
                         </table>
                     </div>
 
-                    <div class="mt-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
-                        <span class="text-muted fs-13">
-                            Menampilkan {{ $pembayaran->firstItem() }}–{{ $pembayaran->lastItem() }}
-                            dari {{ $pembayaran->total() }} pembayaran
-                        </span>
+                    <div class="mt-4">
                         {{ $pembayaran->links() }}
                     </div>
                     @endif

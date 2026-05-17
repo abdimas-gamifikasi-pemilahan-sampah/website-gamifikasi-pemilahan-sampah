@@ -122,8 +122,9 @@
                                 <h6 class="text-info fw-semibold mb-1">Panduan Petugas</h6>
                                 <ul class="text-muted mb-0 fs-13 ps-3">
                                     <li>Pastikan sampah sudah ditimbang dengan benar.</li>
+                                    <li>Pilih <strong>Dipilah</strong> jika warga memisahkan jenis sampah — pilih kategorinya.</li>
+                                    <li>Pilih <strong>Tidak Dipilah</strong> jika sampah campur — cukup catat berat.</li>
                                     <li>Pembayaran dilakukan secara tunai setelah dicatat.</li>
-                                    <li>Status pemilahan boleh diisi jika ingin dicatat sebagai informasi transaksi.</li>
                                 </ul>
                             </div>
                         </div>
@@ -147,10 +148,27 @@
     <div class="item-row card border mb-2">
         <div class="card-body py-3">
             <div class="row g-2 align-items-end">
-                <div class="col-md-5">
-                    <label class="form-label form-label-sm mb-1">Item / Kategori</label>
+
+                {{-- 1. Status Pemilahan — FIRST and REQUIRED --}}
+                <div class="col-md-3">
+                    <label class="form-label form-label-sm mb-1">
+                        Status Pemilahan <span class="text-danger">*</span>
+                    </label>
+                    <select name="items[__INDEX__][status_pemilahan]"
+                            class="form-select form-select-sm pemilahan-select" required>
+                        <option value="" disabled selected>-- Pilih status --</option>
+                        <option value="dipilah">Dipilah</option>
+                        <option value="tidak_dipilah">Tidak Dipilah</option>
+                    </select>
+                </div>
+
+                {{-- 2. Item / Kategori — only visible when "dipilah" --}}
+                <div class="col-md-4 kategori-wrapper" style="display:none;">
+                    <label class="form-label form-label-sm mb-1">
+                        Item / Kategori <span class="text-danger">*</span>
+                    </label>
                     <select name="items[__INDEX__][tarif_item_id]"
-                            class="form-select form-select-sm tarif-select" required>
+                            class="form-select form-select-sm tarif-select">
                         <option value="" disabled selected>-- Pilih jenis --</option>
                         @foreach($tarifItems as $t)
                         <option value="{{ $t->id }}"
@@ -161,8 +179,10 @@
                         @endforeach
                     </select>
                 </div>
+
+                {{-- 3. Berat --}}
                 <div class="col-md-3">
-                    <label class="form-label form-label-sm mb-1">Berat (kg)</label>
+                    <label class="form-label form-label-sm mb-1">Berat (kg) <span class="text-danger">*</span></label>
                     <div class="input-group input-group-sm">
                         <input type="number" name="items[__INDEX__][berat_kg]"
                                class="form-control berat-input"
@@ -170,22 +190,22 @@
                         <span class="input-group-text">kg</span>
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <label class="form-label form-label-sm mb-1">Status Pemilahan <span class="text-muted">(opsional)</span></label>
-                    <select name="items[__INDEX__][status_pemilahan]" class="form-select form-select-sm pemilahan-select">
-                        <option value="" selected>Tidak dicatat</option>
-                        <option value="dipilah">Dipilah</option>
-                        <option value="tidak_dipilah">Tidak dipilah</option>
-                    </select>
-                </div>
-                <div class="col-md-1 text-end">
+
+                {{-- 4. Delete button --}}
+                <div class="col-md-2 text-end">
                     <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeItem(this)" title="Hapus">
                         <i class="ri-delete-bin-line"></i>
                     </button>
                 </div>
+
             </div>
             <div class="mt-2 text-end">
-                <small class="text-muted">Subtotal: <span class="subtotal-display fw-semibold text-dark">Rp 0</span></small>
+                <small class="text-muted">
+                    Subtotal: <span class="subtotal-display fw-semibold text-dark">Rp 0</span>
+                    <span class="tidak-dipilah-note text-muted" style="display:none;">
+                        · Sampah tidak dipilah tidak memiliki nilai tukar
+                    </span>
+                </small>
             </div>
         </div>
     </div>
@@ -204,13 +224,37 @@
         temp.innerHTML = html;
         const row = temp.firstElementChild;
 
-        row.querySelector('.tarif-select').addEventListener('change', recalc);
-        row.querySelector('.berat-input').addEventListener('input', recalc);
-        row.querySelector('.pemilahan-select').addEventListener('change', recalc);
+        const pemilahanSelect = row.querySelector('.pemilahan-select');
+        const tarifSelect     = row.querySelector('.tarif-select');
+        const beratInput      = row.querySelector('.berat-input');
+
+        pemilahanSelect.addEventListener('change', () => {
+            onPemilahanChange(row, pemilahanSelect.value);
+            recalc();
+        });
+        tarifSelect.addEventListener('change', recalc);
+        beratInput.addEventListener('input', recalc);
 
         document.getElementById('items-container').appendChild(row);
         itemCount++;
         recalc();
+    }
+
+    function onPemilahanChange(row, status) {
+        const kategoriWrapper = row.querySelector('.kategori-wrapper');
+        const tarifSelect     = row.querySelector('.tarif-select');
+        const tidakNote       = row.querySelector('.tidak-dipilah-note');
+
+        if (status === 'dipilah') {
+            kategoriWrapper.style.display = '';
+            tarifSelect.required = true;
+            tidakNote.style.display = 'none';
+        } else {
+            kategoriWrapper.style.display = 'none';
+            tarifSelect.required = false;
+            tarifSelect.value = '';
+            tidakNote.style.display = status === 'tidak_dipilah' ? '' : 'none';
+        }
     }
 
     function removeItem(btn) {
@@ -229,20 +273,37 @@
         const summaryLines = [];
 
         document.querySelectorAll('.item-row').forEach(row => {
-            const select = row.querySelector('.tarif-select');
-            const beratInput = row.querySelector('.berat-input');
-            const subtotalEl = row.querySelector('.subtotal-display');
+            const pemilahanSelect = row.querySelector('.pemilahan-select');
+            const tarifSelect     = row.querySelector('.tarif-select');
+            const beratInput      = row.querySelector('.berat-input');
+            const subtotalEl      = row.querySelector('.subtotal-display');
 
-            const harga = select.value ? parseFloat(select.options[select.selectedIndex].dataset.harga || 0) : 0;
-            const berat = parseFloat(beratInput.value || 0);
-            const subtotal = harga * berat;
+            const status = pemilahanSelect.value;
+            const berat  = parseFloat(beratInput.value || 0);
 
-            total += subtotal;
-            subtotalEl.textContent = 'Rp ' + formatRp(subtotal);
+            if (status === 'dipilah' && tarifSelect.value) {
+                const harga    = parseFloat(tarifSelect.options[tarifSelect.selectedIndex].dataset.harga || 0);
+                const subtotal = harga * berat;
+                total += subtotal;
+                subtotalEl.textContent = 'Rp ' + formatRp(subtotal);
 
-            if (select.value && berat > 0) {
-                const nama = select.options[select.selectedIndex].text.split('(')[0].trim();
-                summaryLines.push(`<div class="d-flex justify-content-between mb-1"><span class="text-white-50 small">${nama} ${berat} kg</span><span class="small">Rp ${formatRp(subtotal)}</span></div>`);
+                if (berat > 0) {
+                    const nama = tarifSelect.options[tarifSelect.selectedIndex].text.split('(')[0].trim();
+                    summaryLines.push(
+                        `<div class="d-flex justify-content-between mb-1">` +
+                        `<span class="text-white-50 small">${nama} ${berat} kg</span>` +
+                        `<span class="small">Rp ${formatRp(subtotal)}</span></div>`
+                    );
+                }
+            } else if (status === 'tidak_dipilah' && berat > 0) {
+                subtotalEl.textContent = 'Rp 0';
+                summaryLines.push(
+                    `<div class="d-flex justify-content-between mb-1">` +
+                    `<span class="text-white-50 small">Tidak Dipilah ${berat} kg</span>` +
+                    `<span class="small text-warning">Rp 0</span></div>`
+                );
+            } else {
+                subtotalEl.textContent = 'Rp 0';
             }
         });
 

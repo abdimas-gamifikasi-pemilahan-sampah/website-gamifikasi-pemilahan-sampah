@@ -1,24 +1,41 @@
 @extends('partials.layouts.master')
 
-@section('title', 'Papan Peringkat Admin')
+@section('title', 'Papan Peringkat | SIPS')
+@section('title-sub', 'Ranking Warga')
+@section('pagetitle', 'Papan Peringkat')
 
 @section('content')
 <div class="container-fluid py-4 sips-page-shell">
+
+    {{-- Header --}}
     <div class="row g-4 mb-4">
         <div class="col-12">
-            <div class="card leaderboard-outline-card overflow-hidden">
-                <div class="card-body p-4 p-lg-5" style="background: linear-gradient(135deg, rgba(255, 126, 61, 0.14), rgba(59, 130, 246, 0.08));">
+            <div class="card overflow-hidden">
+                <div class="card-body p-4" style="background: linear-gradient(135deg, rgba(255,126,61,0.10), rgba(59,130,246,0.06));">
                     <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
                         <div>
-                            <span class="badge rounded-pill bg-primary-subtle text-primary border border-primary-subtle mb-3">Admin · Monitor Kinerja</span>
-                            <h1 class="h2 fw-semibold mb-2">Papan Peringkat Pemilahan Sampah</h1>
-                            <p class="text-muted mb-0">
-                                Pantau warga dan RW paling aktif, cek peringkat, lalu gunakan data ini untuk evaluasi program.
+                            <span class="badge rounded-pill bg-primary-subtle text-primary border border-primary-subtle mb-2">Admin · Monitor Kinerja</span>
+                            <h4 class="fw-semibold mb-1">Papan Peringkat Pemilahan Sampah</h4>
+                            <p class="text-muted mb-0 fs-13">
+                                Pantau warga dan RW paling aktif —
+                                <strong>{{ $bulanDipilih->translatedFormat('F Y') }}</strong>
                             </p>
                         </div>
-                        <div class="d-flex gap-2 flex-wrap">
-                            <a href="/leaderboard" class="btn btn-outline-secondary">Lihat versi publik</a>
-                            <button type="button" class="btn btn-primary">Atur periode</button>
+                        <div class="d-flex gap-2 flex-wrap align-items-center">
+                            {{-- Month filter --}}
+                            <form method="GET" action="{{ route('sips.leaderboard') }}" class="d-flex gap-2">
+                                <select name="bulan" class="form-select form-select-sm" onchange="this.form.submit()">
+                                    @foreach($availableMonths as $m)
+                                    <option value="{{ $m->format('Y-m') }}"
+                                        {{ $m->format('Y-m') === $bulanDipilih->format('Y-m') ? 'selected' : '' }}>
+                                        {{ $m->translatedFormat('F Y') }}
+                                    </option>
+                                    @endforeach
+                                </select>
+                            </form>
+                            <a href="{{ route('public.leaderboard') }}" class="btn btn-outline-secondary btn-sm" target="_blank">
+                                Lihat versi publik
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -26,169 +43,192 @@
         </div>
     </div>
 
+    {{-- KPI cards --}}
     <div class="row g-4 mb-4">
         <div class="col-xl-3 col-md-6">
-            <div class="card sips-summary-card leaderboard-outline-card h-100">
+            <div class="card h-100">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <p class="text-muted mb-0">Warga aktif</p>
+                        <p class="text-muted mb-0 fs-13">Warga Aktif</p>
                         <span class="badge bg-success-subtle text-success border border-success-subtle">Aktif</span>
                     </div>
-                    <h3 class="mb-1">182</h3>
-                    <small class="text-success">+12 dari bulan lalu</small>
+                    <h3 class="mb-1">{{ $wargaAktif }}</h3>
+                    <small class="text-muted">Terdaftar dalam sistem</small>
                 </div>
             </div>
         </div>
         <div class="col-xl-3 col-md-6">
-            <div class="card sips-summary-card leaderboard-outline-card h-100">
+            <div class="card h-100">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <p class="text-muted mb-0">Total dipilah</p>
+                        <p class="text-muted mb-0 fs-13">Total Dipilah</p>
                         <span class="badge bg-primary-subtle text-primary border border-primary-subtle">Kg</span>
                     </div>
-                    <h3 class="mb-1">1.420 kg</h3>
-                    <small class="text-muted">Data per periode berjalan</small>
+                    <h3 class="mb-1">{{ number_format($totalKgDipilah, 1, ',', '.') }} kg</h3>
+                    <small class="text-muted">Bulan {{ $bulanDipilih->translatedFormat('F Y') }}</small>
                 </div>
             </div>
         </div>
         <div class="col-xl-3 col-md-6">
-            <div class="card sips-summary-card leaderboard-outline-card h-100">
+            <div class="card h-100">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <p class="text-muted mb-0">RW teraktif</p>
+                        <p class="text-muted mb-0 fs-13">RW Teraktif</p>
                         <span class="badge bg-info-subtle text-info border border-info-subtle">Top RW</span>
                     </div>
-                    <h3 class="mb-1">RW 03</h3>
-                    <small class="text-muted">Melati · 89% pemilahan</small>
+                    @if($rwTerbaik)
+                    <h3 class="mb-1">RW {{ $rwTerbaik->rw }}</h3>
+                    <small class="text-muted">{{ $rwTerbaik->dusun }} · {{ $rwTerbaik->persen_dipilah }}% pemilahan</small>
+                    @else
+                    <h3 class="mb-1">-</h3>
+                    <small class="text-muted">Belum ada data</small>
+                    @endif
                 </div>
             </div>
         </div>
         <div class="col-xl-3 col-md-6">
-            <div class="card sips-summary-card leaderboard-outline-card h-100">
+            <div class="card h-100">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <p class="text-muted mb-0">Rata-rata poin</p>
-                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle">Terbaru</span>
+                        <p class="text-muted mb-0 fs-13">Rata-rata Poin</p>
+                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle">Top 10</span>
                     </div>
-                    <h3 class="mb-1">478</h3>
-                    <small class="text-muted">Top 10 warga bulan ini</small>
+                    <h3 class="mb-1">{{ $rataRataPoin }}</h3>
+                    <small class="text-muted">10 warga teratas bulan ini</small>
                 </div>
             </div>
         </div>
     </div>
 
+    {{-- Main content --}}
     <div class="row g-4">
+
+        {{-- Ranking table --}}
         <div class="col-xl-8">
-            <div class="card leaderboard-outline-card h-100">
+            <div class="card h-100">
                 <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <h5 class="card-title mb-0">Ranking Warga</h5>
-                    <span class="badge bg-info-subtle text-info border border-info-subtle">Siap untuk evaluasi mingguan</span>
+                    <span class="badge bg-info-subtle text-info border border-info-subtle">
+                        {{ $entries->count() }} warga berkontribusi
+                    </span>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-0">
                     <div class="table-responsive">
                         <table class="table align-middle mb-0 table-hover">
                             <thead class="table-light">
                                 <tr>
-                                    <th>Peringkat</th>
+                                    <th style="width:60px">Rank</th>
                                     <th>Nama Warga</th>
                                     <th>RW / Dusun</th>
-                                    <th>Dipilah</th>
-                                    <th>Poin</th>
+                                    <th class="text-end">Dipilah (kg)</th>
+                                    <th class="text-end">% Pilah</th>
+                                    <th class="text-end">Poin</th>
                                 </tr>
                             </thead>
                             <tbody>
+                                @forelse($entries as $i => $entry)
+                                @php
+                                    $rank = $i + 1;
+                                    $badgeClass = match(true) {
+                                        $rank === 1 => 'bg-warning-subtle text-warning',
+                                        $rank === 2 => 'bg-secondary-subtle text-secondary',
+                                        $rank === 3 => 'bg-danger-subtle text-danger',
+                                        $rank <= 10 => 'bg-primary-subtle text-primary',
+                                        default     => 'bg-light text-muted',
+                                    };
+                                @endphp
                                 <tr>
-                                    <td><span class="badge rounded-pill bg-warning-subtle text-warning">1</span></td>
-                                    <td>Siti Aminah</td>
-                                    <td>RW 03 / Melati</td>
-                                    <td>24.6 kg</td>
-                                    <td class="fw-semibold">528</td>
+                                    <td class="text-center">
+                                        <span class="badge rounded-pill {{ $badgeClass }}">#{{ $rank }}</span>
+                                    </td>
+                                    <td class="fw-medium">{{ $entry->nama }}</td>
+                                    <td class="text-muted fs-13">RW {{ $entry->rw }} / {{ $entry->dusun }}</td>
+                                    <td class="text-end">{{ number_format($entry->kg_dipilah, 1, ',', '.') }}</td>
+                                    <td class="text-end">{{ $entry->persen_dipilah }}%</td>
+                                    <td class="text-end fw-semibold">{{ (int) $entry->poin }}</td>
                                 </tr>
+                                @empty
                                 <tr>
-                                    <td><span class="badge rounded-pill bg-primary-subtle text-primary">2</span></td>
-                                    <td>Budi Santoso</td>
-                                    <td>RW 01 / Melati</td>
-                                    <td>22.2 kg</td>
-                                    <td class="fw-semibold">502</td>
+                                    <td colspan="6" class="text-center py-5 text-muted">
+                                        Belum ada data setoran untuk periode ini.
+                                    </td>
                                 </tr>
-                                <tr>
-                                    <td><span class="badge rounded-pill bg-info-subtle text-info">3</span></td>
-                                    <td>Agus Pratama</td>
-                                    <td>RW 04 / Anggrek</td>
-                                    <td>19.8 kg</td>
-                                    <td class="fw-semibold">451</td>
-                                </tr>
-                                <tr>
-                                    <td><span class="badge rounded-pill bg-success-subtle text-success">4</span></td>
-                                    <td>Rahmawati</td>
-                                    <td>RW 05 / Kenanga</td>
-                                    <td>18.9 kg</td>
-                                    <td class="fw-semibold">430</td>
-                                </tr>
-                                <tr>
-                                    <td><span class="badge rounded-pill bg-danger-subtle text-danger">5</span></td>
-                                    <td>Deni Saputra</td>
-                                    <td>RW 02 / Anggrek</td>
-                                    <td>17.1 kg</td>
-                                    <td class="fw-semibold">388</td>
-                                </tr>
+                                @endforelse
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
         </div>
+
+        {{-- Sidebar --}}
         <div class="col-xl-4">
-            <div class="card leaderboard-outline-card mb-4">
+
+            {{-- RW ranking --}}
+            <div class="card mb-4">
                 <div class="card-header">
                     <h5 class="card-title mb-0">Ranking RW</h5>
                 </div>
                 <div class="card-body">
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <strong>RW 03 / Melati</strong>
-                            <span class="badge bg-success">#1</span>
+                    @php
+                    $rwColors = ['bg-success', 'bg-primary', 'bg-info', 'bg-warning', 'bg-secondary'];
+                    $barColors = ['bg-success', 'bg-primary', 'bg-info', 'bg-warning', 'bg-secondary'];
+                    @endphp
+                    @forelse($rws->take(5) as $i => $rw)
+                    <div class="{{ !$loop->last ? 'mb-4' : '' }}">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <div>
+                                <strong class="fs-13">RW {{ $rw->rw }} / {{ $rw->dusun }}</strong>
+                                <div class="text-muted" style="font-size:0.75rem;">
+                                    {{ $rw->persen_dipilah }}% pemilahan · {{ $rw->jumlah_warga }} warga
+                                </div>
+                            </div>
+                            <span class="badge {{ $rwColors[$i] ?? 'bg-secondary' }}">#{{ $i + 1 }}</span>
                         </div>
-                        <div class="progress" style="height: 10px;">
-                            <div class="progress-bar bg-success" style="width: 89%"></div>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <strong>RW 01 / Melati</strong>
-                            <span class="badge bg-primary">#2</span>
-                        </div>
-                        <div class="progress" style="height: 10px;">
-                            <div class="progress-bar bg-primary" style="width: 84%"></div>
-                        </div>
-                    </div>
-                    <div>
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <strong>RW 05 / Kenanga</strong>
-                            <span class="badge bg-info">#3</span>
-                        </div>
-                        <div class="progress" style="height: 10px;">
-                            <div class="progress-bar bg-info" style="width: 79%"></div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar {{ $barColors[$i] ?? 'bg-secondary' }}"
+                                 style="width: {{ $rw->persen_dipilah }}%"></div>
                         </div>
                     </div>
+                    @empty
+                    <p class="text-muted text-center mb-0">Belum ada data periode ini.</p>
+                    @endforelse
                 </div>
             </div>
 
-            <div class="card leaderboard-outline-card">
+            {{-- Quick stats --}}
+            <div class="card">
                 <div class="card-header">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="card-title mb-0">Aksi Admin</h5>
-                        <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">Cepat</span>
-                    </div>
+                    <h5 class="card-title mb-0">Ringkasan Periode</h5>
                 </div>
                 <div class="card-body">
-                    <div class="d-grid gap-2">
-                        <button type="button" class="btn btn-outline-primary">Unduh laporan</button>
-                        <button type="button" class="btn btn-outline-secondary">Filter bulan</button>
-                        <button type="button" class="btn btn-outline-success">Sorot RW terbaik</button>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted fs-13">Warga berkontribusi</span>
+                        <span class="fw-semibold">{{ $entries->count() }}</span>
                     </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted fs-13">Total berat dipilah</span>
+                        <span class="fw-semibold">{{ number_format($totalKgDipilah, 1, ',', '.') }} kg</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted fs-13">Jumlah RW aktif</span>
+                        <span class="fw-semibold">{{ $rws->count() }} RW</span>
+                    </div>
+                    @if($entries->isNotEmpty())
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted fs-13">Poin tertinggi</span>
+                        <span class="fw-semibold text-warning">{{ (int) $entries->first()->poin }} poin</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted fs-13">Juara bulan ini</span>
+                        <span class="fw-semibold text-truncate ms-2" style="max-width:130px;">
+                            {{ $entries->first()->nama }}
+                        </span>
+                    </div>
+                    @endif
                 </div>
             </div>
+
         </div>
     </div>
 </div>

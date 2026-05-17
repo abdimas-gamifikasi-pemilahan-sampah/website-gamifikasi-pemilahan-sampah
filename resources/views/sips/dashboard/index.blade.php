@@ -38,7 +38,7 @@
                     </div>
                     <div class="text-md-end">
                         <p class="mb-1 text-muted">Periode Laporan</p>
-                        <h6 class="mb-0">Mei 2026</h6>
+                        <h6 class="mb-0">{{ $periodeBulan }}</h6>
                     </div>
                 </div>
             </div>
@@ -50,8 +50,13 @@
             <div class="card card-h-100">
                 <div class="card-body">
                     <p class="text-muted mb-2">Total Sampah Terkumpul</p>
-                    <div class="sips-kpi-value">3.480 kg</div>
-                    <div class="mt-2 text-success fs-13"><i class="ri-arrow-up-line"></i> +12,4% dibanding bulan lalu</div>
+                    <div class="sips-kpi-value">{{ number_format($kpi['total_kg'], 1, ',', '.') }} kg</div>
+                    @if($totalKgDelta !== null)
+                    <div class="mt-2 fs-13 {{ $totalKgDelta >= 0 ? 'text-success' : 'text-danger' }}">
+                        <i class="ri-arrow-{{ $totalKgDelta >= 0 ? 'up' : 'down' }}-line"></i>
+                        {{ $totalKgDelta >= 0 ? '+' : '' }}{{ $totalKgDelta }}% dibanding bulan lalu
+                    </div>
+                    @endif
                 </div>
             </div>
         </div>
@@ -59,9 +64,10 @@
             <div class="card card-h-100">
                 <div class="card-body">
                     <p class="text-muted mb-2">Tingkat Pemilahan</p>
-                    <div class="sips-kpi-value">78%</div>
+                    <div class="sips-kpi-value">{{ $kpi['persen_dipilah'] }}%</div>
                     <div class="progress mt-3" style="height: 8px;">
-                        <div class="progress-bar bg-success" role="progressbar" style="width: 78%"></div>
+                        <div class="progress-bar bg-success" role="progressbar"
+                             style="width: {{ $kpi['persen_dipilah'] }}%"></div>
                     </div>
                 </div>
             </div>
@@ -70,8 +76,8 @@
             <div class="card card-h-100">
                 <div class="card-body">
                     <p class="text-muted mb-2">Total Pencairan</p>
-                    <div class="sips-kpi-value">Rp 2.945.000</div>
-                    <div class="mt-2 text-muted fs-13">Dari 416 transaksi setoran</div>
+                    <div class="sips-kpi-value">Rp {{ number_format($kpi['pencairan'], 0, ',', '.') }}</div>
+                    <div class="mt-2 text-muted fs-13">Dari {{ $kpi['total_setoran'] }} transaksi setoran</div>
                 </div>
             </div>
         </div>
@@ -79,8 +85,8 @@
             <div class="card card-h-100">
                 <div class="card-body">
                     <p class="text-muted mb-2">Warga Aktif</p>
-                    <div class="sips-kpi-value">182</div>
-                    <div class="mt-2 text-danger fs-13"><i class="ri-arrow-down-line"></i> 5 warga menjadi tidak aktif bulan ini</div>
+                    <div class="sips-kpi-value">{{ $wargaAktif }}</div>
+                    <div class="mt-2 text-muted fs-13">Terdaftar dalam sistem</div>
                 </div>
             </div>
         </div>
@@ -94,40 +100,46 @@
                     <span class="badge border border-primary text-primary">Bulanan</span>
                 </div>
                 <div class="card-body">
+                    @php
+                        $pctOrganik      = $totalKgAll > 0 ? round(($kgOrganik / $totalKgAll) * 100) : 0;
+                        $pctAnorganik    = $totalKgAll > 0 ? round(($kgAnorganik / $totalKgAll) * 100) : 0;
+                        $pctTidakDipilah = $totalKgAll > 0 ? round(($kgTidakDipilah / $totalKgAll) * 100) : 0;
+                        $pctTidakDicatat = $totalKgAll > 0 ? round(($kgTidakDicatat / $totalKgAll) * 100) : 0;
+                    @endphp
                     <div class="mb-4">
                         <div class="d-flex justify-content-between mb-2">
                             <span><span class="sips-stat-dot bg-success me-2"></span>Organik</span>
-                            <strong>1.420 kg</strong>
+                            <strong>{{ number_format($kgOrganik, 1, ',', '.') }} kg</strong>
                         </div>
                         <div class="progress" style="height: 10px;">
-                            <div class="progress-bar bg-success" style="width: 41%"></div>
+                            <div class="progress-bar bg-success" style="width: {{ $pctOrganik }}%"></div>
                         </div>
                     </div>
                     <div class="mb-4">
                         <div class="d-flex justify-content-between mb-2">
                             <span><span class="sips-stat-dot bg-info me-2"></span>Anorganik</span>
-                            <strong>1.170 kg</strong>
+                            <strong>{{ number_format($kgAnorganik, 1, ',', '.') }} kg</strong>
                         </div>
                         <div class="progress" style="height: 10px;">
-                            <div class="progress-bar bg-info" style="width: 34%"></div>
+                            <div class="progress-bar bg-info" style="width: {{ $pctAnorganik }}%"></div>
                         </div>
                     </div>
                     <div class="mb-4">
                         <div class="d-flex justify-content-between mb-2">
                             <span><span class="sips-stat-dot bg-warning me-2"></span>Tidak Dipilah</span>
-                            <strong>770 kg</strong>
+                            <strong>{{ number_format($kgTidakDipilah, 1, ',', '.') }} kg</strong>
                         </div>
                         <div class="progress" style="height: 10px;">
-                            <div class="progress-bar bg-warning" style="width: 22%"></div>
+                            <div class="progress-bar bg-warning" style="width: {{ $pctTidakDipilah }}%"></div>
                         </div>
                     </div>
                     <div>
                         <div class="d-flex justify-content-between mb-2">
                             <span><span class="sips-stat-dot bg-secondary me-2"></span>Status Tidak Dicatat</span>
-                            <strong>120 kg</strong>
+                            <strong>{{ number_format($kgTidakDicatat, 1, ',', '.') }} kg</strong>
                         </div>
                         <div class="progress" style="height: 10px;">
-                            <div class="progress-bar bg-secondary" style="width: 3%"></div>
+                            <div class="progress-bar bg-secondary" style="width: {{ max($pctTidakDicatat, 1) }}%"></div>
                         </div>
                     </div>
                 </div>
@@ -151,36 +163,29 @@
                                 </tr>
                             </thead>
                             <tbody>
+                                @forelse($rwRanking as $i => $rw)
                                 <tr>
-                                    <td><span class="badge bg-success-subtle text-success">#1</span></td>
-                                    <td>RW 03</td>
-                                    <td>89%</td>
-                                    <td>760</td>
+                                    <td>
+                                        @php
+                                            $badgeClass = match($i) {
+                                                0 => 'bg-success-subtle text-success',
+                                                1 => 'bg-primary-subtle text-primary',
+                                                2 => 'bg-info-subtle text-info',
+                                                3 => 'bg-warning-subtle text-warning',
+                                                default => 'bg-danger-subtle text-danger',
+                                            };
+                                        @endphp
+                                        <span class="badge {{ $badgeClass }}">#{{ $i + 1 }}</span>
+                                    </td>
+                                    <td>RW {{ $rw->rw }}</td>
+                                    <td>{{ $rw->persen_dipilah }}%</td>
+                                    <td>{{ number_format($rw->total_kg, 0, ',', '.') }}</td>
                                 </tr>
+                                @empty
                                 <tr>
-                                    <td><span class="badge bg-primary-subtle text-primary">#2</span></td>
-                                    <td>RW 01</td>
-                                    <td>84%</td>
-                                    <td>710</td>
+                                    <td colspan="4" class="text-center text-muted">Belum ada data bulan ini.</td>
                                 </tr>
-                                <tr>
-                                    <td><span class="badge bg-info-subtle text-info">#3</span></td>
-                                    <td>RW 05</td>
-                                    <td>79%</td>
-                                    <td>645</td>
-                                </tr>
-                                <tr>
-                                    <td><span class="badge bg-warning-subtle text-warning">#4</span></td>
-                                    <td>RW 04</td>
-                                    <td>75%</td>
-                                    <td>701</td>
-                                </tr>
-                                <tr>
-                                    <td><span class="badge bg-danger-subtle text-danger">#5</span></td>
-                                    <td>RW 02</td>
-                                    <td>68%</td>
-                                    <td>664</td>
-                                </tr>
+                                @endforelse
                             </tbody>
                         </table>
                     </div>
@@ -194,7 +199,7 @@
             <div class="card card-h-100">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">Ringkasan Tren Bulanan</h5>
-                    <span class="text-muted fs-13">Jan - Mei 2026</span>
+                    <span class="text-muted fs-13">5 Bulan Terakhir</span>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -209,41 +214,15 @@
                                 </tr>
                             </thead>
                             <tbody>
+                                @foreach($tren as $t)
                                 <tr>
-                                    <td>Januari</td>
-                                    <td>2.810</td>
-                                    <td>70%</td>
-                                    <td>2.281.000</td>
-                                    <td>171</td>
+                                    <td>{{ $t['bulan'] }}</td>
+                                    <td>{{ number_format($t['total_kg'], 1, ',', '.') }}</td>
+                                    <td>{{ $t['persen_dipilah'] }}%</td>
+                                    <td>{{ number_format($t['pencairan'], 0, ',', '.') }}</td>
+                                    <td>{{ $t['warga_aktif'] }}</td>
                                 </tr>
-                                <tr>
-                                    <td>Februari</td>
-                                    <td>2.940</td>
-                                    <td>72%</td>
-                                    <td>2.394.000</td>
-                                    <td>174</td>
-                                </tr>
-                                <tr>
-                                    <td>Maret</td>
-                                    <td>3.160</td>
-                                    <td>75%</td>
-                                    <td>2.643.000</td>
-                                    <td>179</td>
-                                </tr>
-                                <tr>
-                                    <td>April</td>
-                                    <td>3.095</td>
-                                    <td>74%</td>
-                                    <td>2.571.000</td>
-                                    <td>187</td>
-                                </tr>
-                                <tr>
-                                    <td>Mei</td>
-                                    <td>3.480</td>
-                                    <td>78%</td>
-                                    <td>2.945.000</td>
-                                    <td>182</td>
-                                </tr>
+                                @endforeach
                             </tbody>
                         </table>
                     </div>
@@ -259,15 +238,19 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <span>Setoran Sudah Dibayar</span>
-                        <span class="badge border border-success text-success">359</span>
+                        <span class="badge border border-success text-success">
+                            {{ $statusBayar['sudah_dibayar'] ?? 0 }}
+                        </span>
                     </div>
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <span>Setoran Belum Dibayar</span>
-                        <span class="badge border border-danger text-danger">57</span>
+                        <span class="badge border border-danger text-danger">
+                            {{ $statusBayar['belum_dibayar'] ?? 0 }}
+                        </span>
                     </div>
                     <div class="d-flex justify-content-between align-items-center">
                         <span>Nilai Tertunda</span>
-                        <strong>Rp 381.500</strong>
+                        <strong>Rp {{ number_format($nilaiTertunda, 0, ',', '.') }}</strong>
                     </div>
                 </div>
             </div>
@@ -280,7 +263,8 @@
                     <a href="{{ route('sips.setoran.create') }}" class="btn btn-primary w-100 mb-2">+ Catat Setoran Baru</a>
                     @if(auth()->user()->isAdmin())
                     <a href="{{ route('sips.warga.index') }}" class="btn btn-light w-100 mb-2">Kelola Data Warga</a>
-                    <a href="{{ route('sips.tarif.index') }}" class="btn btn-light w-100">Perbarui Tarif</a>
+                    <a href="{{ route('sips.tarif.index') }}" class="btn btn-light w-100 mb-2">Perbarui Tarif</a>
+                    <a href="{{ route('sips.import.index') }}" class="btn btn-light w-100">Import Data Warga</a>
                     @else
                     <a href="{{ route('sips.setoran.index') }}" class="btn btn-light w-100 mb-2">Lihat Riwayat Setoran</a>
                     <a href="{{ route('sips.pembayaran.index') }}" class="btn btn-light w-100">Lihat Pembayaran</a>
