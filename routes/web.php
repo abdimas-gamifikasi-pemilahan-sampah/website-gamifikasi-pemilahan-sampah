@@ -47,6 +47,7 @@ Route::middleware('auth')->group(function () {
 
         // Import (admin only)
         Route::get('/sips/import', [ImportController::class, 'index'])->name('sips.import.index');
+        Route::get('/sips/import/template', [ImportController::class, 'downloadTemplate'])->name('sips.import.template');
         Route::post('/sips/import/preview', [ImportController::class, 'preview'])->name('sips.import.preview');
         Route::post('/sips/import/confirm', [ImportController::class, 'confirm'])->name('sips.import.confirm');
     });

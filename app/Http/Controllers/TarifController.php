@@ -125,7 +125,7 @@ class TarifController extends Controller
     public function storePrice(Request $request, TarifItem $tarif): RedirectResponse
     {
         $validated = $request->validate([
-            'harga_per_kg' => ['required', 'numeric', 'min:0'],
+            'harga_per_kg' => ['required', 'numeric', 'min:1'],
             'tanggal_mulai' => ['required', 'date'],
             'alasan_perubahan' => ['nullable', 'string', 'max:1000'],
         ]);
@@ -139,7 +139,7 @@ class TarifController extends Controller
 
         return redirect()
             ->route('sips.tarif.show', $tarif->id)
-            ->with('success', 'Harga baru berhasil ditambahkan ke riwayat tarif.');
+            ->with('success', 'Harga tarif berhasil disimpan.');
     }
 
     public function updateStatus(Request $request, TarifItem $tarif): RedirectResponse
@@ -171,7 +171,7 @@ class TarifController extends Controller
         return array_merge(
             $this->validateItemPayload($request),
             $request->validate([
-                'harga_per_kg_awal' => ['required', 'numeric', 'min:0'],
+                'harga_per_kg_awal' => ['required', 'numeric', 'min:1'],
                 'tanggal_mulai_awal' => ['required', 'date'],
                 'alasan_perubahan_awal' => ['nullable', 'string', 'max:1000'],
             ])

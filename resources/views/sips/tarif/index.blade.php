@@ -120,10 +120,12 @@
                                 @foreach($tarifItems as $item)
                                 @php
                                     $today = now()->startOfDay();
-                                    $riwayatAktif = $item->riwayatTarif->first(function ($riwayat) use ($today) {
+                                    $riwayatBenarAktif = $item->riwayatTarif->first(function ($riwayat) use ($today) {
                                         return $riwayat->tanggal_mulai?->lte($today)
                                             && (is_null($riwayat->tanggal_akhir) || $riwayat->tanggal_akhir?->gte($today));
-                                    }) ?? $item->riwayatTarif->first();
+                                    });
+                                    $riwayatAktif = $riwayatBenarAktif ?? $item->riwayatTarif->first();
+                                    $isPending    = $item->status === 'aktif' && is_null($riwayatBenarAktif);
                                     $meta = $tipeMeta[$item->tipe_sampah] ?? ['label' => strtoupper($item->tipe_sampah), 'class' => 'secondary'];
                                 @endphp
                                 <tr>
@@ -145,9 +147,13 @@
                                     </td>
                                     <td>{{ optional($riwayatAktif?->tanggal_mulai)->translatedFormat('d M Y') ?: '-' }}</td>
                                     <td>
-                                        <span class="badge {{ $item->status === 'aktif' ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary' }}">
-                                            {{ $item->status === 'aktif' ? 'Aktif' : 'Arsip' }}
-                                        </span>
+                                        @if($item->status === 'arsip')
+                                            <span class="badge bg-secondary-subtle text-secondary">Arsip</span>
+                                        @elseif($isPending)
+                                            <span class="badge bg-warning-subtle text-warning border border-warning-subtle">Pending</span>
+                                        @else
+                                            <span class="badge bg-success-subtle text-success">Aktif</span>
+                                        @endif
                                     </td>
                                     <td>{{ $item->riwayatTarif->count() }} entri</td>
                                     <td>

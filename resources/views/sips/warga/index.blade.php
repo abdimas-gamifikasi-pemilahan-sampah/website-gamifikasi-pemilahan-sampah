@@ -59,6 +59,22 @@
                         </div>
                     </form>
 
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <span class="text-muted fs-13">Filter cepat:</span>
+                        @if(request('belum_setor'))
+                            <a href="{{ route('sips.warga.index', array_merge(request()->except('belum_setor', 'page'), [])) }}"
+                               class="btn btn-warning btn-sm">
+                                <i class="ri-user-unfollow-line me-1"></i> Belum Setor Bulan Ini
+                                <i class="ri-close-line ms-1"></i>
+                            </a>
+                        @else
+                            <a href="{{ route('sips.warga.index', array_merge(request()->query(), ['belum_setor' => 1])) }}"
+                               class="btn btn-outline-warning btn-sm">
+                                <i class="ri-user-unfollow-line me-1"></i> Belum Setor Bulan Ini
+                            </a>
+                        @endif
+                    </div>
+
                     @if($warga->isEmpty())
                     <div class="text-center py-5 text-muted">
                         <i class="ri-team-line display-4 d-block mb-2"></i>

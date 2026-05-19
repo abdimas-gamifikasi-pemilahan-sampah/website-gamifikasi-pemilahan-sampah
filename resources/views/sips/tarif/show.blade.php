@@ -8,10 +8,12 @@
 <div id="layout-wrapper">
     @php
         $today = now()->startOfDay();
-        $tarifAktif = $tarifItem->riwayatTarif->first(function ($riwayat) use ($today) {
+        $tarifBenarAktif = $tarifItem->riwayatTarif->first(function ($riwayat) use ($today) {
             return $riwayat->tanggal_mulai?->lte($today)
                 && (is_null($riwayat->tanggal_akhir) || $riwayat->tanggal_akhir?->gte($today));
-        }) ?? $tarifItem->riwayatTarif->first();
+        });
+        $tarifAktif = $tarifBenarAktif ?? $tarifItem->riwayatTarif->first();
+        $isPending   = $tarifItem->status === 'aktif' && is_null($tarifBenarAktif);
         $meta = [
             'organik' => ['label' => 'Organik', 'class' => 'success'],
             'anorganik' => ['label' => 'Anorganik', 'class' => 'info'],
@@ -39,9 +41,13 @@
                     </div>
                     <div class="mb-3">
                         <div class="text-muted fs-13">Status</div>
-                        <span class="badge {{ $tarifItem->status === 'aktif' ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary' }}">
-                            {{ $tarifItem->status === 'aktif' ? 'Aktif' : 'Arsip' }}
-                        </span>
+                        @if($tarifItem->status === 'arsip')
+                            <span class="badge bg-secondary-subtle text-secondary">Arsip</span>
+                        @elseif($isPending)
+                            <span class="badge bg-warning-subtle text-warning border border-warning-subtle">Pending</span>
+                        @else
+                            <span class="badge bg-success-subtle text-success">Aktif</span>
+                        @endif
                     </div>
                     <div class="mb-3">
                         <div class="text-muted fs-13">Tarif Aktif</div>
@@ -88,22 +94,38 @@
                                     <th>Harga</th>
                                     <th>Tanggal Mulai</th>
                                     <th>Tanggal Akhir</th>
+                                    <th>Status</th>
                                     <th>Alasan</th>
                                     <th>Diperbarui Oleh</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @forelse($tarifItem->riwayatTarif as $riwayat)
+                                @php
+                                    $isPending = $riwayat->tanggal_mulai?->gt($today);
+                                    $isActive  = !$isPending
+                                        && $riwayat->tanggal_mulai?->lte($today)
+                                        && (is_null($riwayat->tanggal_akhir) || $riwayat->tanggal_akhir?->gte($today));
+                                @endphp
                                 <tr>
                                     <td class="fw-semibold">Rp {{ number_format($riwayat->harga_per_kg, 0, ',', '.') }}/kg</td>
                                     <td>{{ optional($riwayat->tanggal_mulai)->translatedFormat('d M Y') }}</td>
                                     <td>{{ optional($riwayat->tanggal_akhir)->translatedFormat('d M Y') ?: 'Masih berlaku' }}</td>
+                                    <td>
+                                        @if($isPending)
+                                            <span class="badge bg-warning-subtle text-warning border border-warning-subtle">Akan Berlaku</span>
+                                        @elseif($isActive)
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle">Aktif</span>
+                                        @else
+                                            <span class="badge bg-secondary-subtle text-secondary">Selesai</span>
+                                        @endif
+                                    </td>
                                     <td>{{ $riwayat->alasan_perubahan ?: '-' }}</td>
                                     <td>{{ $riwayat->pengubahUser->name ?? 'System' }}</td>
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="5" class="text-center text-muted py-4">Belum ada riwayat harga.</td>
+                                    <td colspan="6" class="text-center text-muted py-4">Belum ada riwayat harga.</td>
                                 </tr>
                                 @endforelse
                             </tbody>

@@ -192,6 +192,75 @@
         </div>
     </div>
 
+    {{-- Per-item breakdown --}}
+    <div class="row g-3 mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div>
+                        <h5 class="card-title mb-0">Kontribusi per Jenis Item</h5>
+                        <small class="text-muted">Berat dipilah per item — {{ $bulanDipilih->translatedFormat('F Y') }}</small>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <span class="badge bg-success-subtle text-success border border-success-subtle fs-12">&#9679; Organik</span>
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle fs-12">&#9679; Anorganik</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    @if($perItem->isEmpty())
+                    <p class="text-muted text-center py-4">Belum ada data item dipilah untuk periode ini.</p>
+                    @else
+                    <div class="row g-4">
+                        <div class="col-xl-7">
+                            @php $chartItemHeight = max(220, $perItem->count() * 38); @endphp
+                            <div class="chart-container" style="height: {{ min($chartItemHeight, 480) }}px;">
+                                <canvas id="chartPerItem"></canvas>
+                            </div>
+                        </div>
+                        <div class="col-xl-5">
+                            <div class="table-responsive">
+                                <table class="table table-sm align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Item</th>
+                                            <th>Tipe</th>
+                                            <th class="text-end">Berat (kg)</th>
+                                            <th class="text-end">Setoran</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($perItem as $item)
+                                        <tr>
+                                            <td class="fw-medium">{{ $item->nama_item }}</td>
+                                            <td>
+                                                @if($item->tipe_sampah === 'organik')
+                                                    <span class="badge bg-success-subtle text-success">Organik</span>
+                                                @else
+                                                    <span class="badge bg-primary-subtle text-primary">Anorganik</span>
+                                                @endif
+                                            </td>
+                                            <td class="text-end fw-semibold">{{ number_format($item->total_kg, 1, ',', '.') }}</td>
+                                            <td class="text-end text-muted">{{ $item->jumlah_setoran }}x</td>
+                                        </tr>
+                                        @endforeach
+                                    </tbody>
+                                    <tfoot class="table-light">
+                                        <tr>
+                                            <td colspan="2" class="fw-semibold">Total Dipilah</td>
+                                            <td class="text-end fw-bold">{{ number_format($perItem->sum('total_kg'), 1, ',', '.') }}</td>
+                                            <td></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+
     {{-- Tingkat Pemilahan per RW + Payment Donut --}}
     <div class="row g-3 mb-4">
         <div class="col-xl-8">
@@ -322,7 +391,7 @@
                                     $medal = match($rank) {
                                         1 => '<i class="ri-medal-line text-warning fs-5" title="Juara 1"></i>',
                                         2 => '<i class="ri-medal-line text-secondary fs-5" title="Juara 2"></i>',
-                                        3 => '<i class="ri-medal-line text-danger fs-5" title="Juara 3"></i>',
+                                        3 => '<i class="ri-medal-line fs-5" style="color:#A0522D;" title="Juara 3"></i>',
                                         default => "<span class=\"text-muted fw-medium\">#$rank</span>",
                                     };
                                 @endphp
@@ -513,223 +582,284 @@
     const persen12    = @json($trenPersen);
 
     // ── 1. Tren 12 bulan (line + bar) ────────────────────────
-    new Chart(document.getElementById('chartTren'), {
-        data: {
-            labels: labels12,
-            datasets: [
-                {
-                    type: 'bar',
-                    label: 'Total Sampah (kg)',
-                    data: totalKg12,
-                    backgroundColor: 'rgba(59,130,246,0.15)',
-                    borderColor: 'rgba(59,130,246,0.4)',
-                    borderWidth: 1,
-                    yAxisID: 'yKg',
-                    order: 2,
-                },
-                {
-                    type: 'bar',
-                    label: 'Dipilah (kg)',
-                    data: dipilah12,
-                    backgroundColor: 'rgba(16,185,129,0.55)',
-                    borderColor: 'rgba(16,185,129,0.8)',
-                    borderWidth: 1,
-                    yAxisID: 'yKg',
-                    order: 1,
-                },
-                {
-                    type: 'line',
-                    label: 'Pencairan (Rp ribu)',
-                    data: pencairan12,
-                    borderColor: 'rgba(245,158,11,1)',
-                    backgroundColor: 'rgba(245,158,11,0.08)',
-                    pointBackgroundColor: 'rgba(245,158,11,1)',
-                    tension: 0.4,
-                    fill: true,
-                    yAxisID: 'yRp',
-                    order: 0,
-                },
-            ],
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            interaction: { mode: 'index', intersect: false },
-            plugins: {
-                legend: { position: 'top' },
-                tooltip: {
-                    callbacks: {
-                        label: (ctx) => {
-                            const val = ctx.parsed.y;
-                            if (ctx.dataset.label.includes('Pencairan'))
-                                return ` Pencairan: Rp ${(val * 1000).toLocaleString('id-ID')}`;
-                            return ` ${ctx.dataset.label}: ${val.toLocaleString('id-ID')} kg`;
+    try {
+        new Chart(document.getElementById('chartTren'), {
+            type: 'bar',
+            data: {
+                labels: labels12,
+                datasets: [
+                    {
+                        type: 'bar',
+                        label: 'Total Sampah (kg)',
+                        data: totalKg12,
+                        backgroundColor: 'rgba(59,130,246,0.15)',
+                        borderColor: 'rgba(59,130,246,0.4)',
+                        borderWidth: 1,
+                        yAxisID: 'yKg',
+                        order: 2,
+                    },
+                    {
+                        type: 'bar',
+                        label: 'Dipilah (kg)',
+                        data: dipilah12,
+                        backgroundColor: 'rgba(16,185,129,0.55)',
+                        borderColor: 'rgba(16,185,129,0.8)',
+                        borderWidth: 1,
+                        yAxisID: 'yKg',
+                        order: 1,
+                    },
+                    {
+                        type: 'line',
+                        label: 'Pencairan (Rp ribu)',
+                        data: pencairan12,
+                        borderColor: 'rgba(245,158,11,1)',
+                        backgroundColor: 'rgba(245,158,11,0.08)',
+                        pointBackgroundColor: 'rgba(245,158,11,1)',
+                        tension: 0.4,
+                        fill: true,
+                        yAxisID: 'yRp',
+                        order: 0,
+                    },
+                ],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { position: 'top' },
+                    tooltip: {
+                        callbacks: {
+                            label: (ctx) => {
+                                const val = ctx.parsed.y;
+                                if (ctx.dataset.label.includes('Pencairan'))
+                                    return ` Pencairan: Rp ${(val * 1000).toLocaleString('id-ID')}`;
+                                return ` ${ctx.dataset.label}: ${val.toLocaleString('id-ID')} kg`;
+                            },
                         },
                     },
                 },
-            },
-            scales: {
-                yKg: {
-                    position: 'left',
-                    title: { display: true, text: 'Berat (kg)' },
-                    grid: { color: 'rgba(0,0,0,0.05)' },
+                scales: {
+                    yKg: {
+                        position: 'left',
+                        title: { display: true, text: 'Berat (kg)' },
+                        grid: { color: 'rgba(0,0,0,0.05)' },
+                    },
+                    yRp: {
+                        position: 'right',
+                        title: { display: true, text: 'Pencairan (Rp ribu)' },
+                        grid: { drawOnChartArea: false },
+                    },
                 },
-                yRp: {
-                    position: 'right',
-                    title: { display: true, text: 'Pencairan (Rp ribu)' },
-                    grid: { drawOnChartArea: false },
-                },
             },
-        },
-    });
+        });
+    } catch (e) { console.error('chartTren:', e); }
 
     // ── 2. Komposisi donut ────────────────────────────────────
     const organik   = @json($kgOrganik);
     const anorganik = @json($kgAnorganik);
     const tidakPilah = @json($kgTidakDipilah);
 
-    new Chart(document.getElementById('chartKomposisi'), {
-        type: 'doughnut',
-        data: {
-            labels: ['Organik', 'Anorganik', 'Tidak Dipilah'],
-            datasets: [{
-                data: [organik, anorganik, tidakPilah],
-                backgroundColor: [
-                    'rgba(16,185,129,0.75)',
-                    'rgba(59,130,246,0.75)',
-                    'rgba(239,68,68,0.75)',
-                ],
-                borderWidth: 2,
-                borderColor: '#fff',
-                hoverOffset: 6,
-            }],
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            cutout: '60%',
-            plugins: {
-                legend: { position: 'bottom' },
-                tooltip: {
-                    callbacks: {
-                        label: (ctx) => ` ${ctx.label}: ${ctx.parsed.toLocaleString('id-ID', { maximumFractionDigits: 1 })} kg`,
+    try {
+        new Chart(document.getElementById('chartKomposisi'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Organik', 'Anorganik', 'Tidak Dipilah'],
+                datasets: [{
+                    data: [organik, anorganik, tidakPilah],
+                    backgroundColor: [
+                        'rgba(16,185,129,0.75)',
+                        'rgba(59,130,246,0.75)',
+                        'rgba(239,68,68,0.75)',
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#fff',
+                    hoverOffset: 6,
+                }],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '60%',
+                plugins: {
+                    legend: { position: 'bottom' },
+                    tooltip: {
+                        callbacks: {
+                            label: (ctx) => ` ${ctx.label}: ${ctx.parsed.toLocaleString('id-ID', { maximumFractionDigits: 1 })} kg`,
+                        },
                     },
                 },
             },
-        },
-    });
+        });
+    } catch (e) { console.error('chartKomposisi:', e); }
 
     // ── 3. Per-RW bar chart ───────────────────────────────────
     const rwLabels  = @json($rwData->pluck('label'));
     const rwTotal   = @json($rwData->pluck('total_kg'));
     const rwDipilah = @json($rwData->pluck('kg_dipilah'));
 
-    new Chart(document.getElementById('chartRw'), {
-        type: 'bar',
-        data: {
-            labels: rwLabels,
-            datasets: [
-                {
-                    label: 'Total Sampah (kg)',
-                    data: rwTotal,
-                    backgroundColor: 'rgba(59,130,246,0.2)',
-                    borderColor: 'rgba(59,130,246,0.6)',
-                    borderWidth: 1,
-                },
-                {
-                    label: 'Dipilah (kg)',
-                    data: rwDipilah,
-                    backgroundColor: 'rgba(16,185,129,0.6)',
-                    borderColor: 'rgba(16,185,129,0.9)',
-                    borderWidth: 1,
-                },
-            ],
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            interaction: { mode: 'index', intersect: false },
-            plugins: { legend: { position: 'top' } },
-            scales: {
-                x: { grid: { display: false } },
-                y: {
-                    title: { display: true, text: 'Berat (kg)' },
-                    grid: { color: 'rgba(0,0,0,0.05)' },
+    try {
+        new Chart(document.getElementById('chartRw'), {
+            type: 'bar',
+            data: {
+                labels: rwLabels,
+                datasets: [
+                    {
+                        label: 'Total Sampah (kg)',
+                        data: rwTotal,
+                        backgroundColor: 'rgba(59,130,246,0.2)',
+                        borderColor: 'rgba(59,130,246,0.6)',
+                        borderWidth: 1,
+                    },
+                    {
+                        label: 'Dipilah (kg)',
+                        data: rwDipilah,
+                        backgroundColor: 'rgba(16,185,129,0.6)',
+                        borderColor: 'rgba(16,185,129,0.9)',
+                        borderWidth: 1,
+                    },
+                ],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: { legend: { position: 'top' } },
+                scales: {
+                    x: { grid: { display: false } },
+                    y: {
+                        title: { display: true, text: 'Berat (kg)' },
+                        grid: { color: 'rgba(0,0,0,0.05)' },
+                    },
                 },
             },
-        },
-    });
+        });
+    } catch (e) { console.error('chartRw:', e); }
 
     // ── 4. Payment status donut ───────────────────────────────
     const sudah = @json($jumlahSudah);
     const belum = @json($jumlahBelum);
 
-    new Chart(document.getElementById('chartPayment'), {
-        type: 'doughnut',
-        data: {
-            labels: ['Sudah Dibayar', 'Belum Dibayar'],
-            datasets: [{
-                data: [sudah, belum],
-                backgroundColor: ['rgba(16,185,129,0.75)', 'rgba(239,68,68,0.75)'],
-                borderWidth: 2,
-                borderColor: '#fff',
-                hoverOffset: 4,
-            }],
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            cutout: '55%',
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    callbacks: {
-                        label: (ctx) => ` ${ctx.label}: ${ctx.parsed} transaksi`,
+    try {
+        new Chart(document.getElementById('chartPayment'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Sudah Dibayar', 'Belum Dibayar'],
+                datasets: [{
+                    data: [sudah, belum],
+                    backgroundColor: ['rgba(16,185,129,0.75)', 'rgba(239,68,68,0.75)'],
+                    borderWidth: 2,
+                    borderColor: '#fff',
+                    hoverOffset: 4,
+                }],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '55%',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: (ctx) => ` ${ctx.label}: ${ctx.parsed} transaksi`,
+                        },
                     },
                 },
             },
-        },
-    });
+        });
+    } catch (e) { console.error('chartPayment:', e); }
 
     // ── 5. Tren persen pemilahan (sparkline-style line) ───────
-    new Chart(document.getElementById('chartPersen'), {
-        type: 'line',
-        data: {
-            labels: labels12,
-            datasets: [{
-                label: '% Pemilahan',
-                data: persen12,
-                borderColor: 'rgba(16,185,129,0.9)',
-                backgroundColor: 'rgba(16,185,129,0.1)',
-                fill: true,
-                tension: 0.4,
-                pointRadius: 4,
-                pointBackgroundColor: 'rgba(16,185,129,1)',
-            }],
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    callbacks: {
-                        label: (ctx) => ` ${ctx.parsed.y}% dipilah`,
+    try {
+        new Chart(document.getElementById('chartPersen'), {
+            type: 'line',
+            data: {
+                labels: labels12,
+                datasets: [{
+                    label: '% Pemilahan',
+                    data: persen12,
+                    borderColor: 'rgba(16,185,129,0.9)',
+                    backgroundColor: 'rgba(16,185,129,0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointBackgroundColor: 'rgba(16,185,129,1)',
+                }],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: (ctx) => ` ${ctx.parsed.y}% dipilah`,
+                        },
                     },
                 },
-            },
-            scales: {
-                y: {
-                    min: 0,
-                    max: 100,
-                    title: { display: true, text: '%' },
-                    grid: { color: 'rgba(0,0,0,0.05)' },
-                    ticks: { callback: (v) => v + '%' },
+                scales: {
+                    y: {
+                        min: 0,
+                        max: 100,
+                        title: { display: true, text: '%' },
+                        grid: { color: 'rgba(0,0,0,0.05)' },
+                        ticks: { callback: (v) => v + '%' },
+                    },
+                    x: { grid: { display: false } },
                 },
-                x: { grid: { display: false } },
             },
-        },
-    });
+        });
+    } catch (e) { console.error('chartPersen:', e); }
+
+    // ── 6. Per-item horizontal bar ────────────────────────────
+    @php
+        $perItemLabels = $perItem->pluck('nama_item')->toArray();
+        $perItemKg     = $perItem->map(fn ($r) => round((float) $r->total_kg, 1))->values()->toArray();
+        $perItemBg     = $perItem->map(fn ($r) => $r->tipe_sampah === 'organik'
+            ? 'rgba(16,185,129,0.65)'
+            : 'rgba(59,130,246,0.65)')->values()->toArray();
+        $perItemBorder = $perItem->map(fn ($r) => $r->tipe_sampah === 'organik'
+            ? 'rgba(16,185,129,1)'
+            : 'rgba(59,130,246,1)')->values()->toArray();
+    @endphp
+    @if($perItem->isNotEmpty())
+    try {
+        new Chart(document.getElementById('chartPerItem'), {
+            type: 'bar',
+            data: {
+                labels: @json($perItemLabels),
+                datasets: [{
+                    label: 'Berat Dipilah (kg)',
+                    data: @json($perItemKg),
+                    backgroundColor: @json($perItemBg),
+                    borderColor: @json($perItemBorder),
+                    borderWidth: 1,
+                    borderRadius: 4,
+                }],
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: (ctx) => ` ${ctx.parsed.x.toLocaleString('id-ID', { maximumFractionDigits: 1 })} kg`,
+                        },
+                    },
+                },
+                scales: {
+                    x: {
+                        title: { display: true, text: 'Berat (kg)' },
+                        grid: { color: 'rgba(0,0,0,0.05)' },
+                    },
+                    y: { grid: { display: false } },
+                },
+            },
+        });
+    } catch (e) { console.error('chartPerItem:', e); }
+    @endif
 
 })();
 </script>

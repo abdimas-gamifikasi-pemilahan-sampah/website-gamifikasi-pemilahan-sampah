@@ -4,6 +4,16 @@
 @section('title-sub', 'Ranking Warga')
 @section('pagetitle', 'Papan Peringkat')
 
+@section('css')
+<style>
+    .badge-bronze {
+        background-color: rgba(205,127,50,0.15);
+        color: #A0522D;
+        border: 1px solid rgba(205,127,50,0.3);
+    }
+</style>
+@endsection
+
 @section('content')
 <div class="container-fluid py-4 sips-page-shell">
 
@@ -132,7 +142,7 @@
                                     $badgeClass = match(true) {
                                         $rank === 1 => 'bg-warning-subtle text-warning',
                                         $rank === 2 => 'bg-secondary-subtle text-secondary',
-                                        $rank === 3 => 'bg-danger-subtle text-danger',
+                                        $rank === 3 => 'badge-bronze',
                                         $rank <= 10 => 'bg-primary-subtle text-primary',
                                         default     => 'bg-light text-muted',
                                     };

@@ -59,6 +59,7 @@ class SetoranController extends Controller
             'items.*.status_pemilahan'      => ['required', Rule::in(ItemSetoran::statusPemilahanOptions())],
             'items.*.tarif_item_id'         => ['nullable', 'exists:tarif_items,id'],
             'items.*.berat_kg'              => ['required', 'numeric', 'min:0.1'],
+            'items.*.harga_tidak_dipilah'   => ['nullable', 'numeric', 'min:0'],
         ], [
             'warga_id.required'               => 'Warga harus dipilih.',
             'tanggal_setoran.required'        => 'Tanggal setoran harus diisi.',
@@ -103,7 +104,10 @@ class SetoranController extends Controller
                         'updated_at'            => now(),
                     ];
                 } else {
-                    // tidak_dipilah: no category, no tarif, no value
+                    $nilaiTukar    = (float) ($item['harga_tidak_dipilah'] ?? 0);
+                    $subtotalTidak = round($nilaiTukar, 2);
+                    $totalNilai   += $subtotalTidak;
+
                     $itemRows[] = [
                         'tarif_item_id'         => null,
                         'riwayat_tarif_id'      => null,
@@ -111,7 +115,7 @@ class SetoranController extends Controller
                         'status_pemilahan'      => 'tidak_dipilah',
                         'berat_kg'              => $item['berat_kg'],
                         'harga_per_kg_saat_itu' => null,
-                        'subtotal'              => 0,
+                        'subtotal'              => $subtotalTidak,
                         'created_at'            => now(),
                         'updated_at'            => now(),
                     ];

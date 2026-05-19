@@ -43,6 +43,22 @@ class AnalitikController extends Controller
             $trenPersen[]    = $data['persen_dipilah'];
         }
 
+        // ── Per-item breakdown (bulan dipilih) ────────────────────
+        $perItem = DB::table('item_setoran')
+            ->join('setoran', 'setoran.id', '=', 'item_setoran.setoran_id')
+            ->join('tarif_items', 'tarif_items.id', '=', 'item_setoran.tarif_item_id')
+            ->whereBetween('setoran.tanggal_setoran', [$awal, $akhir])
+            ->where('item_setoran.status_pemilahan', 'dipilah')
+            ->select([
+                'tarif_items.nama_item',
+                'tarif_items.tipe_sampah',
+                DB::raw('SUM(item_setoran.berat_kg) as total_kg'),
+                DB::raw('COUNT(DISTINCT setoran.id) as jumlah_setoran'),
+            ])
+            ->groupBy('tarif_items.id', 'tarif_items.nama_item', 'tarif_items.tipe_sampah')
+            ->orderByDesc('total_kg')
+            ->get();
+
         // ── Komposisi sampah (bulan dipilih) ───────────────────────
         $komposisi = DB::table('item_setoran')
             ->join('setoran', 'setoran.id', '=', 'item_setoran.setoran_id')
@@ -136,6 +152,8 @@ class AnalitikController extends Controller
             'trenDipilah'        => $trenDipilah,
             'trenPencairan'      => $trenPencairan,
             'trenPersen'         => $trenPersen,
+            // Per-item chart
+            'perItem'            => $perItem,
             // Komposisi donut
             'kgOrganik'          => $kgOrganik,
             'kgAnorganik'        => $kgAnorganik,

@@ -58,7 +58,12 @@
 
             <div class="card mt-3 bg-light border-0">
                 <div class="card-body fs-13">
-                    <h6 class="fw-semibold mb-2">Contoh format CSV</h6>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="fw-semibold mb-0">Contoh format CSV</h6>
+                        <a href="{{ route('sips.import.template') }}" class="btn btn-outline-primary btn-sm">
+                            <i class="ri-download-2-line me-1"></i> Unduh Template
+                        </a>
+                    </div>
                     <pre class="bg-white p-2 rounded fs-12 mb-0" style="overflow-x:auto;">nama,no_kk,rt,rw,dusun,no_hp,tanggal_terdaftar
 Siti Rahayu,1234567890123456,01,01,Melati,081234567890,2026-01-15
 Budi Santoso,9876543210987654,02,02,Anggrek,,2026-02-01</pre>

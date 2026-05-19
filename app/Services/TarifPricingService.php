@@ -38,15 +38,21 @@ class TarifPricingService
                 ->first();
 
             if ($riwayatSebelumnya && $riwayatSebelumnya->tanggal_mulai->isSameDay($tanggalMulai)) {
-                throw ValidationException::withMessages([
-                    'tanggal_mulai' => 'Sudah ada tarif yang dimulai pada tanggal tersebut.',
+                $riwayatSebelumnya->update([
+                    'harga_per_kg'        => $hargaPerKg,
+                    'alasan_perubahan'    => $alasanPerubahan ?? $riwayatSebelumnya->alasan_perubahan,
+                    'diubah_oleh_user_id' => $actorId,
                 ]);
+                return $riwayatSebelumnya->fresh();
             }
 
             if ($riwayatBerikutnya && $riwayatBerikutnya->tanggal_mulai->isSameDay($tanggalMulai)) {
-                throw ValidationException::withMessages([
-                    'tanggal_mulai' => 'Sudah ada tarif lain yang dimulai pada tanggal tersebut.',
+                $riwayatBerikutnya->update([
+                    'harga_per_kg'        => $hargaPerKg,
+                    'alasan_perubahan'    => $alasanPerubahan ?? $riwayatBerikutnya->alasan_perubahan,
+                    'diubah_oleh_user_id' => $actorId,
                 ]);
+                return $riwayatBerikutnya->fresh();
             }
 
             if ($riwayatSebelumnya) {

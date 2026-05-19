@@ -73,17 +73,29 @@ class SetoranSeeder extends Seeder
                             continue;
                         }
 
-                        $rand            = rand(1, 10);
-                        $statusPemilahan = $rand <= 7 ? 'dipilah' : ($rand <= 9 ? 'tidak_dipilah' : null);
-                        $subtotal        = round($beratKg * $riwayat->harga_per_kg, 2);
-                        $totalNilai     += $subtotal;
+                        $statusPemilahan = rand(1, 10) <= 7 ? 'dipilah' : 'tidak_dipilah';
+
+                        if ($statusPemilahan === 'dipilah') {
+                            $subtotal             = round($beratKg * $riwayat->harga_per_kg, 2);
+                            $hargaPerKgSaatItu    = $riwayat->harga_per_kg;
+                            $riwayatTarifId       = $riwayat->id;
+                            $tarifItemIdRow       = $tarifItemId;
+                            $tipeRow              = $tipe;
+                        } else {
+                            $subtotal             = 0;
+                            $hargaPerKgSaatItu    = null;
+                            $riwayatTarifId       = null;
+                            $tarifItemIdRow       = null;
+                            $tipeRow              = null;
+                        }
+                        $totalNilai += $subtotal;
 
                         $newItemRows[] = [
-                            'tarif_item_id'         => $tarifItemId,
-                            'riwayat_tarif_id'      => $riwayat->id,
-                            'tipe_sampah'           => $tipe,
+                            'tarif_item_id'         => $tarifItemIdRow,
+                            'riwayat_tarif_id'      => $riwayatTarifId,
+                            'tipe_sampah'           => $tipeRow,
                             'berat_kg'              => $beratKg,
-                            'harga_per_kg_saat_itu' => $riwayat->harga_per_kg,
+                            'harga_per_kg_saat_itu' => $hargaPerKgSaatItu,
                             'subtotal'              => $subtotal,
                             'status_pemilahan'      => $statusPemilahan,
                             'created_at'            => $tanggal,

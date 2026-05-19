@@ -123,7 +123,7 @@
                                 <ul class="text-muted mb-0 fs-13 ps-3">
                                     <li>Pastikan sampah sudah ditimbang dengan benar.</li>
                                     <li>Pilih <strong>Dipilah</strong> jika warga memisahkan jenis sampah — pilih kategorinya.</li>
-                                    <li>Pilih <strong>Tidak Dipilah</strong> jika sampah campur — cukup catat berat.</li>
+                                    <li>Pilih <strong>Tidak Dipilah</strong> jika sampah campur — catat berat dan harga/kg jika berlaku.</li>
                                     <li>Pembayaran dilakukan secara tunai setelah dicatat.</li>
                                 </ul>
                             </div>
@@ -162,22 +162,33 @@
                     </select>
                 </div>
 
-                {{-- 2. Item / Kategori — only visible when "dipilah" --}}
-                <div class="col-md-4 kategori-wrapper" style="display:none;">
-                    <label class="form-label form-label-sm mb-1">
-                        Item / Kategori <span class="text-danger">*</span>
-                    </label>
-                    <select name="items[__INDEX__][tarif_item_id]"
-                            class="form-select form-select-sm tarif-select">
-                        <option value="" disabled selected>-- Pilih jenis --</option>
-                        @foreach($tarifItems as $t)
-                        <option value="{{ $t->id }}"
-                                data-harga="{{ $t->activeRate->harga_per_kg }}">
-                            {{ $t->nama_item }}
-                            (Rp {{ number_format($t->activeRate->harga_per_kg, 0, ',', '.') }}/kg)
-                        </option>
-                        @endforeach
-                    </select>
+                {{-- 2. Item/Kategori (dipilah) OR Harga override (tidak_dipilah) --}}
+                <div class="col-md-4">
+                    <div class="kategori-wrapper" style="display:none;">
+                        <label class="form-label form-label-sm mb-1">
+                            Item / Kategori <span class="text-danger">*</span>
+                        </label>
+                        <select name="items[__INDEX__][tarif_item_id]"
+                                class="form-select form-select-sm tarif-select">
+                            <option value="" disabled selected>-- Pilih jenis --</option>
+                            @foreach($tarifItems as $t)
+                            <option value="{{ $t->id }}"
+                                    data-harga="{{ $t->activeRate->harga_per_kg }}">
+                                {{ $t->nama_item }}
+                                (Rp {{ number_format($t->activeRate->harga_per_kg, 0, ',', '.') }}/kg)
+                            </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="harga-tidak-dipilah-wrapper" style="display:none;">
+                        <label class="form-label form-label-sm mb-1">Nilai Tukar <span class="text-muted">(opsional)</span></label>
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text">Rp</span>
+                            <input type="number" name="items[__INDEX__][harga_tidak_dipilah]"
+                                   class="form-control harga-tidak-dipilah-input"
+                                   step="1" min="0" placeholder="0">
+                        </div>
+                    </div>
                 </div>
 
                 {{-- 3. Berat --}}
@@ -203,7 +214,7 @@
                 <small class="text-muted">
                     Subtotal: <span class="subtotal-display fw-semibold text-dark">Rp 0</span>
                     <span class="tidak-dipilah-note text-muted" style="display:none;">
-                        · Sampah tidak dipilah tidak memiliki nilai tukar
+                        · Masukkan harga/kg jika ada nilai tukar, atau biarkan 0
                     </span>
                 </small>
             </div>
@@ -228,12 +239,15 @@
         const tarifSelect     = row.querySelector('.tarif-select');
         const beratInput      = row.querySelector('.berat-input');
 
+        const hargaTidakDipilahInput = row.querySelector('.harga-tidak-dipilah-input');
+
         pemilahanSelect.addEventListener('change', () => {
             onPemilahanChange(row, pemilahanSelect.value);
             recalc();
         });
         tarifSelect.addEventListener('change', recalc);
         beratInput.addEventListener('input', recalc);
+        hargaTidakDipilahInput.addEventListener('input', recalc);
 
         document.getElementById('items-container').appendChild(row);
         itemCount++;
@@ -241,19 +255,30 @@
     }
 
     function onPemilahanChange(row, status) {
-        const kategoriWrapper = row.querySelector('.kategori-wrapper');
-        const tarifSelect     = row.querySelector('.tarif-select');
-        const tidakNote       = row.querySelector('.tidak-dipilah-note');
+        const kategoriWrapper       = row.querySelector('.kategori-wrapper');
+        const hargaWrapper          = row.querySelector('.harga-tidak-dipilah-wrapper');
+        const tarifSelect           = row.querySelector('.tarif-select');
+        const hargaTidakDipilahInput = row.querySelector('.harga-tidak-dipilah-input');
+        const tidakNote             = row.querySelector('.tidak-dipilah-note');
 
         if (status === 'dipilah') {
             kategoriWrapper.style.display = '';
+            hargaWrapper.style.display = 'none';
             tarifSelect.required = true;
+            hargaTidakDipilahInput.value = '';
             tidakNote.style.display = 'none';
-        } else {
+        } else if (status === 'tidak_dipilah') {
             kategoriWrapper.style.display = 'none';
+            hargaWrapper.style.display = '';
             tarifSelect.required = false;
             tarifSelect.value = '';
-            tidakNote.style.display = status === 'tidak_dipilah' ? '' : 'none';
+            tidakNote.style.display = '';
+        } else {
+            kategoriWrapper.style.display = 'none';
+            hargaWrapper.style.display = 'none';
+            tarifSelect.required = false;
+            tarifSelect.value = '';
+            tidakNote.style.display = 'none';
         }
     }
 
@@ -295,12 +320,15 @@
                         `<span class="small">Rp ${formatRp(subtotal)}</span></div>`
                     );
                 }
-            } else if (status === 'tidak_dipilah' && berat > 0) {
-                subtotalEl.textContent = 'Rp 0';
+            } else if (status === 'tidak_dipilah') {
+                const hargaInput = row.querySelector('.harga-tidak-dipilah-input');
+                const subtotal   = parseFloat(hargaInput?.value || 0);
+                total += subtotal;
+                subtotalEl.textContent = 'Rp ' + formatRp(subtotal);
                 summaryLines.push(
                     `<div class="d-flex justify-content-between mb-1">` +
-                    `<span class="text-white-50 small">Tidak Dipilah ${berat} kg</span>` +
-                    `<span class="small text-warning">Rp 0</span></div>`
+                    `<span class="text-white-50 small">Tidak Dipilah${berat > 0 ? ' ' + berat + ' kg' : ''}</span>` +
+                    `<span class="small ${subtotal > 0 ? '' : 'text-warning'}">Rp ${formatRp(subtotal)}</span></div>`
                 );
             } else {
                 subtotalEl.textContent = 'Rp 0';

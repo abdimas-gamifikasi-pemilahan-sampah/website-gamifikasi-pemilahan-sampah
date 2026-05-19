@@ -16,6 +16,7 @@ class WargaController extends Controller
             'search' => ['nullable', 'string', 'max:100'],
             'rw' => ['nullable', 'string', 'max:5'],
             'status_keanggotaan' => ['nullable', Rule::in(['aktif', 'non_aktif'])],
+            'belum_setor' => ['nullable', 'boolean'],
         ]);
 
         $periodeMulai = now()->startOfMonth();
@@ -34,6 +35,11 @@ class WargaController extends Controller
             ->when(
                 $validated['status_keanggotaan'] ?? null,
                 fn ($query, $status) => $query->where('status_keanggotaan', $status)
+            )
+            ->when(
+                $validated['belum_setor'] ?? false,
+                fn ($query) => $query->whereDoesntHave('setoran', fn ($q) => $q
+                    ->whereBetween('tanggal_setoran', [$periodeMulai, $periodeAkhir]))
             )
             ->withExists([
                 'setoran as memiliki_setoran_bulan_ini' => fn ($query) => $query
@@ -118,8 +124,8 @@ class WargaController extends Controller
                 'size:16',
                 Rule::unique('warga', 'no_kk')->ignore($warga?->id),
             ],
-            'rt' => ['required', 'string', 'max:5'],
-            'rw' => ['required', 'string', 'max:5'],
+            'rt' => ['required', 'integer', 'min:1', 'max:999'],
+            'rw' => ['required', 'integer', 'min:1', 'max:999'],
             'dusun' => ['required', 'string', 'max:255'],
             'no_hp' => ['nullable', 'string', 'max:20'],
             'tanggal_terdaftar' => ['required', 'date'],

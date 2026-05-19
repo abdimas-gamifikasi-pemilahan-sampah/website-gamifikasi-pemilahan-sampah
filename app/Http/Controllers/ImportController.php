@@ -7,6 +7,7 @@ use App\Models\Warga;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ImportController extends Controller
 {
@@ -14,6 +15,25 @@ class ImportController extends Controller
     {
         $logs = ImportLog::with('uploader')->latest()->paginate(20);
         return view('sips.import.index', compact('logs'));
+    }
+
+    public function downloadTemplate(): StreamedResponse
+    {
+        $rows = [
+            ['nama', 'no_kk', 'rt', 'rw', 'dusun', 'no_hp', 'tanggal_terdaftar'],
+            ['Siti Rahayu', '1234567890123456', '1', '1', 'Melati', '081234567890', '2026-01-15'],
+            ['Budi Santoso', '9876543210987654', '2', '2', 'Anggrek', '', '2026-02-01'],
+        ];
+
+        return response()->streamDownload(function () use ($rows) {
+            $handle = fopen('php://output', 'w');
+            foreach ($rows as $row) {
+                fputcsv($handle, $row);
+            }
+            fclose($handle);
+        }, 'template_import_warga.csv', [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
     }
 
     public function preview(Request $request)
