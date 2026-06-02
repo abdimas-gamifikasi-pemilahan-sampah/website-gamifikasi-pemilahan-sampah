@@ -1,12 +1,13 @@
 @php
-    $isEdit = isset($warga);
+    $isEdit  = isset($warga);
+    $prefill ??= [];
 @endphp
 
 <div class="row g-3">
     <div class="col-md-6">
         <label for="nama" class="form-label">Nama Lengkap <span class="text-danger">*</span></label>
         <input type="text" class="form-control @error('nama') is-invalid @enderror"
-               id="nama" name="nama" value="{{ old('nama', $warga->nama ?? '') }}" required>
+               id="nama" name="nama" value="{{ old('nama', $warga->nama ?? $prefill['nama'] ?? '') }}" required>
         @error('nama')
         <div class="invalid-feedback">{{ $message }}</div>
         @enderror
@@ -24,7 +25,7 @@
     <div class="col-md-2">
         <label for="rt" class="form-label">RT <span class="text-danger">*</span></label>
         <input type="number" class="form-control @error('rt') is-invalid @enderror"
-               id="rt" name="rt" min="1" max="999" value="{{ old('rt', $warga->rt ?? '') }}" required>
+               id="rt" name="rt" min="1" max="999" value="{{ old('rt', $warga->rt ?? $prefill['rt'] ?? '') }}" required>
         @error('rt')
         <div class="invalid-feedback">{{ $message }}</div>
         @enderror
@@ -33,7 +34,7 @@
     <div class="col-md-2">
         <label for="rw" class="form-label">RW <span class="text-danger">*</span></label>
         <input type="number" class="form-control @error('rw') is-invalid @enderror"
-               id="rw" name="rw" min="1" max="999" value="{{ old('rw', $warga->rw ?? '') }}" required>
+               id="rw" name="rw" min="1" max="999" value="{{ old('rw', $warga->rw ?? $prefill['rw'] ?? '') }}" required>
         @error('rw')
         <div class="invalid-feedback">{{ $message }}</div>
         @enderror

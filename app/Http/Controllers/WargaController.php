@@ -58,9 +58,10 @@ class WargaController extends Controller
         return view('sips.warga.index', compact('warga', 'rwOptions'));
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
-        return view('sips.warga.create');
+        $prefill = $request->only(['nama', 'rt', 'rw']);
+        return view('sips.warga.create', compact('prefill'));
     }
 
     public function store(Request $request): RedirectResponse

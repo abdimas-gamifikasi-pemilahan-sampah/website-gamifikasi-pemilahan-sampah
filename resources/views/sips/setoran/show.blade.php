@@ -52,9 +52,20 @@
                     {{-- Info setoran --}}
                     <div class="row mb-4 g-3">
                         <div class="col-sm-6">
-                            <p class="text-muted mb-1 fs-12">WARGA</p>
-                            <p class="fw-semibold mb-0">{{ $setoran->warga->nama }}</p>
-                            <small class="text-muted">RT {{ $setoran->warga->rt }} / {{ $setoran->warga->dusun }}</small>
+                            @if($setoran->warga)
+                                <p class="text-muted mb-1 fs-12">WARGA</p>
+                                <p class="fw-semibold mb-0">{{ $setoran->warga->nama }}</p>
+                                <small class="text-muted">RT {{ $setoran->warga->rt }} / {{ $setoran->warga->dusun }}</small>
+                            @else
+                                <p class="text-muted mb-1 fs-12">PENYETOR</p>
+                                @php
+                                    $namaPenyetor = $setoran->items->pluck('nama_penyetor')->filter()->unique()->values();
+                                @endphp
+                                <p class="fw-semibold mb-0">
+                                    {{ $namaPenyetor->take(3)->implode(', ') }}{{ $namaPenyetor->count() > 3 ? ', ...' : '' }}
+                                </p>
+                                <small class="text-muted">{{ $setoran->items->count() }} item · area RW {{ $setoran->area_rw ?? '—' }}</small>
+                            @endif
                         </div>
                         <div class="col-sm-6">
                             <p class="text-muted mb-1 fs-12">DICATAT OLEH</p>
@@ -232,7 +243,9 @@
                 <div class="modal-body text-center">
                     <i class="ri-wallet-3-line text-success display-4 d-block mb-3"></i>
                     <h4 class="mb-1">Rp {{ number_format($setoran->total_nilai, 0, ',', '.') }}</h4>
-                    <p class="text-muted mb-4">{{ $setoran->warga->nama }}</p>
+                    <p class="text-muted mb-4">
+                        {{ $setoran->warga?->nama ?? 'Setoran #' . str_pad($setoran->id, 5, '0', STR_PAD_LEFT) }}
+                    </p>
                     <div class="alert alert-info py-2 fs-13 text-start">
                         Pastikan uang tunai sudah diberikan kepada warga sebelum konfirmasi.
                     </div>

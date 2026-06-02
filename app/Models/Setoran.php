@@ -18,14 +18,40 @@ class Setoran extends Model
         'catatan_kondisi',
         'total_nilai',
         'status_pembayaran',
+        // v5 fields
+        'area_rw',
+        'total_kg',
+        'total_kg_dipilah',
+        'total_kg_tidak_dipilah',
+        'nilai',
+        'mode',
+        'sumber_input',
+        'is_selesai',
     ];
 
     protected function casts(): array
     {
         return [
-            'tanggal_setoran'  => 'datetime',
-            'total_nilai'      => 'decimal:2',
+            'tanggal_setoran'         => 'datetime',
+            'total_nilai'             => 'decimal:2',
+            'total_kg'                => 'decimal:2',
+            'total_kg_dipilah'        => 'decimal:2',
+            'total_kg_tidak_dipilah'  => 'decimal:2',
+            'nilai'                   => 'decimal:2',
+            'is_selesai'              => 'boolean',
         ];
+    }
+
+    public function isAgregat(): bool
+    {
+        return $this->mode === 'agregat';
+    }
+
+    public function nilaiFormatted(): string
+    {
+        $abs = abs((float) $this->nilai);
+        $rp  = 'Rp ' . number_format($abs, 0, ',', '.');
+        return $this->nilai >= 0 ? "Terima {$rp}" : "Iuran {$rp}";
     }
 
     public function warga(): BelongsTo

@@ -10,6 +10,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\AnalitikController;
+use App\Http\Controllers\ImportSetoranController;
 
 Route::get('/', function () {
     return view('public.landing');
@@ -53,11 +54,18 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::middleware('role:admin,petugas')->group(function () {
+        // Import Setoran (Excel)
+        Route::get('/sips/import/setoran', [ImportSetoranController::class, 'index'])->name('sips.import.setoran.index');
+        Route::get('/sips/import/setoran/template/{format}', [ImportSetoranController::class, 'downloadTemplate'])->name('sips.import.setoran.template')->where('format', 'perolehan|rivan|detail');
+        Route::post('/sips/import/setoran/preview', [ImportSetoranController::class, 'preview'])->name('sips.import.setoran.preview');
+        Route::post('/sips/import/setoran/confirm', [ImportSetoranController::class, 'confirm'])->name('sips.import.setoran.confirm');
+
         Route::get('/sips/setoran', [SetoranController::class, 'index'])->name('sips.setoran.index');
         Route::get('/sips/setoran/create', [SetoranController::class, 'create'])->name('sips.setoran.create');
         Route::post('/sips/setoran', [SetoranController::class, 'store'])->name('sips.setoran.store');
         Route::get('/sips/setoran/{setoran}', [SetoranController::class, 'show'])->name('sips.setoran.show');
         Route::get('/sips/setoran/{setoran}/kwitansi', [SetoranController::class, 'kwitansi'])->name('sips.setoran.kwitansi');
+        Route::patch('/sips/setoran/{setoran}/selesai', [SetoranController::class, 'toggleSelesai'])->name('sips.setoran.selesai');
         Route::post('/sips/setoran/{setoran}/bayar', [PembayaranController::class, 'store'])->name('sips.pembayaran.store');
         Route::get('/sips/pembayaran', [PembayaranController::class, 'index'])->name('sips.pembayaran.index');
     });
