@@ -115,7 +115,7 @@ class WargaController extends Controller
             'no_kk' => [
                 'required',
                 'string',
-                'size:16',
+                'regex:/^\d{16}$/',
                 Rule::unique('warga', 'no_kk')->ignore($warga?->id),
             ],
             'rt' => ['required', 'string', 'max:5'],
@@ -124,6 +124,8 @@ class WargaController extends Controller
             'no_hp' => ['nullable', 'string', 'max:20'],
             'tanggal_terdaftar' => ['required', 'date'],
             'status_keanggotaan' => ['required', Rule::in(['aktif', 'non_aktif'])],
+        ], [
+            'no_kk.regex' => 'Nomor KK harus 16 digit angka.',
         ]);
     }
 

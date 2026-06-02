@@ -16,6 +16,11 @@ class PengaturanSistemSeeder extends Seeder
                 'deskripsi' => 'Tarif iuran per kilogram sampah (Rp). Berlaku untuk semua jenis sampah tidak dipilah.',
             ],
             [
+                'kunci'     => 'nilai_dipilah_per_kg',
+                'nilai'     => '500',
+                'deskripsi' => 'Nilai global per kilogram untuk sampah yang dipilah.',
+            ],
+            [
                 'kunci'     => 'nama_tps',
                 'nilai'     => 'TPS 3R Banjarsari',
                 'deskripsi' => 'Nama TPS yang tampil di laporan dan ekspor.',

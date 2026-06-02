@@ -17,16 +17,48 @@ class SetoranController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Setoran::with(['warga', 'items', 'pembayaran'])
-            ->latest('tanggal_setoran');
+        $validated = $request->validate([
+            'status' => ['nullable', Rule::in(Setoran::paymentStatusFilters())],
+        ]);
 
-        if ($request->filled('status')) {
-            $query->where('status_pembayaran', $request->status);
+        $query = Setoran::query()->latest('tanggal_setoran');
+
+        if (!empty($validated['status'])) {
+            match ($validated['status']) {
+                'belum_dibayar_warga' => $query
+                    ->where('status_pembayaran', 'belum_dibayar')
+                    ->where('nilai', '<', 0),
+                'belum_dibayar_petugas' => $query
+                    ->where('status_pembayaran', 'belum_dibayar')
+                    ->where('nilai', '>', 0),
+                'sudah_dibayar_warga' => $query
+                    ->where('status_pembayaran', 'sudah_dibayar')
+                    ->where('nilai', '<', 0),
+                'sudah_dibayar_petugas' => $query
+                    ->where('status_pembayaran', 'sudah_dibayar')
+                    ->where('nilai', '>', 0),
+                default => null,
+            };
         }
 
-        $setoran = $query->paginate(20)->withQueryString();
+        $setoran = (clone $query)
+            ->with(['warga', 'items', 'pembayaran'])
+            ->paginate(20)
+            ->withQueryString();
 
-        return view('sips.setoran.index', compact('setoran'));
+        $ringkasan = (clone $query)
+            ->reorder()
+            ->selectRaw("
+                COUNT(*) AS jumlah_setoran,
+                SUM(CASE WHEN status_pembayaran = 'belum_dibayar' AND nilai < 0 THEN 1 ELSE 0 END) AS belum_dibayar_warga,
+                SUM(CASE WHEN status_pembayaran = 'belum_dibayar' AND nilai > 0 THEN 1 ELSE 0 END) AS belum_dibayar_petugas,
+                SUM(CASE WHEN status_pembayaran = 'sudah_dibayar' THEN 1 ELSE 0 END) AS sudah_dibayar,
+                SUM(CASE WHEN nilai > 0 THEN nilai ELSE 0 END) AS total_nilai_plus,
+                SUM(CASE WHEN nilai < 0 THEN ABS(nilai) ELSE 0 END) AS total_nilai_minus
+            ")
+            ->first();
+
+        return view('sips.setoran.index', compact('setoran', 'ringkasan'));
     }
 
     public function create()
@@ -319,7 +351,7 @@ class SetoranController extends Controller
             'items.*.status_pemilahan'      => ['required', Rule::in(ItemSetoran::statusPemilahanOptions())],
             'items.*.tarif_item_id'         => ['nullable', 'exists:tarif_items,id'],
             'items.*.berat_kg'              => ['required', 'numeric', 'min:0.1'],
-            'items.*.harga_tidak_dipilah'   => ['nullable', 'numeric', 'min:0'],
+            'items.*.harga_tidak_dipilah'   => ['nullable', 'numeric'],
         ], [
             'warga_id.required'               => 'Warga harus dipilih.',
             'tanggal_setoran.required'        => 'Tanggal setoran harus diisi.',

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\PengaturanSistem;
 use App\Models\RiwayatTarif;
 use App\Models\TarifItem;
 use App\Models\User;
@@ -48,7 +49,15 @@ class TarifController extends Controller
             ->limit(8)
             ->get();
 
-        return view('sips.tarif.index', compact('tarifItems', 'ringkasanTipe', 'riwayatTerbaru'));
+        $settings = [
+            'tarif_flat_per_kg' => (float) PengaturanSistem::get('tarif_flat_per_kg', 500),
+            'nilai_dipilah_per_kg' => (float) PengaturanSistem::get(
+                'nilai_dipilah_per_kg',
+                PengaturanSistem::get('tarif_flat_per_kg', 500)
+            ),
+        ];
+
+        return view('sips.tarif.index', compact('tarifItems', 'ringkasanTipe', 'riwayatTerbaru', 'settings'));
     }
 
     public function create(): View

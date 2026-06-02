@@ -6,11 +6,16 @@ use App\Models\Pembayaran;
 use App\Models\Setoran;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class PembayaranController extends Controller
 {
     public function index(Request $request)
     {
+        $validated = $request->validate([
+            'aktor' => ['nullable', Rule::in(['warga', 'petugas'])],
+        ]);
+
         $query = Pembayaran::with(['setoran.warga', 'petugasPembayar'])
             ->latest('tanggal_bayar');
 
@@ -20,12 +25,30 @@ class PembayaranController extends Controller
         if ($request->filled('sampai')) {
             $query->whereDate('tanggal_bayar', '<=', $request->sampai);
         }
+        if (!empty($validated['aktor'])) {
+            $operator = $validated['aktor'] === 'warga' ? '<' : '>';
+            $query->whereHas('setoran', fn ($setoran) => $setoran->where('nilai', $operator, 0));
+        }
 
         $pembayaran = $query->paginate(20)->withQueryString();
 
-        $totalPeriode = $query->sum('jumlah_dibayar');
+        $ringkasan = (clone $query)
+            ->reorder()
+            ->selectRaw("
+                SUM(CASE WHEN EXISTS (
+                    SELECT 1 FROM setoran
+                    WHERE setoran.id = pembayaran.setoran_id
+                      AND setoran.nilai < 0
+                ) THEN jumlah_dibayar ELSE 0 END) AS total_warga,
+                SUM(CASE WHEN EXISTS (
+                    SELECT 1 FROM setoran
+                    WHERE setoran.id = pembayaran.setoran_id
+                      AND setoran.nilai > 0
+                ) THEN jumlah_dibayar ELSE 0 END) AS total_petugas
+            ")
+            ->first();
 
-        return view('sips.pembayaran.index', compact('pembayaran', 'totalPeriode'));
+        return view('sips.pembayaran.index', compact('pembayaran', 'ringkasan'));
     }
 
     public function store(Request $request, Setoran $setoran)

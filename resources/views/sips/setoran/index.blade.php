@@ -24,14 +24,89 @@
                     </a>
                 </div>
                 <div class="card-body">
+                    @php
+                        $hasSetoranFilter = filled(request('status'));
+                        $ringkasanSetoran = [
+                            [
+                                'label' => 'Jumlah Setoran',
+                                'value' => number_format((int) ($ringkasan->jumlah_setoran ?? 0), 0, ',', '.'),
+                                'class' => 'primary',
+                                'icon' => 'ri-inbox-archive-line',
+                            ],
+                            [
+                                'label' => 'Belum Dibayar Warga',
+                                'value' => number_format((int) ($ringkasan->belum_dibayar_warga ?? 0), 0, ',', '.'),
+                                'class' => 'danger',
+                                'icon' => 'ri-alert-line',
+                            ],
+                            [
+                                'label' => 'Belum Dibayar Petugas',
+                                'value' => number_format((int) ($ringkasan->belum_dibayar_petugas ?? 0), 0, ',', '.'),
+                                'class' => 'warning',
+                                'icon' => 'ri-time-line',
+                            ],
+                            [
+                                'label' => 'Sudah Dibayar',
+                                'value' => number_format((int) ($ringkasan->sudah_dibayar ?? 0), 0, ',', '.'),
+                                'class' => 'success',
+                                'icon' => 'ri-checkbox-circle-line',
+                            ],
+                            [
+                                'label' => 'Pemasukan',
+                                'value' => \App\Support\SignedMoney::formatCurrency((float) ($ringkasan->total_nilai_minus ?? 0)),
+                                'class' => 'success',
+                                'icon' => 'ri-arrow-down-circle-line',
+                            ],
+                            [
+                                'label' => 'Pengeluaran',
+                                'value' => \App\Support\SignedMoney::formatCurrency((float) ($ringkasan->total_nilai_plus ?? 0)),
+                                'class' => 'danger',
+                                'icon' => 'ri-arrow-up-circle-line',
+                            ],
+                        ];
+                    @endphp
+
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                            <div>
+                                <h6 class="mb-1">Ringkasan Setoran</h6>
+                                <p class="text-muted mb-0 fs-13">
+                                    {{ $hasSetoranFilter ? 'Menampilkan hasil filter setoran.' : 'Menampilkan seluruh data setoran.' }}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="row">
+                            @foreach($ringkasanSetoran as $item)
+                            <div class="col-md-6 col-xl-4">
+                                <div class="card border border-{{ $item['class'] }} shadow-sm">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <div class="fs-13 text-muted mb-1">{{ $item['label'] }}</div>
+                                                <h4 class="mb-0">{{ $item['value'] }}</h4>
+                                            </div>
+                                            <div class="avatar-sm">
+                                                <span class="avatar-title bg-{{ $item['class'] }}-subtle text-{{ $item['class'] }} rounded-circle fs-4">
+                                                    <i class="{{ $item['icon'] }}"></i>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+                    </div>
 
                     {{-- Filters --}}
                     <form method="GET" action="{{ route('sips.setoran.index') }}"
                           class="d-flex flex-wrap gap-2 align-items-center mb-4">
                         <select class="form-select form-select-sm w-auto" name="status" onchange="this.form.submit()">
                             <option value="">Semua Status Bayar</option>
-                            <option value="belum_dibayar" {{ request('status') === 'belum_dibayar' ? 'selected' : '' }}>Belum Dibayar</option>
-                            <option value="sudah_dibayar" {{ request('status') === 'sudah_dibayar' ? 'selected' : '' }}>Sudah Dibayar</option>
+                            <option value="belum_dibayar_warga" {{ request('status') === 'belum_dibayar_warga' ? 'selected' : '' }}>Belum Dibayar Warga</option>
+                            <option value="belum_dibayar_petugas" {{ request('status') === 'belum_dibayar_petugas' ? 'selected' : '' }}>Belum Dibayar Petugas</option>
+                            <option value="sudah_dibayar_warga" {{ request('status') === 'sudah_dibayar_warga' ? 'selected' : '' }}>Sudah Dibayar Warga</option>
+                            <option value="sudah_dibayar_petugas" {{ request('status') === 'sudah_dibayar_petugas' ? 'selected' : '' }}>Sudah Dibayar Petugas</option>
                         </select>
                         @if(request('status'))
                             <a href="{{ route('sips.setoran.index') }}" class="btn btn-sm btn-light">Reset</a>
@@ -93,15 +168,16 @@
                                     </td>
 
                                     <td class="fw-semibold text-end">
-                                        Rp {{ number_format($s->total_nilai, 0, ',', '.') }}
+                                        <span class="{{ $s->signedAmountTextClasses() }}">
+                                            {{ $s->nilaiSignedFormatted() }}
+                                        </span>
+                                        <div class="small text-muted">{{ $s->nilaiFormatted() }}</div>
                                     </td>
 
                                     <td>
-                                        @if($s->status_pembayaran === 'sudah_dibayar')
-                                            <span class="badge bg-success-subtle text-success">Sudah Dibayar</span>
-                                        @else
-                                            <span class="badge bg-danger-subtle text-danger">Belum Dibayar</span>
-                                        @endif
+                                        <span class="badge {{ $s->paymentStatusBadgeClasses() }}">
+                                            {{ $s->paymentStatusLabel() }}
+                                        </span>
                                     </td>
 
                                     <td>
@@ -110,7 +186,7 @@
                                                 data-id="{{ $s->id }}"
                                                 title="{{ $s->is_selesai ? 'Tandai Belum Selesai' : 'Tandai Selesai' }}">
                                             <i class="ri-checkbox-circle-{{ $s->is_selesai ? 'fill' : 'line' }}"></i>
-                                            {{ $s->is_selesai ? 'Selesai' : 'Draft' }}
+                                            {{ $s->statusSederhanaLabel() }}
                                         </button>
                                     </td>
 
@@ -120,13 +196,14 @@
                                                class="btn btn-sm btn-light border" title="Detail">
                                                 <i class="ri-eye-line"></i>
                                             </a>
-                                            @if($s->status_pembayaran === 'belum_dibayar' && $s->warga)
+                                            @if($s->status_pembayaran === 'belum_dibayar' && $s->warga && $s->hasPaymentFlow())
                                             <button type="button" class="btn btn-sm btn-success"
                                                     data-bs-toggle="modal"
                                                     data-bs-target="#payModal"
                                                     data-id="{{ $s->id }}"
                                                     data-nama="{{ $s->warga->nama }}"
-                                                    data-total="Rp {{ number_format($s->total_nilai, 0, ',', '.') }}"
+                                                    data-total="{{ $s->nilaiSignedFormatted() }}"
+                                                    data-flow="{{ $s->isPaymentByWarga() ? 'pemasukan' : 'pengeluaran' }}"
                                                     data-total-raw="{{ $s->total_nilai }}">
                                                 <i class="ri-money-dollar-circle-line"></i>
                                             </button>
@@ -163,7 +240,8 @@
                 <div class="modal-body text-center">
                     <i class="ri-wallet-3-line text-success display-4 d-block mb-3"></i>
                     <h4 class="mb-1" id="pay-total"></h4>
-                    <p class="text-muted mb-4" id="pay-nama"></p>
+                    <p class="text-muted mb-2" id="pay-nama"></p>
+                    <div class="alert alert-info py-2 fs-13 text-start mb-4" id="pay-hint"></div>
                     <div class="mb-3 text-start">
                         <label class="form-label fs-13">Jumlah Dibayar (Rp) <span class="text-danger">*</span></label>
                         <input type="number" class="form-control form-control-sm" name="jumlah_dibayar"
@@ -191,6 +269,9 @@ document.getElementById('payModal').addEventListener('show.bs.modal', function (
     const btn = e.relatedTarget;
     document.getElementById('pay-total').textContent  = btn.dataset.total;
     document.getElementById('pay-nama').textContent   = 'Setoran ' + btn.dataset.nama;
+    document.getElementById('pay-hint').textContent   = btn.dataset.flow === 'pemasukan'
+        ? 'Catat saat pemasukan dari warga sudah diterima oleh sistem.'
+        : 'Catat saat pengeluaran dari sistem kepada warga sudah dibayarkan.';
     document.getElementById('pay-jumlah').value       = btn.dataset.totalRaw;
     document.getElementById('pay-form').action        = '/sips/setoran/' + btn.dataset.id + '/bayar';
 });

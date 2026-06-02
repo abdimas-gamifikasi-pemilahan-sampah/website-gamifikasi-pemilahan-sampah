@@ -22,7 +22,7 @@ class WargaController extends Controller
         $periodeMulai = now()->startOfMonth();
         $periodeAkhir = now()->endOfMonth();
 
-        $warga = Warga::query()
+        $filteredQuery = Warga::query()
             ->when($validated['search'] ?? null, function ($query, $search) {
                 $query->where(function ($innerQuery) use ($search) {
                     $innerQuery
@@ -40,7 +40,9 @@ class WargaController extends Controller
                 $validated['belum_setor'] ?? false,
                 fn ($query) => $query->whereDoesntHave('setoran', fn ($q) => $q
                     ->whereBetween('tanggal_setoran', [$periodeMulai, $periodeAkhir]))
-            )
+            );
+
+        $warga = (clone $filteredQuery)
             ->withExists([
                 'setoran as memiliki_setoran_bulan_ini' => fn ($query) => $query
                     ->whereBetween('tanggal_setoran', [$periodeMulai, $periodeAkhir]),
@@ -49,13 +51,22 @@ class WargaController extends Controller
             ->paginate(10)
             ->withQueryString();
 
+        $ringkasan = (clone $filteredQuery)
+            ->reorder()
+            ->selectRaw("
+                COUNT(*) AS total_warga,
+                SUM(CASE WHEN status_keanggotaan = 'aktif' THEN 1 ELSE 0 END) AS total_aktif,
+                SUM(CASE WHEN status_keanggotaan = 'non_aktif' THEN 1 ELSE 0 END) AS total_non_aktif
+            ")
+            ->first();
+
         $rwOptions = Warga::query()
             ->select('rw')
             ->distinct()
             ->orderBy('rw')
             ->pluck('rw');
 
-        return view('sips.warga.index', compact('warga', 'rwOptions'));
+        return view('sips.warga.index', compact('warga', 'rwOptions', 'ringkasan'));
     }
 
     public function create(Request $request): View
@@ -122,7 +133,7 @@ class WargaController extends Controller
             'no_kk' => [
                 'required',
                 'string',
-                'size:16',
+                'regex:/^\d{16}$/',
                 Rule::unique('warga', 'no_kk')->ignore($warga?->id),
             ],
             'rt' => ['required', 'integer', 'min:1', 'max:999'],
@@ -131,6 +142,8 @@ class WargaController extends Controller
             'no_hp' => ['nullable', 'string', 'max:20'],
             'tanggal_terdaftar' => ['required', 'date'],
             'status_keanggotaan' => ['required', Rule::in(['aktif', 'non_aktif'])],
+        ], [
+            'no_kk.regex' => 'Nomor KK harus 16 digit angka.',
         ]);
     }
 }

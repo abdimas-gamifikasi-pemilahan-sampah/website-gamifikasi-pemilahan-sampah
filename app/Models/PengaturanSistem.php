@@ -16,6 +16,11 @@ class PengaturanSistem extends Model
         return $row ? $row->nilai : $default;
     }
 
+    public static function getFloat(string $kunci, int|float $default = 0): float
+    {
+        return (float) static::get($kunci, $default);
+    }
+
     public static function set(string $kunci, mixed $nilai, ?string $deskripsi = null): void
     {
         static::updateOrCreate(
