@@ -2,8 +2,9 @@
 <html lang="en">
 
 <meta charset="utf-8" />
-<title>@yield('title', ' | FabKin Admin & Dashboards Template')</title>
+<title>@yield('title', 'SIPS | Sistem Informasi Pemilahan Sampah')</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="csrf-token" content="{{ csrf_token() }}">
 <meta content="Admin & Dashboards Template" name="description" />
 <meta content="Pixeleyez" name="author" />
 
@@ -36,11 +37,15 @@
             @yield('content')
             @include('partials.switcher')
             @include('partials.scroll-to-top')
-            @include('partials.footer')
 
-            @include('partials.vendor-scripts')
+        </div>
+    </main>
 
-            @yield('js')
+    @include('partials.footer')
+
+    @include('partials.vendor-scripts')
+
+    @yield('js')
 
 </body>
 

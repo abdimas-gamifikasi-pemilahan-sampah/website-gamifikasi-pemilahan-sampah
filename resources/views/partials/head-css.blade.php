@@ -170,4 +170,15 @@
 [data-bs-theme="dark"] #layout-wrapper .badge.bg-warning.text-dark {
 	color: #111827 !important;
 }
+
+/* Sticky footer — footer spans full viewport width and sits below all content */
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main.app-wrapper {
+    flex: 1;
+}
 </style>

@@ -31,6 +31,8 @@
         <link href="{{ asset('assets/libs/@iconscout/unicons/css/line.css') }}" type="text/css" rel="stylesheet">
         <!-- Style Css-->
         <link href="{{ asset('assets/css/style.css') }}" id="color-opt" class="theme-opt" rel="stylesheet" type="text/css">
+
+        @yield('css')
     </head>
 
     <body>

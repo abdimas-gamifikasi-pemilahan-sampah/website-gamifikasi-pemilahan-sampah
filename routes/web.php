@@ -12,6 +12,7 @@ use App\Http\Controllers\ImportController;
 use App\Http\Controllers\AnalitikController;
 use App\Http\Controllers\ImportSetoranController;
 use App\Http\Controllers\PengaturanSistemController;
+use App\Http\Controllers\EksporController;
 
 Route::get('/', function () {
     return view('public.landing');
@@ -48,6 +49,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/sips/tarif/{tarif}/harga/create', [TarifController::class, 'createPrice'])->name('sips.tarif.price.create');
         Route::post('/sips/tarif/{tarif}/harga', [TarifController::class, 'storePrice'])->name('sips.tarif.price.store');
         Route::patch('/sips/tarif/{tarif}/status', [TarifController::class, 'updateStatus'])->name('sips.tarif.status');
+
+        // Ekspor Laporan (admin only)
+        Route::get('/sips/ekspor', [EksporController::class, 'index'])->name('sips.ekspor.index');
+        Route::get('/sips/ekspor/download', [EksporController::class, 'download'])->name('sips.ekspor.download');
 
         // Import (admin only)
         Route::get('/sips/import', [ImportController::class, 'index'])->name('sips.import.index');

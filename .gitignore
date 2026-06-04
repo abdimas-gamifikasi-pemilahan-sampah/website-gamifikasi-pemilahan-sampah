@@ -25,6 +25,11 @@ yarn-error.log
 # Reference template (bought, not to be committed)
 /landing-page-reference
 
+# Microsoft Office temp/lock files
+~$*.docx
+~$*.xlsx
+~$*.pptx
+
 # Temp extraction scripts & output
 extract_docx.py
 fix_assets.py

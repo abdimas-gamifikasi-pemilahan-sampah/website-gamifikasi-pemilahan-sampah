@@ -14,22 +14,10 @@
     </div>
     @endif
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="mb-3">
         <a href="{{ route('sips.setoran.index') }}" class="btn btn-light btn-sm">
             <i class="ri-arrow-left-line me-1"></i> Kembali ke Daftar
         </a>
-        <div class="d-flex gap-2">
-            <a href="{{ route('sips.setoran.kwitansi', $setoran->id) }}"
-               class="btn btn-outline-secondary btn-sm" target="_blank">
-                <i class="ri-printer-line me-1"></i> Cetak Kwitansi
-            </a>
-            @if($setoran->status_pembayaran === 'belum_dibayar' && $setoran->hasPaymentFlow())
-            <button type="button" class="btn btn-success btn-sm"
-                    data-bs-toggle="modal" data-bs-target="#payModal">
-                <i class="ri-money-dollar-circle-line me-1"></i> Catat Pembayaran
-            </button>
-            @endif
-        </div>
     </div>
 
     <div class="row">
@@ -201,10 +189,13 @@
                         @endif
                     </p>
                     @if($setoran->hasPaymentFlow())
-                    <button type="button" class="btn btn-success btn-sm w-100"
-                            data-bs-toggle="modal" data-bs-target="#payModal">
-                        <i class="ri-money-dollar-circle-line me-1"></i> Catat Pembayaran
-                    </button>
+                    <form method="POST" action="{{ route('sips.pembayaran.store', $setoran->id) }}">
+                        @csrf
+                        <input type="hidden" name="jumlah_dibayar" value="{{ $setoran->total_nilai }}">
+                        <button type="submit" class="btn btn-success btn-sm w-100">
+                            <i class="ri-checkbox-circle-line me-1"></i> Konfirmasi Sudah Dibayar
+                        </button>
+                    </form>
                     @endif
                 </div>
             </div>
@@ -246,51 +237,4 @@
     </div>
 </div>
 
-{{-- Modal Konfirmasi Pembayaran --}}
-@if($setoran->status_pembayaran === 'belum_dibayar' && $setoran->hasPaymentFlow())
-<div class="modal fade" id="payModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-sm">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Konfirmasi Pembayaran</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form method="POST" action="{{ route('sips.pembayaran.store', $setoran->id) }}">
-                @csrf
-                <div class="modal-body text-center">
-                    <i class="ri-wallet-3-line text-success display-4 d-block mb-3"></i>
-                    <h4 class="mb-1 {{ $setoran->signedAmountTextClasses() }}">{{ $setoran->nilaiSignedFormatted() }}</h4>
-                    <p class="text-muted mb-4">
-                        {{ $setoran->warga?->nama ?? 'Setoran #' . str_pad($setoran->id, 5, '0', STR_PAD_LEFT) }}
-                    </p>
-                    <div class="alert alert-info py-2 fs-13 text-start">
-                        @if($setoran->isPaymentByWarga())
-                            Gunakan konfirmasi ini setelah pemasukan dari warga sudah diterima oleh sistem.
-                        @else
-                            Gunakan konfirmasi ini setelah pengeluaran dari sistem kepada warga sudah dibayarkan.
-                        @endif
-                    </div>
-                    <div class="mb-3 text-start">
-                        <label class="form-label fs-13">Jumlah Dibayar (Rp) <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control form-control-sm" name="jumlah_dibayar"
-                               value="{{ $setoran->total_nilai }}" step="100" min="0" required>
-                        <small class="text-muted">Ubah jika ada pembulatan atau kebijakan lokal (BR-07).</small>
-                    </div>
-                    <div class="mb-3 text-start">
-                        <label class="form-label fs-13">Catatan <span class="text-muted">(opsional)</span></label>
-                        <input type="text" class="form-control form-control-sm" name="catatan"
-                               placeholder="Misal: Diberikan pas...">
-                    </div>
-                </div>
-                <div class="modal-footer d-flex justify-content-center">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-success">
-                        <i class="ri-checkbox-circle-line me-1"></i> Konfirmasi Sudah Dibayar
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-@endif
 @endsection

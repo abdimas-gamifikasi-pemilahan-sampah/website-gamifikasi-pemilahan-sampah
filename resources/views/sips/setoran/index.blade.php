@@ -144,15 +144,35 @@
                                         @if($s->warga)
                                             <div class="fw-semibold">{{ $s->warga->nama }}</div>
                                             <small class="text-muted">RT {{ $s->warga->rt }} / {{ $s->warga->dusun }}</small>
-                                        @elseif($s->area_rw)
-                                            <div class="fw-semibold">RW {{ $s->area_rw }}</div>
-                                            <small class="text-muted">{{ $s->items->count() }} penyetor</small>
                                         @else
-                                            <span class="text-muted">—</span>
+                                            @php
+                                                $namaList = $s->items->pluck('nama_penyetor')->filter()->unique()->values();
+                                            @endphp
+                                            @if($namaList->isNotEmpty())
+                                                <div class="fw-semibold">
+                                                    {{ $namaList->take(2)->implode(', ') }}
+                                                    @if($namaList->count() > 2)
+                                                        <span class="text-muted fw-normal fs-12">+{{ $namaList->count() - 2 }} lainnya</span>
+                                                    @endif
+                                                </div>
+                                                <small class="text-muted">
+                                                    {{ $s->items->count() }} item{{ $s->area_rw ? ' · RW '.$s->area_rw : '' }}
+                                                </small>
+                                            @elseif($s->area_rw)
+                                                <div class="fw-semibold text-muted">Area RW {{ $s->area_rw }}</div>
+                                                <small class="text-muted">{{ $s->items->count() ?: '—' }} item</small>
+                                            @else
+                                                <span class="text-muted">—</span>
+                                            @endif
                                         @endif
                                     </td>
 
-                                    <td>{{ $s->tanggal_setoran->format('d M Y') }}</td>
+                                    <td>
+                                        <div>{{ $s->tanggal_setoran->format('d M Y') }}</div>
+                                        @if($s->tanggal_setoran->format('H:i') !== '00:00')
+                                        <small class="text-muted">{{ $s->tanggal_setoran->format('H:i') }}</small>
+                                        @endif
+                                    </td>
 
                                     <td>
                                         @if($s->mode === 'agregat')
@@ -175,18 +195,30 @@
                                     </td>
 
                                     <td>
-                                        <span class="badge {{ $s->paymentStatusBadgeClasses() }}">
+                                        <span class="badge payment-status-badge {{ $s->paymentStatusBadgeClasses() }}">
                                             {{ $s->paymentStatusLabel() }}
                                         </span>
                                     </td>
 
                                     <td>
+                                        @php
+                                            $btnLabel = $s->is_selesai
+                                                ? 'Selesai'
+                                                : ($s->hasPaymentFlow() ? 'Konfirmasi Pembayaran' : 'Tandai Selesai');
+                                            $btnClass = $s->is_selesai
+                                                ? 'btn-success'
+                                                : ($s->hasPaymentFlow() ? 'btn-outline-primary' : 'btn-outline-secondary');
+                                            $btnTitle = $s->is_selesai
+                                                ? 'Klik untuk batalkan konfirmasi'
+                                                : ($s->hasPaymentFlow() ? 'Konfirmasi pembayaran sekaligus tandai selesai' : 'Tandai Selesai');
+                                        @endphp
                                         <button type="button"
-                                                class="btn btn-sm selesai-btn {{ $s->is_selesai ? 'btn-success' : 'btn-outline-secondary' }}"
+                                                class="btn btn-sm selesai-btn {{ $btnClass }}"
                                                 data-id="{{ $s->id }}"
-                                                title="{{ $s->is_selesai ? 'Tandai Belum Selesai' : 'Tandai Selesai' }}">
+                                                data-has-payment="{{ $s->hasPaymentFlow() ? '1' : '0' }}"
+                                                title="{{ $btnTitle }}">
                                             <i class="ri-checkbox-circle-{{ $s->is_selesai ? 'fill' : 'line' }}"></i>
-                                            {{ $s->statusSederhanaLabel() }}
+                                            {{ $btnLabel }}
                                         </button>
                                     </td>
 
@@ -196,18 +228,6 @@
                                                class="btn btn-sm btn-light border" title="Detail">
                                                 <i class="ri-eye-line"></i>
                                             </a>
-                                            @if($s->status_pembayaran === 'belum_dibayar' && $s->warga && $s->hasPaymentFlow())
-                                            <button type="button" class="btn btn-sm btn-success"
-                                                    data-bs-toggle="modal"
-                                                    data-bs-target="#payModal"
-                                                    data-id="{{ $s->id }}"
-                                                    data-nama="{{ $s->warga->nama }}"
-                                                    data-total="{{ $s->nilaiSignedFormatted() }}"
-                                                    data-flow="{{ $s->isPaymentByWarga() ? 'pemasukan' : 'pengeluaran' }}"
-                                                    data-total-raw="{{ $s->total_nilai }}">
-                                                <i class="ri-money-dollar-circle-line"></i>
-                                            </button>
-                                            @endif
                                         </div>
                                     </td>
                                 </tr>
@@ -227,74 +247,42 @@
     </div>
 </div>
 
-{{-- Modal Konfirmasi Pembayaran --}}
-<div class="modal fade" id="payModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-sm">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Konfirmasi Pembayaran</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form id="pay-form" method="POST" action="">
-                @csrf
-                <div class="modal-body text-center">
-                    <i class="ri-wallet-3-line text-success display-4 d-block mb-3"></i>
-                    <h4 class="mb-1" id="pay-total"></h4>
-                    <p class="text-muted mb-2" id="pay-nama"></p>
-                    <div class="alert alert-info py-2 fs-13 text-start mb-4" id="pay-hint"></div>
-                    <div class="mb-3 text-start">
-                        <label class="form-label fs-13">Jumlah Dibayar (Rp) <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control form-control-sm" name="jumlah_dibayar"
-                               id="pay-jumlah" step="100" min="0" required>
-                    </div>
-                    <div class="mb-3 text-start">
-                        <label class="form-label fs-13">Catatan <span class="text-muted">(opsional)</span></label>
-                        <input type="text" class="form-control form-control-sm" name="catatan" placeholder="Misal: Diberikan pas...">
-                    </div>
-                </div>
-                <div class="modal-footer d-flex justify-content-center">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-success">
-                        <i class="ri-checkbox-circle-line me-1"></i> Konfirmasi Sudah Dibayar
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
 @section('js')
 <script>
-document.getElementById('payModal').addEventListener('show.bs.modal', function (e) {
-    const btn = e.relatedTarget;
-    document.getElementById('pay-total').textContent  = btn.dataset.total;
-    document.getElementById('pay-nama').textContent   = 'Setoran ' + btn.dataset.nama;
-    document.getElementById('pay-hint').textContent   = btn.dataset.flow === 'pemasukan'
-        ? 'Catat saat pemasukan dari warga sudah diterima oleh sistem.'
-        : 'Catat saat pengeluaran dari sistem kepada warga sudah dibayarkan.';
-    document.getElementById('pay-jumlah').value       = btn.dataset.totalRaw;
-    document.getElementById('pay-form').action        = '/sips/setoran/' + btn.dataset.id + '/bayar';
-});
-
-// Selesai toggle (AJAX)
 document.querySelectorAll('.selesai-btn').forEach(btn => {
     btn.addEventListener('click', function () {
-        const id = this.dataset.id;
+        const id    = this.dataset.id;
+        const token = document.querySelector('meta[name="csrf-token"]').content;
+        const self  = this;
+        self.disabled = true;
+
         fetch(`/sips/setoran/${id}/selesai`, {
             method: 'PATCH',
             headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'X-CSRF-TOKEN': token,
                 'Accept': 'application/json',
             },
         })
         .then(r => r.json())
         .then(data => {
             const selesai = data.is_selesai;
-            this.className = 'btn btn-sm selesai-btn ' + (selesai ? 'btn-success' : 'btn-outline-secondary');
-            this.innerHTML = `<i class="ri-checkbox-circle-${selesai ? 'fill' : 'line'}"></i> ${selesai ? 'Selesai' : 'Draft'}`;
-            this.title     = selesai ? 'Tandai Belum Selesai' : 'Tandai Selesai';
-            this.closest('tr').className = selesai ? 'table-success' : '';
-        });
+            const row     = self.closest('tr');
+
+            // Update button
+            self.className = `btn btn-sm selesai-btn ${data.btn_class}`;
+            self.innerHTML = `<i class="ri-checkbox-circle-${selesai ? 'fill' : 'line'}"></i> ${data.btn_label}`;
+            self.title     = data.btn_class.includes('btn-success') ? 'Klik untuk batalkan konfirmasi' : self.dataset.title || '';
+            row.className  = selesai ? 'table-success' : '';
+
+            // Update payment status badge
+            const badge = row.querySelector('.payment-status-badge');
+            if (badge && data.status_badge_class) {
+                badge.className   = `badge payment-status-badge ${data.status_badge_class}`;
+                badge.textContent = data.status_label;
+            }
+        })
+        .catch(() => {})
+        .finally(() => { self.disabled = false; });
     });
 });
 </script>

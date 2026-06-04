@@ -2,6 +2,53 @@
 
 @section('title', 'SIPS - Sistem Informasi Pemilahan Sampah')
 
+@section('css')
+<style>
+/* ---- Mobile: phone ≤ 767px ---- */
+@media (max-width: 767.98px) {
+    /* Hero */
+    .bg-home { min-height: auto !important; padding: 90px 0 30px !important; }
+    .title-heading.margin-top-100 { margin-top: 20px !important; }
+    .home-dashboard { display: none; } /* hide hero image on mobile to save vertical space */
+    h1.heading { font-size: 1.8rem !important; line-height: 1.3 !important; }
+
+    /* Section padding: Landrick default is 100px */
+    .section { padding: 40px 0 !important; }
+    .section.mt-100 { margin-top: 0 !important; }
+
+    /* Feature section layout */
+    .section .row.align-items-center { text-align: center; }
+
+    /* Info box */
+    .d-flex.align-items-start.gap-3 { flex-direction: column !important; gap: 12px !important; }
+
+    /* Step cards */
+    h4.title { font-size: 1.4rem !important; }
+    h4.title.mb-3 { font-size: 1.3rem !important; }
+}
+
+/* ---- Mobile: small phone ≤ 575px ---- */
+@media (max-width: 575.98px) {
+    h1.heading { font-size: 1.45rem !important; }
+    .section { padding: 32px 0 !important; }
+
+    /* Hero CTAs: stack buttons vertically */
+    .list-inline-item { display: block !important; margin: 0 0 10px 0 !important; text-align: center; }
+    .list-inline-item .btn { width: 100%; }
+
+    /* Step cards: reduce inner padding */
+    .card-body.px-4.py-5 { padding: 20px 16px !important; }
+    .card-body.px-4.py-5 div[style*="4rem"] { font-size: 2.8rem !important; }
+
+    /* Feature section col order: image second on mobile */
+    .col-lg-5.order-1.order-md-2 { display: none; } /* hide illustrator on xs */
+
+    /* Info box items */
+    .row.g-2 .col-md-6 { margin-bottom: 6px; }
+}
+</style>
+@endsection
+
 @section('content')
 
 @include('includes.landrick-sips.navbar')

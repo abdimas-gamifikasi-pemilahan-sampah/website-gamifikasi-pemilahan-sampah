@@ -7,6 +7,7 @@ use App\Models\PengaturanSistem;
 use App\Models\Setoran;
 use App\Models\TarifItem;
 use App\Models\Warga;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -63,7 +64,8 @@ class SetoranController extends Controller
 
     public function create()
     {
-        $tarifFlat = (float) PengaturanSistem::get('tarif_flat_per_kg', 500);
+        $tarifTidak   = (float) PengaturanSistem::get('tarif_flat_per_kg', 500);
+        $tarifDipilah = (float) PengaturanSistem::get('nilai_dipilah_per_kg', 500);
 
         $warga = Warga::where('status_keanggotaan', 'aktif')
             ->orderBy('nama')
@@ -92,7 +94,7 @@ class SetoranController extends Controller
             'dusun' => $w->dusun,
         ]);
 
-        return view('sips.setoran.create', compact('tarifFlat', 'tarifItems', 'tarifJson', 'wargaJson'));
+        return view('sips.setoran.create', compact('tarifTidak', 'tarifDipilah', 'tarifItems', 'tarifJson', 'wargaJson'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -108,13 +110,52 @@ class SetoranController extends Controller
 
     public function toggleSelesai(Request $request, Setoran $setoran): JsonResponse|RedirectResponse
     {
-        $setoran->update(['is_selesai' => !$setoran->is_selesai]);
+        $newSelesai = !$setoran->is_selesai;
+
+        DB::transaction(function () use ($setoran, $newSelesai) {
+            $setoran->update(['is_selesai' => $newSelesai]);
+
+            if ($newSelesai) {
+                // Marking selesai: auto-confirm payment if not yet done
+                if ($setoran->hasPaymentFlow() && !$setoran->sudahDibayar()) {
+                    $setoran->pembayaran()->create([
+                        'petugas_pembayar_id' => auth()->id(),
+                        'tanggal_bayar'       => now(),
+                        'jumlah_dibayar'      => $setoran->total_nilai,
+                        'catatan'             => null,
+                    ]);
+                    $setoran->update(['status_pembayaran' => 'sudah_dibayar']);
+                }
+            } else {
+                // Reverting: undo payment confirmation
+                $setoran->pembayaran()->delete();
+                $setoran->update(['status_pembayaran' => 'belum_dibayar']);
+            }
+        });
+
+        $setoran->refresh();
 
         if ($request->expectsJson()) {
-            return response()->json(['is_selesai' => $setoran->is_selesai]);
+            $selesai    = $setoran->is_selesai;
+            $hasPayment = $setoran->hasPaymentFlow();
+
+            $btnLabel = $selesai
+                ? 'Selesai'
+                : ($hasPayment ? 'Konfirmasi Pembayaran' : 'Tandai Selesai');
+            $btnClass = $selesai
+                ? 'btn-success'
+                : ($hasPayment ? 'btn-outline-primary' : 'btn-outline-secondary');
+
+            return response()->json([
+                'is_selesai'        => $selesai,
+                'btn_label'         => $btnLabel,
+                'btn_class'         => $btnClass,
+                'status_label'      => $setoran->paymentStatusLabel(),
+                'status_badge_class'=> $setoran->paymentStatusBadgeClasses(),
+            ]);
         }
 
-        $msg = $setoran->is_selesai ? 'Setoran ditandai Selesai.' : 'Setoran dibuka kembali.';
+        $msg = $setoran->is_selesai ? 'Pembayaran dikonfirmasi.' : 'Setoran dibuka kembali ke Draft.';
         return back()->with('success', $msg);
     }
 
@@ -147,7 +188,7 @@ class SetoranController extends Controller
     private function storePenyetor(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'tanggal_setoran'                         => ['required', 'date', 'before_or_equal:today'],
+            'tanggal_setoran'                         => ['required', 'date_format:Y-m-d', 'before_or_equal:today'],
             'catatan_kondisi'                         => ['nullable', 'string', 'max:500'],
             'penyetor'                                => ['required', 'array', 'min:1'],
             'penyetor.*.warga_id'                     => ['nullable', 'exists:warga,id'],
@@ -167,36 +208,30 @@ class SetoranController extends Controller
             'tanggal_setoran.before_or_equal'             => 'Tanggal tidak boleh lebih dari hari ini.',
         ]);
 
-        $tarif = (float) PengaturanSistem::get('tarif_flat_per_kg', 500);
+        $tarifDipilah = (float) PengaturanSistem::get('nilai_dipilah_per_kg', 500);
+        $tarifTidak   = (float) PengaturanSistem::get('tarif_flat_per_kg', 500);
 
-        $setoran = DB::transaction(function () use ($validated, $tarif) {
-            $totalKg   = 0;
-            $kgDipilah = 0;
-            $kgTidak   = 0;
-            $totalNilai = 0;
-            $itemRows  = [];
-            $rwSeen    = [];
-
-            // If exactly one penyetor is a registered warga → link setoran to them for leaderboard
-            $setoranWargaId = null;
-            $penyetorList   = array_values($validated['penyetor']);
-            if (count($penyetorList) === 1 && !empty($penyetorList[0]['warga_id'])) {
-                $setoranWargaId = (int) $penyetorList[0]['warga_id'];
-            }
+        $setoranIds = DB::transaction(function () use ($validated, $tarifDipilah, $tarifTidak) {
+            $ids = [];
 
             foreach ($validated['penyetor'] as $pData) {
-                $namaPenyetor = $pData['nama_penyetor'];
+                $totalKg    = 0;
+                $kgDipilah  = 0;
+                $kgTidak    = 0;
+                $totalNilai = 0;
+                $itemRows   = [];
 
-                if (!empty($pData['rw'])) {
-                    $rwSeen[] = str_pad(trim($pData['rw']), 2, '0', STR_PAD_LEFT);
-                }
+                $namaPenyetor   = $pData['nama_penyetor'];
+                $setoranWargaId = !empty($pData['warga_id']) ? (int) $pData['warga_id'] : null;
+                $areaRw         = !empty($pData['rw'])
+                    ? str_pad(trim($pData['rw']), 2, '0', STR_PAD_LEFT)
+                    : null;
 
                 foreach ($pData['items'] as $item) {
                     $berat   = (float) $item['berat_kg'];
                     $dipilah = $item['status_pemilahan'] === 'dipilah';
 
-                    // Use item-specific tariff if selected, otherwise fall back to flat rate
-                    $hargaPerKg     = $tarif;
+                    $hargaPerKg     = $dipilah ? $tarifDipilah : $tarifTidak;
                     $tarifItemId    = null;
                     $riwayatTarifId = null;
                     $tipeSampah     = null;
@@ -219,6 +254,8 @@ class SetoranController extends Controller
 
                     $itemRows[] = [
                         'nama_penyetor'         => $namaPenyetor,
+                        'rw'                    => !empty($pData['rw']) ? trim($pData['rw']) : null,
+                        'rt'                    => !empty($pData['rt']) ? trim($pData['rt']) : null,
                         'tarif_item_id'         => $tarifItemId,
                         'riwayat_tarif_id'      => $riwayatTarifId,
                         'tipe_sampah'           => $tipeSampah,
@@ -230,31 +267,38 @@ class SetoranController extends Controller
                         'updated_at'            => now(),
                     ];
                 }
+
+                $setoran = Setoran::create([
+                    'warga_id'               => $setoranWargaId,
+                    'petugas_id'             => auth()->id() ?? 1,
+                    'tanggal_setoran'        => Carbon::parse($validated['tanggal_setoran'])
+                                                    ->setTime(now()->hour, now()->minute, now()->second),
+                    'area_rw'                => $areaRw,
+                    'total_kg'               => $totalKg,
+                    'total_kg_dipilah'       => $kgDipilah,
+                    'total_kg_tidak_dipilah' => $kgTidak,
+                    'nilai'                  => round($totalNilai, 2),
+                    'total_nilai'            => round(abs($totalNilai), 2),
+                    'mode'                   => 'detail',
+                    'sumber_input'           => 'manual',
+                    'status_pembayaran'      => 'belum_dibayar',
+                    'catatan_kondisi'        => $validated['catatan_kondisi'] ?? null,
+                ]);
+
+                $setoran->items()->createMany($itemRows);
+                $ids[] = $setoran->id;
             }
 
-            $setoran = Setoran::create([
-                'warga_id'               => $setoranWargaId,
-                'petugas_id'             => auth()->id() ?? 1,
-                'tanggal_setoran'        => $validated['tanggal_setoran'],
-                'area_rw'                => implode(', ', array_unique($rwSeen)) ?: null,
-                'total_kg'               => $totalKg,
-                'total_kg_dipilah'       => $kgDipilah,
-                'total_kg_tidak_dipilah' => $kgTidak,
-                'nilai'                  => round($totalNilai, 2),
-                'total_nilai'            => round(abs($totalNilai), 2),
-                'mode'                   => 'detail',
-                'sumber_input'           => 'manual',
-                'status_pembayaran'      => 'belum_dibayar',
-                'catatan_kondisi'        => $validated['catatan_kondisi'] ?? null,
-            ]);
-
-            $setoran->items()->createMany($itemRows);
-
-            return $setoran;
+            return $ids;
         });
 
-        return redirect()->route('sips.setoran.show', $setoran->id)
-            ->with('success', 'Setoran berhasil dicatat.');
+        if (count($setoranIds) === 1) {
+            return redirect()->route('sips.setoran.show', $setoranIds[0])
+                ->with('success', 'Setoran berhasil dicatat.');
+        }
+
+        return redirect()->route('sips.setoran.index')
+            ->with('success', count($setoranIds) . ' setoran berhasil dicatat secara terpisah.');
     }
 
     // ── v5 Detail per penyetor ────────────────────────────────────────────────
@@ -262,7 +306,7 @@ class SetoranController extends Controller
     private function storeDetail(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'tanggal_setoran'         => ['required', 'date', 'before_or_equal:today'],
+            'tanggal_setoran'         => ['required', 'date_format:Y-m-d', 'before_or_equal:today'],
             'catatan_kondisi'         => ['nullable', 'string', 'max:500'],
             'rows'                    => ['required', 'array', 'min:1'],
             'rows.*.nama_penyetor'    => ['required', 'string', 'max:255'],
@@ -278,9 +322,10 @@ class SetoranController extends Controller
             'tanggal_setoran.before_or_equal'  => 'Tanggal tidak boleh lebih dari hari ini.',
         ]);
 
-        $tarif = (float) PengaturanSistem::get('tarif_flat_per_kg', 500);
+        $tarifDipilah = (float) PengaturanSistem::get('nilai_dipilah_per_kg', 500);
+        $tarifTidak   = (float) PengaturanSistem::get('tarif_flat_per_kg', 500);
 
-        $setoran = DB::transaction(function () use ($validated, $tarif) {
+        $setoran = DB::transaction(function () use ($validated, $tarifDipilah, $tarifTidak) {
             $totalKg   = 0;
             $kgDipilah = 0;
             $kgTidak   = 0;
@@ -288,8 +333,9 @@ class SetoranController extends Controller
             $rwSeen    = [];
 
             foreach ($validated['rows'] as $row) {
-                $berat   = (float) $row['berat_kg'];
-                $dipilah = $row['status_pemilahan'] === 'dipilah';
+                $berat       = (float) $row['berat_kg'];
+                $dipilah     = $row['status_pemilahan'] === 'dipilah';
+                $hargaPerKg  = $dipilah ? $tarifDipilah : $tarifTidak;
 
                 $totalKg += $berat;
                 $dipilah ? ($kgDipilah += $berat) : ($kgTidak += $berat);
@@ -305,8 +351,8 @@ class SetoranController extends Controller
                     'tipe_sampah'           => null,
                     'status_pemilahan'      => $row['status_pemilahan'],
                     'berat_kg'              => $berat,
-                    'harga_per_kg_saat_itu' => $tarif,
-                    'subtotal'              => round($berat * $tarif * ($dipilah ? 1 : -1), 2),
+                    'harga_per_kg_saat_itu' => $hargaPerKg,
+                    'subtotal'              => round($berat * $hargaPerKg * ($dipilah ? 1 : -1), 2),
                     'created_at'            => now(),
                     'updated_at'            => now(),
                 ];
@@ -317,13 +363,14 @@ class SetoranController extends Controller
             $setoran = Setoran::create([
                 'warga_id'               => null,
                 'petugas_id'             => auth()->id() ?? 1,
-                'tanggal_setoran'        => $validated['tanggal_setoran'],
+                'tanggal_setoran'        => Carbon::parse($validated['tanggal_setoran'])
+                                                ->setTime(now()->hour, now()->minute, now()->second),
                 'area_rw'                => $areaRw,
                 'total_kg'               => $totalKg,
                 'total_kg_dipilah'       => $kgDipilah,
                 'total_kg_tidak_dipilah' => $kgTidak,
-                'nilai'                  => round(($kgDipilah - $kgTidak) * $tarif, 2),
-                'total_nilai'            => round($totalKg * $tarif, 2),
+                'nilai'                  => round(($kgDipilah * $tarifDipilah) - ($kgTidak * $tarifTidak), 2),
+                'total_nilai'            => round(($kgDipilah * $tarifDipilah) + ($kgTidak * $tarifTidak), 2),
                 'mode'                   => 'detail',
                 'sumber_input'           => 'manual',
                 'status_pembayaran'      => 'belum_dibayar',
@@ -345,7 +392,7 @@ class SetoranController extends Controller
     {
         $validated = $request->validate([
             'warga_id'                      => ['required', 'exists:warga,id'],
-            'tanggal_setoran'               => ['required', 'date', 'before_or_equal:today'],
+            'tanggal_setoran'               => ['required', 'date_format:Y-m-d', 'before_or_equal:today'],
             'catatan_kondisi'               => ['nullable', 'string', 'max:500'],
             'items'                         => ['required', 'array', 'min:1'],
             'items.*.status_pemilahan'      => ['required', Rule::in(ItemSetoran::statusPemilahanOptions())],
@@ -415,7 +462,8 @@ class SetoranController extends Controller
             $setoran = Setoran::create([
                 'warga_id'          => $validated['warga_id'],
                 'petugas_id'        => auth()->id() ?? 1,
-                'tanggal_setoran'   => $validated['tanggal_setoran'],
+                'tanggal_setoran'   => Carbon::parse($validated['tanggal_setoran'])
+                                            ->setTime(now()->hour, now()->minute, now()->second),
                 'catatan_kondisi'   => $validated['catatan_kondisi'] ?? null,
                 'total_nilai'       => $totalNilai,
                 'status_pembayaran' => 'belum_dibayar',

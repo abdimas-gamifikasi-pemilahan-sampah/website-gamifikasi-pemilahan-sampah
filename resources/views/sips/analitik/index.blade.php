@@ -173,6 +173,12 @@
                             <div class="fw-semibold text-danger">{{ number_format($kgTidakDipilah, 1, ',', '.') }} kg</div>
                             <div class="text-muted fs-12">Tidak Dipilah</div>
                         </div>
+                        @if($kgDipilahAgregat > 0)
+                        <div class="text-center">
+                            <div class="fw-semibold text-warning">{{ number_format($kgDipilahAgregat, 1, ',', '.') }} kg</div>
+                            <div class="text-muted fs-12">Dipilah (Agregat)</div>
+                        </div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -465,6 +471,15 @@
                             </div>
                         </div>
                     </div>
+                    @if($pengangkutanAgregat > 0)
+                    <div class="mt-3 p-2 bg-light rounded d-flex align-items-center gap-2 fs-12 text-muted">
+                        <i class="ri-truck-line text-warning"></i>
+                        <span>
+                            + <strong>{{ $pengangkutanAgregat }}</strong> pengangkutan per-area
+                            (input agregat, tanpa data warga individual)
+                        </span>
+                    </div>
+                    @endif
                 </div>
             </div>
         </div>
@@ -656,22 +671,35 @@
     } catch (e) { console.error('chartTren:', e); }
 
     // ── 2. Komposisi donut ────────────────────────────────────
-    const organik   = @json($kgOrganik);
-    const anorganik = @json($kgAnorganik);
-    const tidakPilah = @json($kgTidakDipilah);
+    const organik         = @json($kgOrganik);
+    const anorganik       = @json($kgAnorganik);
+    const tidakPilah      = @json($kgTidakDipilah);
+    const dipilahAgregat  = @json($kgDipilahAgregat); // v5.1 dipilah without organik/anorganik split
+
+    // Build dynamic labels/data (skip zero segments to keep chart clean)
+    const komposisiData   = [];
+    const komposisiLabels = [];
+    const komposisiBg     = [];
+    const palette = [
+        ['Organik',            organik,        'rgba(16,185,129,0.75)'],
+        ['Anorganik',          anorganik,       'rgba(59,130,246,0.75)'],
+        ['Tidak Dipilah',      tidakPilah,      'rgba(239,68,68,0.75)'],
+        ['Dipilah (Agregat)',  dipilahAgregat,  'rgba(245,158,11,0.75)'],
+    ];
+    palette.forEach(([label, val, color]) => {
+        if (val > 0) { komposisiLabels.push(label); komposisiData.push(val); komposisiBg.push(color); }
+    });
+    // If all zero, push a placeholder so the chart renders
+    if (komposisiData.length === 0) { komposisiLabels.push('Belum ada data'); komposisiData.push(1); komposisiBg.push('rgba(200,200,200,0.4)'); }
 
     try {
         new Chart(document.getElementById('chartKomposisi'), {
             type: 'doughnut',
             data: {
-                labels: ['Organik', 'Anorganik', 'Tidak Dipilah'],
+                labels: komposisiLabels,
                 datasets: [{
-                    data: [organik, anorganik, tidakPilah],
-                    backgroundColor: [
-                        'rgba(16,185,129,0.75)',
-                        'rgba(59,130,246,0.75)',
-                        'rgba(239,68,68,0.75)',
-                    ],
+                    data: komposisiData,
+                    backgroundColor: komposisiBg,
                     borderWidth: 2,
                     borderColor: '#fff',
                     hoverOffset: 6,

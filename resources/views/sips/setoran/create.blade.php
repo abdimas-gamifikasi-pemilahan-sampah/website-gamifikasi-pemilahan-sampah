@@ -165,7 +165,7 @@
                             <i class="ri-information-line me-1"></i> Panduan
                         </h6>
                         <ul class="text-muted mb-0 fs-13 ps-3">
-                            <li>Tarif flat: <strong>Rp {{ number_format($tarifFlat, 0, ',', '.') }}/kg</strong></li>
+                            <li>Dipilah: <strong>Rp {{ number_format($tarifDipilah, 0, ',', '.') }}/kg</strong> &nbsp;·&nbsp; Tidak dipilah: <strong>Rp {{ number_format($tarifTidak, 0, ',', '.') }}/kg</strong></li>
                             <li><strong>Dipilah</strong> = warga <span class="text-success">menerima uang</span></li>
                             <li><strong>Tidak dipilah</strong> = warga <span class="text-danger">bayar iuran</span></li>
                             <li>Pilih <em>Jenis Item</em> untuk harga spesifik, atau kosongkan untuk flat.</li>
@@ -304,7 +304,7 @@
             <div class="jenis-wrapper d-none">
                 <select name="penyetor[__P__][items][__I__][tarif_item_id]"
                         class="form-select tarif-select">
-                    <option value="">— flat (Rp {{ number_format($tarifFlat, 0, ',', '.') }}/kg) —</option>
+                    <option value="">— flat (Rp {{ number_format($tarifDipilah, 0, ',', '.') }}/kg) —</option>
                     @foreach($tarifItems as $t)
                     <option value="{{ $t->id }}" data-harga="{{ $t->activeRate->harga_per_kg }}">
                         {{ $t->nama_item }} · Rp {{ number_format($t->activeRate->harga_per_kg, 0, ',', '.') }}/kg
@@ -468,7 +468,7 @@
         <div class="fs-12 text-muted mb-1">Jenis Item</div>
         <select name="penyetor[__P__][items][__I__][tarif_item_id]"
                 class="form-select tarif-select">
-            <option value="">— flat (Rp {{ number_format($tarifFlat, 0, ',', '.') }}/kg) —</option>
+            <option value="">— flat (Rp {{ number_format($tarifDipilah, 0, ',', '.') }}/kg) —</option>
             @foreach($tarifItems as $t)
             <option value="{{ $t->id }}" data-harga="{{ $t->activeRate->harga_per_kg }}">
                 {{ $t->nama_item }} · Rp {{ number_format($t->activeRate->harga_per_kg, 0, ',', '.') }}/kg
@@ -511,7 +511,8 @@
 
 @section('js')
 <script>
-const TARIF            = {{ $tarifFlat }};
+const TARIF_DIPILAH    = {{ $tarifDipilah }};
+const TARIF_TIDAK      = {{ $tarifTidak }};
 const wargaData        = @json($wargaJson);
 const isMobile         = window.innerWidth < 768;
 const IS_ADMIN         = {{ auth()->user()?->isAdmin() ? 'true' : 'false' }};
@@ -737,10 +738,10 @@ function recalc() {
             }
 
             const dipilah = pilah === 'dipilah';
-            let harga     = TARIF;
+            let harga     = dipilah ? TARIF_DIPILAH : TARIF_TIDAK;
 
             if (dipilah && tarifSel.value) {
-                harga = parseFloat(tarifSel.options[tarifSel.selectedIndex]?.dataset.harga || TARIF);
+                harga = parseFloat(tarifSel.options[tarifSel.selectedIndex]?.dataset.harga || TARIF_DIPILAH);
             }
 
             const sub  = berat * harga * (dipilah ? 1 : -1);

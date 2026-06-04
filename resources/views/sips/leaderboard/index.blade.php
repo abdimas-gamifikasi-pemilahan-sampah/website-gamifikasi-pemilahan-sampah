@@ -115,9 +115,9 @@
 
         {{-- Ranking table --}}
         <div class="col-xl-8">
-            <div class="card h-100">
+            <div class="card {{ $unregistered->isNotEmpty() ? 'mb-4' : 'h-100' }}">
                 <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-                    <h5 class="card-title mb-0">Ranking Warga</h5>
+                    <h5 class="card-title mb-0">Ranking Warga Terdaftar</h5>
                     <span class="badge bg-info-subtle text-info border border-info-subtle">
                         {{ $entries->count() }} warga berkontribusi
                     </span>
@@ -171,6 +171,71 @@
             </div>
         </div>
 
+        {{-- Unregistered penyetor contributions --}}
+        @if($unregistered->isNotEmpty())
+        <div class="col-xl-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div>
+                        <h5 class="card-title mb-0">Penyetor Belum Terdaftar</h5>
+                        <small class="text-muted">Setoran tercatat tapi tidak terhubung ke akun warga</small>
+                    </div>
+                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle">
+                        {{ $unregistered->count() }} penyetor
+                    </span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0 table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width:50px">No.</th>
+                                    <th>Nama Penyetor</th>
+                                    <th class="text-end">Total (kg)</th>
+                                    <th class="text-end">Dipilah (kg)</th>
+                                    <th class="text-end">% Pilah</th>
+                                    <th class="text-end">Poin</th>
+                                    <th class="text-end">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($unregistered as $i => $u)
+                                <tr>
+                                    <td class="text-center text-muted">{{ $i + 1 }}</td>
+                                    <td class="fw-medium">{{ $u->nama }}</td>
+                                    <td class="text-end">{{ number_format($u->total_kg, 1, ',', '.') }}</td>
+                                    <td class="text-end">{{ number_format($u->kg_dipilah, 1, ',', '.') }}</td>
+                                    <td class="text-end">{{ $u->persen_dipilah }}%</td>
+                                    <td class="text-end fw-semibold text-warning">{{ (int) $u->poin }}</td>
+                                    <td class="text-end">
+                                        @php
+                                            $prefillParams = array_filter([
+                                                'nama' => $u->nama,
+                                                'rw'   => $u->rw ? (int) ltrim($u->rw, '0') ?: null : null,
+                                                'rt'   => $u->rt ? (int) ltrim($u->rt, '0') ?: null : null,
+                                            ]);
+                                        @endphp
+                                        <a href="{{ route('sips.warga.create', $prefillParams) }}"
+                                           class="btn btn-sm btn-outline-primary"
+                                           title="Buka form daftar warga dengan nama, RW, RT sudah terisi">
+                                            <i class="ri-user-add-line me-1"></i> Daftarkan
+                                        </a>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer bg-warning-subtle border-warning-subtle fs-12 text-warning-emphasis">
+                    <i class="ri-information-line me-1"></i>
+                    Klik <strong>Daftarkan</strong> di tiap baris untuk membuka form pendaftaran dengan nama sudah terisi otomatis.
+                    Lengkapi No. KK, RT/RW, dan Dusun untuk menyimpan.
+                </div>
+            </div>
+        </div>
+        @endif
+
         {{-- Sidebar --}}
         <div class="col-xl-4">
 
@@ -203,6 +268,37 @@
                     @empty
                     <p class="text-muted text-center mb-0">Belum ada data periode ini.</p>
                     @endforelse
+                </div>
+            </div>
+
+            {{-- Poin formula --}}
+            <div class="card mb-4 border-primary-subtle">
+                <div class="card-header bg-primary-subtle border-primary-subtle">
+                    <h5 class="card-title mb-0 text-primary fs-13">
+                        <i class="ri-calculator-line me-1"></i> Cara Perhitungan Poin
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-3 p-3 rounded" style="background: rgba(13,110,253,0.06);">
+                        <div class="fw-bold fs-14" style="font-family: monospace; letter-spacing: 0.02em;">
+                            Poin = (kg dipilah × 10) + (% pilah × 2)
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2 fs-13">
+                        <span class="text-muted">Bobot berat dipilah</span>
+                        <span class="fw-semibold">× 10 / kg</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-3 fs-13">
+                        <span class="text-muted">Bobot persentase pilah</span>
+                        <span class="fw-semibold">× 2 / %</span>
+                    </div>
+                    <div class="border-top pt-3">
+                        <p class="text-muted fs-12 mb-1">Contoh:</p>
+                        <p class="fs-12 mb-0">
+                            10 kg dipilah, 80% pilah<br>
+                            = (10 × 10) + (80 × 2) = <strong class="text-primary">260 poin</strong>
+                        </p>
+                    </div>
                 </div>
             </div>
 

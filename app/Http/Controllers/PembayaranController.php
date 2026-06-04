@@ -16,7 +16,7 @@ class PembayaranController extends Controller
             'aktor' => ['nullable', Rule::in(['warga', 'petugas'])],
         ]);
 
-        $query = Pembayaran::with(['setoran.warga', 'petugasPembayar'])
+        $query = Pembayaran::with(['setoran.warga', 'setoran.items', 'petugasPembayar'])
             ->latest('tanggal_bayar');
 
         if ($request->filled('dari')) {

@@ -128,10 +128,23 @@
                                         <small class="text-muted">{{ $p->tanggal_bayar->format('H:i') }}</small>
                                     </td>
                                     <td>
-                                        <div class="fw-semibold">{{ $p->setoran->warga->nama }}</div>
-                                        <small class="text-muted">
-                                            RT {{ $p->setoran->warga->rt }} / {{ $p->setoran->warga->dusun }}
-                                        </small>
+                                        @if($p->setoran->warga)
+                                            <div class="fw-semibold">{{ $p->setoran->warga->nama }}</div>
+                                            <small class="text-muted">
+                                                RT {{ $p->setoran->warga->rt }} / {{ $p->setoran->warga->dusun }}
+                                            </small>
+                                        @else
+                                            @php
+                                                $names = $p->setoran->items->pluck('nama_penyetor')->filter()->unique()->values();
+                                            @endphp
+                                            <div class="fw-semibold">
+                                                {{ $names->take(2)->implode(', ') ?: ('Area RW ' . ($p->setoran->area_rw ?? '—')) }}
+                                            </div>
+                                            <small class="text-muted">
+                                                {{ $names->count() > 2 ? '+'.($names->count()-2).' lainnya · ' : '' }}
+                                                RW {{ $p->setoran->area_rw ?? '—' }}
+                                            </small>
+                                        @endif
                                     </td>
                                     <td class="fw-medium">
                                         #{{ str_pad($p->setoran_id, 5, '0', STR_PAD_LEFT) }}
@@ -160,11 +173,6 @@
                                             <a href="{{ route('sips.setoran.show', $p->setoran_id) }}"
                                                class="btn btn-sm btn-light border" title="Detail Setoran">
                                                 <i class="ri-eye-line"></i>
-                                            </a>
-                                            <a href="{{ route('sips.setoran.kwitansi', $p->setoran_id) }}"
-                                               class="btn btn-sm btn-light border" title="Cetak Kwitansi"
-                                               target="_blank">
-                                                <i class="ri-printer-line"></i>
                                             </a>
                                         </div>
                                     </td>

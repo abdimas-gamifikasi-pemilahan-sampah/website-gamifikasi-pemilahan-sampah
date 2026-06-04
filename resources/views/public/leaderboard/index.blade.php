@@ -2,6 +2,84 @@
 
 @section('title', 'SIPS - Papan Peringkat Desa Banjarsari')
 
+@section('css')
+<style>
+/* ---- Mobile: phone ≤ 767px ---- */
+@media (max-width: 767.98px) {
+    /* Hero header */
+    .bg-half-170 { padding: 90px 0 30px !important; min-height: auto !important; }
+
+    /* Section padding: Landrick default is 100px — way too much on phone */
+    .section { padding: 40px 0 !important; }
+    .section.pt-4 { padding-top: 28px !important; }
+    .section.pt-5 { padding-top: 40px !important; }
+
+    /* Headings */
+    h4.title  { font-size: 1.4rem !important; }
+    h5.title  { font-size: 1.1rem !important; }
+    .pages-heading h4.title { font-size: 1.4rem !important; }
+    .pages-heading p { font-size: 0.875rem; }
+
+    /* Page header buttons - stack on mobile */
+    .pages-heading .mt-4 .btn { margin-bottom: 8px; }
+
+    /* Podium - reduce card padding */
+    .section .card-body.px-4.pt-4 { padding: 20px 16px !important; }
+
+    /* Top 3 rank label and avatar size */
+    .section .col-lg-4 .card-body div[style*="width: 72px"] {
+        width: 56px !important; height: 56px !important; font-size: 1.1rem !important;
+    }
+
+    /* RW ranking progress bars section */
+    .card.border-0.p-4 { padding: 16px !important; }
+}
+
+/* ---- Mobile: small phone ≤ 575px ---- */
+@media (max-width: 575.98px) {
+    /* Section spacing tighter */
+    .section { padding: 32px 0 !important; }
+
+    /* Leaderboard rows: reduce horizontal padding so subtitle has room */
+    #warga-list .d-flex.align-items-center,
+    #unregistered-list .d-flex.align-items-center {
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+        padding-top: 10px !important;
+        padding-bottom: 10px !important;
+    }
+
+    /* Subtitle text: smaller + allow graceful wrap */
+    .lb-subtitle {
+        font-size: 0.70rem !important;
+        line-height: 1.6;
+        word-break: break-word;
+    }
+
+    /* Poin badge: smaller on xs */
+    .lb-badge { padding: 5px 10px !important; font-size: 0.76rem !important; }
+
+    /* Section & card titles */
+    h4.title  { font-size: 1.2rem !important; }
+    h5.title  { font-size: 1rem !important; }
+    h5.mb-1   { font-size: 1rem !important; }
+
+    /* Stats counter cards: reduce padding */
+    .card.features .card-body.py-4 { padding: 20px 12px !important; }
+    .card.features h3 { font-size: 1.6rem; }
+
+    /* Poin formula info box: stack icon + text vertically */
+    .poin-info-box { flex-direction: column !important; gap: 10px !important; }
+
+    /* Spotlight card padding */
+    .card-body.p-4 { padding: 16px !important; }
+
+    /* Cara ikut serta cards */
+    .card-body.px-4.py-5 { padding: 24px 20px !important; }
+}
+</style>
+@endsection
+
 @section('content')
 
 @include('includes.landrick-sips.navbar')
@@ -188,28 +266,49 @@
         <div class="row g-4">
             <!-- Leaderboard Table -->
             <div class="col-lg-7">
-                <div class="mb-5">
+                <div class="mb-4">
                     <h5 class="title mb-1">10 Besar Warga</h5>
                     <p class="text-muted small mb-0">Daftar warga dengan kontribusi pemilahan terbanyak bulan ini.</p>
                 </div>
-                <div class="card border-0 overflow-hidden" style="border-radius: 1rem; box-shadow: 0 8px 30px rgba(0,0,0,0.08);">
+
+                {{-- Poin formula info --}}
+                <div class="poin-info-box mb-4 px-4 py-3 rounded-3 d-flex align-items-start gap-3" style="background: linear-gradient(135deg, #eef2ff, #f5f7ff); border: 1px solid #dde6ff;">
+                    <div class="rounded-circle d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width:32px; height:32px; background: #2f55d4;">
+                        <i data-feather="info" style="width:15px; height:15px; color:white; stroke-width:2.5;"></i>
+                    </div>
+                    <div>
+                        <div class="fw-semibold mb-1" style="font-size:0.85rem; color:#2f55d4;">Cara Perhitungan Poin</div>
+                        <div style="font-size:0.82rem; color:#495057;">
+                            <strong>Poin = (kg dipilah × 10) + (% pilah × 2)</strong>
+                        </div>
+                        <div class="text-muted mt-1" style="font-size:0.78rem;">
+                            Contoh: 10 kg dipilah, 80% dipilah → (10 × 10) + (80 × 2) = <strong>260 poin</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="warga-list" class="card border-0 overflow-hidden" style="border-radius: 1rem; box-shadow: 0 8px 30px rgba(0,0,0,0.08);">
                     @forelse($entries->take(10) as $i => $entry)
                     @php $rank = $i + 1; @endphp
-                    <div class="d-flex align-items-center px-4 py-4 {{ !$loop->last ? 'border-bottom' : '' }}">
-                        <div class="me-4" style="width: 34px; text-align: center;">
+                    <div class="d-flex align-items-center px-4 py-3 {{ !$loop->last ? 'border-bottom' : '' }}">
+                        <div class="me-3" style="width: 34px; text-align: center; flex-shrink: 0;">
                             @if($rank <= 3)
                                 <div class="rounded-circle d-inline-flex align-items-center justify-content-center fw-bold text-white" style="width: 30px; height: 30px; background: {{ $medalBg[$rank] }}; font-size: 0.72rem;">{{ $rank }}</div>
                             @else
                                 <span class="text-muted fw-semibold" style="font-size: 0.85rem;">#{{ $rank }}</span>
                             @endif
                         </div>
-                        <div class="grow">
+                        <div class="flex-grow-1">
                             <div class="fw-semibold" style="font-size: 0.9rem; line-height: 1.3;">{{ $entry->nama }}</div>
-                            <div class="text-muted" style="font-size: 0.78rem;">RW {{ $entry->rw }} / {{ $entry->dusun }}</div>
+                            <div class="lb-subtitle text-muted" style="font-size: 0.78rem;">
+                                RW {{ $entry->rw }} / {{ $entry->dusun }}
+                                &nbsp;·&nbsp;{{ number_format($entry->total_kg, 1, ',', '.') }} kg total
+                                &nbsp;·&nbsp;{{ number_format($entry->kg_dipilah, 1, ',', '.') }} kg dipilah
+                                &nbsp;·&nbsp;{{ $entry->persen_dipilah }}% pilah
+                            </div>
                         </div>
-                        <div class="text-end">
-                            <span class="badge rounded-pill px-3 py-2 d-block mb-1" style="background: linear-gradient(135deg, #eef2ff, #dde6ff); color: #2f55d4; font-size: 0.82rem; font-weight: 700;">{{ (int) $entry->poin }} poin</span>
-                            <span class="text-muted" style="font-size: 0.74rem;">{{ number_format($entry->total_kg, 1, ',', '.') }} kg</span>
+                        <div class="text-end ms-3">
+                            <span class="lb-badge badge rounded-pill px-3 py-2" style="background: linear-gradient(135deg, #eef2ff, #dde6ff); color: #2f55d4; font-size: 0.82rem; font-weight: 700;">{{ (int) $entry->poin }} poin</span>
                         </div>
                     </div>
                     @empty
@@ -218,6 +317,28 @@
                     </div>
                     @endforelse
                 </div>
+
+                {{-- Unregistered penyetors --}}
+                @if($unregistered->isNotEmpty())
+                <div class="mt-4">
+                    <h6 class="title mb-1 text-muted">Penyetor Belum Terdaftar</h6>
+                    <p class="text-muted small mb-3">Kontribusi tercatat namun belum memiliki akun warga di sistem.</p>
+                    <div id="unregistered-list" class="card border-0 overflow-hidden" style="border-radius: 1rem; box-shadow: 0 8px 30px rgba(0,0,0,0.06); border-left: 3px solid #fd7e14 !important;">
+                        @foreach($unregistered->take(10) as $i => $u)
+                        <div class="d-flex align-items-center px-4 py-3 {{ !$loop->last ? 'border-bottom' : '' }}">
+                            <div class="me-3 text-muted" style="width:24px; text-align:center; font-size:0.8rem; flex-shrink:0;">{{ $i + 1 }}</div>
+                            <div class="flex-grow-1">
+                                <div class="fw-semibold" style="font-size:0.9rem;">{{ $u->nama }}</div>
+                                <div class="lb-subtitle text-muted" style="font-size:0.78rem;">{{ number_format($u->total_kg, 1, ',', '.') }} kg · {{ $u->persen_dipilah }}% dipilah</div>
+                            </div>
+                            <div class="text-end ms-2">
+                                <span class="lb-badge badge rounded-pill px-2 py-1" style="background: rgba(253,126,20,0.12); color: #fd7e14; font-size:0.8rem;">{{ (int) $u->poin }} poin</span>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
             </div>
 
             <!-- RW Rankings -->

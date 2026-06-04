@@ -14,6 +14,8 @@ class ItemSetoran extends Model
     protected $fillable = [
         'setoran_id',
         'nama_penyetor',
+        'rw',
+        'rt',
         'tarif_item_id',
         'riwayat_tarif_id',
         'tipe_sampah',

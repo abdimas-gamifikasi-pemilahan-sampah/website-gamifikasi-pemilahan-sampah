@@ -25,6 +25,15 @@
                     <h5 class="card-title mb-1">Form Warga Baru</h5>
                     <p class="text-muted mb-0 fs-13">Tambahkan warga agar bisa dipilih saat input setoran oleh petugas.</p>
                 </div>
+                @if(!empty($prefill['nama']))
+                <div class="alert alert-info border-0 rounded-0 mb-0 fs-13 py-2 px-4">
+                    <i class="ri-user-add-line me-1"></i>
+                    Data dari setoran sudah diisi: <strong>{{ $prefill['nama'] }}</strong>
+                    @if(!empty($prefill['rw'])) · RW {{ $prefill['rw'] }} @endif
+                    @if(!empty($prefill['rt'])) · RT {{ $prefill['rt'] }} @endif.
+                    Lengkapi <strong>No. KK</strong> dan <strong>Dusun</strong>, lalu klik <strong>Simpan Warga</strong>.
+                </div>
+                @endif
                 <div class="card-body">
                     <form method="POST" action="{{ route('sips.warga.store') }}">
                         @csrf

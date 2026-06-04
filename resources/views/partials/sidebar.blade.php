@@ -98,7 +98,7 @@
             </li>
 
             {{-- Analitik & Laporan --}}
-            @php $analitikActive = request()->routeIs('sips.leaderboard', 'sips.analitik.*'); @endphp
+            @php $analitikActive = request()->routeIs('sips.leaderboard', 'sips.analitik.*', 'sips.ekspor.*'); @endphp
             <li class="pe-slide pe-has-sub">
                 <a href="#collapseAnalytics"
                    class="pe-nav-link {{ $analitikActive ? 'active' : '' }}"
@@ -125,6 +125,14 @@
                             Papan Peringkat
                         </a>
                     </li>
+                    @if(auth()->user()->isAdmin())
+                    <li class="pe-slide-item">
+                        <a href="{{ route('sips.ekspor.index') }}"
+                           class="pe-nav-link {{ request()->routeIs('sips.ekspor.*') ? 'active' : '' }}">
+                            Ekspor Laporan
+                        </a>
+                    </li>
+                    @endif
                 </ul>
             </li>
 
