@@ -11,6 +11,7 @@ use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\AnalitikController;
 use App\Http\Controllers\ImportSetoranController;
+use App\Http\Controllers\PengaturanSistemController;
 
 Route::get('/', function () {
     return view('public.landing');
@@ -29,6 +30,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/sips/analitik', [AnalitikController::class, 'index'])->name('sips.analitik.index');
 
     Route::middleware('role:admin')->group(function () {
+        Route::match(['put', 'patch'], '/sips/pengaturan', [PengaturanSistemController::class, 'update'])->name('sips.pengaturan.update');
+
         Route::get('/sips/warga', [WargaController::class, 'index'])->name('sips.warga.index');
         Route::get('/sips/warga/create', [WargaController::class, 'create'])->name('sips.warga.create');
         Route::post('/sips/warga', [WargaController::class, 'store'])->name('sips.warga.store');

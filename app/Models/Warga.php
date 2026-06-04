@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -25,6 +26,13 @@ class Warga extends Model
         return [
             'tanggal_terdaftar' => 'date',
         ];
+    }
+
+    protected function noKk(): Attribute
+    {
+        return Attribute::make(
+            set: fn (mixed $value) => substr(preg_replace('/\D/', '', trim((string) $value)), 0, 16),
+        );
     }
 
     public function setoran(): HasMany

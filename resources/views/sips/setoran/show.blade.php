@@ -23,7 +23,7 @@
                class="btn btn-outline-secondary btn-sm" target="_blank">
                 <i class="ri-printer-line me-1"></i> Cetak Kwitansi
             </a>
-            @if($setoran->status_pembayaran === 'belum_dibayar')
+            @if($setoran->status_pembayaran === 'belum_dibayar' && $setoran->hasPaymentFlow())
             <button type="button" class="btn btn-success btn-sm"
                     data-bs-toggle="modal" data-bs-target="#payModal">
                 <i class="ri-money-dollar-circle-line me-1"></i> Catat Pembayaran
@@ -41,11 +41,9 @@
                     <h5 class="card-title mb-0">
                         Setoran #{{ str_pad($setoran->id, 5, '0', STR_PAD_LEFT) }}
                     </h5>
-                    @if($setoran->status_pembayaran === 'sudah_dibayar')
-                        <span class="badge bg-success fs-12">Sudah Dibayar</span>
-                    @else
-                        <span class="badge bg-danger fs-12">Belum Dibayar</span>
-                    @endif
+                    <span class="badge {{ $setoran->paymentStatusBadgeClasses() }} fs-12">
+                        {{ $setoran->paymentStatusLabel() }}
+                    </span>
                 </div>
                 <div class="card-body">
 
@@ -133,7 +131,10 @@
                                 <tr class="table-light">
                                     <td colspan="5" class="text-end fw-bold">Total</td>
                                     <td class="text-end fw-bold fs-15">
-                                        Rp {{ number_format($setoran->total_nilai, 0, ',', '.') }}
+                                        <span class="{{ $setoran->signedAmountTextClasses() }}">
+                                            {{ $setoran->nilaiSignedFormatted() }}
+                                        </span>
+                                        <div class="small text-muted fw-normal">{{ $setoran->nilaiFormatted() }}</div>
                                     </td>
                                 </tr>
                             </tfoot>
@@ -146,13 +147,13 @@
 
         {{-- Right: payment status --}}
         <div class="col-lg-4">
-            @if($setoran->status_pembayaran === 'sudah_dibayar' && $setoran->pembayaran)
-            <div class="card border-success">
+            @if($setoran->status_pembayaran === 'sudah_dibayar' && $setoran->pembayaran && $setoran->hasPaymentFlow())
+            <div class="card {{ $setoran->paymentStatusCardClasses() }}">
                 <div class="card-body">
                     <div class="d-flex align-items-center mb-3">
-                        <i class="ri-checkbox-circle-fill text-success fs-1 me-2"></i>
+                        <i class="{{ $setoran->paymentStatusIconClasses() }} fs-1 me-2"></i>
                         <div>
-                            <h6 class="fw-bold mb-0">Pembayaran Selesai</h6>
+                            <h6 class="fw-bold mb-0">{{ $setoran->paymentStatusLabel() }}</h6>
                             <small class="text-muted">
                                 {{ $setoran->pembayaran->tanggal_bayar->format('d M Y, H:i') }}
                             </small>
@@ -167,7 +168,11 @@
                                 </td>
                             </tr>
                             <tr>
-                                <td class="text-muted ps-0">Petugas Bayar</td>
+                                <td class="text-muted ps-0">Dibayar Oleh</td>
+                                <td class="text-end pe-0">{{ $setoran->paymentActorLabel() }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted ps-0">Dicatat Oleh Petugas</td>
                                 <td class="text-end pe-0">
                                     {{ $setoran->pembayaran->petugasPembayar->name ?? '-' }}
                                 </td>
@@ -183,18 +188,24 @@
                 </div>
             </div>
             @else
-            <div class="card border-warning">
+            <div class="card {{ $setoran->paymentStatusCardClasses() }}">
                 <div class="card-body text-center py-4">
-                    <i class="ri-time-line text-warning display-5 d-block mb-2"></i>
-                    <h6 class="fw-semibold mb-1">Menunggu Pembayaran</h6>
+                    <i class="{{ $setoran->paymentStatusIconClasses() }} display-5 d-block mb-2"></i>
+                    <h6 class="fw-semibold mb-1">{{ $setoran->paymentStatusLabel() }}</h6>
                     <p class="text-muted fs-13 mb-3">
-                        Total tagihan:
-                        <strong>Rp {{ number_format($setoran->total_nilai, 0, ',', '.') }}</strong>
+                        @if($setoran->hasPaymentFlow())
+                            Menunggu {{ $setoran->isPaymentByWarga() ? 'pemasukan' : 'pengeluaran' }}:
+                            <strong class="{{ $setoran->signedAmountTextClasses() }}">{{ $setoran->nilaiSignedFormatted() }}</strong>
+                        @else
+                            Tidak ada aliran uang pada setoran ini.
+                        @endif
                     </p>
+                    @if($setoran->hasPaymentFlow())
                     <button type="button" class="btn btn-success btn-sm w-100"
                             data-bs-toggle="modal" data-bs-target="#payModal">
                         <i class="ri-money-dollar-circle-line me-1"></i> Catat Pembayaran
                     </button>
+                    @endif
                 </div>
             </div>
             @endif
@@ -209,6 +220,12 @@
                     <div class="d-flex justify-content-between mb-2">
                         <span class="text-muted">Total Berat</span>
                         <span>{{ number_format($setoran->items->sum('berat_kg'), 1, ',', '.') }} kg</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Arus Kas Sistem</span>
+                        <span class="{{ $setoran->signedAmountTextClasses() }}">
+                            {{ $setoran->nilaiSignedFormatted() }}
+                        </span>
                     </div>
                     <div class="d-flex justify-content-between mb-2">
                         <span class="text-muted">Dipilah</span>
@@ -230,7 +247,7 @@
 </div>
 
 {{-- Modal Konfirmasi Pembayaran --}}
-@if($setoran->status_pembayaran === 'belum_dibayar')
+@if($setoran->status_pembayaran === 'belum_dibayar' && $setoran->hasPaymentFlow())
 <div class="modal fade" id="payModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-sm">
         <div class="modal-content">
@@ -242,12 +259,16 @@
                 @csrf
                 <div class="modal-body text-center">
                     <i class="ri-wallet-3-line text-success display-4 d-block mb-3"></i>
-                    <h4 class="mb-1">Rp {{ number_format($setoran->total_nilai, 0, ',', '.') }}</h4>
+                    <h4 class="mb-1 {{ $setoran->signedAmountTextClasses() }}">{{ $setoran->nilaiSignedFormatted() }}</h4>
                     <p class="text-muted mb-4">
                         {{ $setoran->warga?->nama ?? 'Setoran #' . str_pad($setoran->id, 5, '0', STR_PAD_LEFT) }}
                     </p>
                     <div class="alert alert-info py-2 fs-13 text-start">
-                        Pastikan uang tunai sudah diberikan kepada warga sebelum konfirmasi.
+                        @if($setoran->isPaymentByWarga())
+                            Gunakan konfirmasi ini setelah pemasukan dari warga sudah diterima oleh sistem.
+                        @else
+                            Gunakan konfirmasi ini setelah pengeluaran dari sistem kepada warga sudah dibayarkan.
+                        @endif
                     </div>
                     <div class="mb-3 text-start">
                         <label class="form-label fs-13">Jumlah Dibayar (Rp) <span class="text-danger">*</span></label>

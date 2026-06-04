@@ -16,7 +16,12 @@
     <div class="col-md-6">
         <label for="no_kk" class="form-label">Nomor KK <span class="text-danger">*</span></label>
         <input type="text" class="form-control @error('no_kk') is-invalid @enderror"
-               id="no_kk" name="no_kk" maxlength="16" value="{{ old('no_kk', $warga->no_kk ?? '') }}" required>
+               id="no_kk" name="no_kk" maxlength="16" minlength="16"
+               inputmode="numeric" pattern="[0-9]{16}"
+               value="{{ old('no_kk', $warga->no_kk ?? '') }}"
+               oninput="this.value = this.value.replace(/\D/g, '').slice(0, 16)"
+               required>
+        <div class="form-text">Nomor KK harus terdiri dari tepat 16 digit angka.</div>
         @error('no_kk')
         <div class="invalid-feedback">{{ $message }}</div>
         @enderror

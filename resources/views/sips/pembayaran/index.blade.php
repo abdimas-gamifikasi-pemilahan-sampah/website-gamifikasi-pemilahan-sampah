@@ -17,6 +17,23 @@
                     </a>
                 </div>
                 <div class="card-body">
+                    @php
+                        $hasPembayaranFilter = request('dari') || request('sampai') || request('aktor');
+                        $ringkasanPembayaran = [
+                            [
+                                'label' => 'Pemasukan',
+                                'value' => 'Rp ' . number_format((float) ($ringkasan->total_warga ?? 0), 0, ',', '.'),
+                                'class' => 'success',
+                                'icon' => 'ri-arrow-down-circle-line',
+                            ],
+                            [
+                                'label' => 'Pengeluaran',
+                                'value' => 'Rp ' . number_format((float) ($ringkasan->total_petugas ?? 0), 0, ',', '.'),
+                                'class' => 'danger',
+                                'icon' => 'ri-arrow-up-circle-line',
+                            ],
+                        ];
+                    @endphp
 
                     {{-- Filter --}}
                     <form method="GET" action="{{ route('sips.pembayaran.index') }}"
@@ -31,26 +48,56 @@
                             <input type="date" class="form-control form-control-sm"
                                    name="sampai" value="{{ request('sampai') }}">
                         </div>
+                        <div class="col-sm-auto">
+                            <label class="form-label form-label-sm mb-1">Dibayar Oleh</label>
+                            <select class="form-select form-select-sm" name="aktor">
+                                <option value="">Semua</option>
+                                <option value="warga" {{ request('aktor') === 'warga' ? 'selected' : '' }}>Warga</option>
+                                <option value="petugas" {{ request('aktor') === 'petugas' ? 'selected' : '' }}>Petugas</option>
+                            </select>
+                        </div>
                         <div class="col-sm-auto d-flex gap-2">
                             <button type="submit" class="btn btn-primary btn-sm">
                                 <i class="ri-filter-line me-1"></i> Filter
                             </button>
-                            @if(request('dari') || request('sampai'))
+                            @if(request('dari') || request('sampai') || request('aktor'))
                             <a href="{{ route('sips.pembayaran.index') }}" class="btn btn-light btn-sm">Reset</a>
                             @endif
                         </div>
                     </form>
 
                     {{-- Summary card --}}
-                    @if(request('dari') || request('sampai'))
-                    <div class="alert alert-primary d-flex align-items-center gap-3 mb-4 py-3">
-                        <i class="ri-bar-chart-line fs-3"></i>
-                        <div>
-                            <div class="fw-semibold">Total Pembayaran Periode Ini</div>
-                            <div class="fs-4 fw-bold">Rp {{ number_format($totalPeriode, 0, ',', '.') }}</div>
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                            <div>
+                                <h6 class="mb-1">Ringkasan Pembayaran</h6>
+                                <p class="text-muted mb-0 fs-13">
+                                    {{ $hasPembayaranFilter ? 'Menampilkan hasil filter pembayaran.' : 'Menampilkan seluruh pembayaran yang tercatat.' }}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="row">
+                            @foreach($ringkasanPembayaran as $item)
+                            <div class="col-md-6">
+                                <div class="card border border-{{ $item['class'] }} shadow-sm">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <div class="fs-13 text-muted mb-1">{{ $item['label'] }}</div>
+                                                <h4 class="mb-0">{{ $item['value'] }}</h4>
+                                            </div>
+                                            <div class="avatar-sm">
+                                                <span class="avatar-title bg-{{ $item['class'] }}-subtle text-{{ $item['class'] }} rounded-circle fs-4">
+                                                    <i class="{{ $item['icon'] }}"></i>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            @endforeach
                         </div>
                     </div>
-                    @endif
 
                     @if($pembayaran->isEmpty())
                     <div class="text-center py-5 text-muted">
@@ -65,9 +112,11 @@
                                     <th>Tgl. Bayar</th>
                                     <th>Warga</th>
                                     <th>Setoran</th>
-                                    <th class="text-end">Nilai Setoran (Rp)</th>
+                                    <th class="text-end">Aliran Nilai</th>
                                     <th class="text-end">Dibayar (Rp)</th>
-                                    <th>Petugas Bayar</th>
+                                    <th>Status</th>
+                                    <th>Dibayar Oleh</th>
+                                    <th>Dicatat Oleh</th>
                                     <th>Aksi</th>
                                 </tr>
                             </thead>
@@ -88,7 +137,10 @@
                                         #{{ str_pad($p->setoran_id, 5, '0', STR_PAD_LEFT) }}
                                     </td>
                                     <td class="text-end">
-                                        Rp {{ number_format($p->setoran->total_nilai, 0, ',', '.') }}
+                                        <span class="{{ $p->setoran->signedAmountTextClasses() }}">
+                                            {{ $p->setoran->nilaiSignedFormatted() }}
+                                        </span>
+                                        <div class="small text-muted">{{ $p->setoran->nilaiFormatted() }}</div>
                                     </td>
                                     <td class="text-end fw-semibold">
                                         Rp {{ number_format($p->jumlah_dibayar, 0, ',', '.') }}
@@ -96,6 +148,12 @@
                                             <br><small class="text-warning">*disesuaikan</small>
                                         @endif
                                     </td>
+                                    <td>
+                                        <span class="badge {{ $p->setoran->paymentStatusBadgeClasses() }}">
+                                            {{ $p->setoran->paymentStatusLabel() }}
+                                        </span>
+                                    </td>
+                                    <td>{{ $p->setoran->paymentActorLabel() }}</td>
                                     <td>{{ $p->petugasPembayar->name ?? '-' }}</td>
                                     <td>
                                         <div class="d-flex gap-1">

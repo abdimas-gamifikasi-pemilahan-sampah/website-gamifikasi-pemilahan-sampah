@@ -13,12 +13,17 @@
     </div>
     @endif
 
-    <div class="alert alert-warning d-flex align-items-center mb-4" role="alert">
-        <i class="ri-error-warning-line fs-4 me-2"></i>
-        <div>
-            <strong>Penting:</strong> Perubahan tarif hanya berlaku untuk setoran pada atau setelah tanggal efektif. Nilai setoran historis tidak berubah.
-        </div>
+    @if ($errors->any())
+    <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+        <strong>Terdapat kesalahan pada form:</strong>
+        <ul class="mb-0 mt-1">
+            @foreach ($errors->all() as $error)
+            <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
+    @endif
 
     @php
         $tipeMeta = [
@@ -48,6 +53,61 @@
             </div>
         </div>
         @endforeach
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card card-h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-1">Pengaturan Tarif Default</h5>
+                    <p class="text-muted mb-0 fs-13">Kelola nilai default</p>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ route('sips.pengaturan.update') }}" class="row g-3 align-items-end">
+                        @csrf
+                        @method('PATCH')
+
+                        <div class="col-md-5">
+                            <label for="tarif_flat_per_kg" class="form-label">Tarif Default Tidak Dipilah (Rp/kg) <span class="text-danger">*</span></label>
+                            <input type="number"
+                                   class="form-control @error('tarif_flat_per_kg') is-invalid @enderror"
+                                   id="tarif_flat_per_kg"
+                                   name="tarif_flat_per_kg"
+                                   min="0"
+                                   step="100"
+                                   value="{{ old('tarif_flat_per_kg', $settings['tarif_flat_per_kg']) }}"
+                                   required>
+                            <div class="form-text">Dipakai sebagai tarif default untuk sampah tidak dipilah.</div>
+                            @error('tarif_flat_per_kg')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="col-md-5">
+                            <label for="nilai_dipilah_per_kg" class="form-label">Nilai Dipilah (Rp/kg) <span class="text-danger">*</span></label>
+                            <input type="number"
+                                   class="form-control @error('nilai_dipilah_per_kg') is-invalid @enderror"
+                                   id="nilai_dipilah_per_kg"
+                                   name="nilai_dipilah_per_kg"
+                                   min="0"
+                                   step="100"
+                                   value="{{ old('nilai_dipilah_per_kg', $settings['nilai_dipilah_per_kg']) }}"
+                                   required>
+                            <div class="form-text">Dipakai sebagai nilai default untuk sampah yang dipilah.</div>
+                            @error('nilai_dipilah_per_kg')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="col-md-2 d-flex justify-content-md-end">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="ri-save-line me-1"></i> Simpan
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="row">

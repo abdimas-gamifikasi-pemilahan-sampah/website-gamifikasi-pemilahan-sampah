@@ -26,6 +26,62 @@
                     </a>
                 </div>
                 <div class="card-body">
+                    @php
+                        $hasWargaFilter = request('search') || request('rw') || request('status_keanggotaan') || request('belum_setor');
+                        $ringkasanWarga = [
+                            [
+                                'label' => 'Total Warga',
+                                'value' => (int) ($ringkasan->total_warga ?? 0),
+                                'class' => 'primary',
+                                'icon' => 'ri-team-line',
+                            ],
+                            [
+                                'label' => 'Warga Aktif',
+                                'value' => (int) ($ringkasan->total_aktif ?? 0),
+                                'class' => 'success',
+                                'icon' => 'ri-user-follow-line',
+                            ],
+                            [
+                                'label' => 'Warga Non Aktif',
+                                'value' => (int) ($ringkasan->total_non_aktif ?? 0),
+                                'class' => 'secondary',
+                                'icon' => 'ri-user-unfollow-line',
+                            ],
+                        ];
+                    @endphp
+
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                            <div>
+                                <h6 class="mb-1">Ringkasan Data Warga</h6>
+                                <p class="text-muted mb-0 fs-13">
+                                    {{ $hasWargaFilter ? 'Menampilkan hasil filter data warga.' : 'Menampilkan seluruh data warga terdaftar.' }}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="row">
+                            @foreach($ringkasanWarga as $item)
+                            <div class="col-md-4">
+                                <div class="card border border-{{ $item['class'] }} shadow-sm">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <div class="fs-13 text-muted mb-1">{{ $item['label'] }}</div>
+                                                <h4 class="mb-0">{{ number_format($item['value'], 0, ',', '.') }}</h4>
+                                            </div>
+                                            <div class="avatar-sm">
+                                                <span class="avatar-title bg-{{ $item['class'] }}-subtle text-{{ $item['class'] }} rounded-circle fs-4">
+                                                    <i class="{{ $item['icon'] }}"></i>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+                    </div>
+
                     <form method="GET" action="{{ route('sips.warga.index') }}" class="row g-2 mb-4">
                         <div class="col-md-5">
                             <label for="search" class="form-label fs-13">Cari Warga</label>
