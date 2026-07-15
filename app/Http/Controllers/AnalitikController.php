@@ -43,50 +43,10 @@ class AnalitikController extends Controller
             $trenPersen[]    = $data['persen_dipilah'];
         }
 
-        // ── Per-item breakdown (bulan dipilih) ─────────────────────
-        // Only for setoran that have item_setoran rows with tarif_item link
-        $perItem = DB::table('item_setoran')
-            ->join('setoran', 'setoran.id', '=', 'item_setoran.setoran_id')
-            ->join('tarif_items', 'tarif_items.id', '=', 'item_setoran.tarif_item_id')
-            ->whereBetween('setoran.tanggal_setoran', [$awal, $akhir])
-            ->where('item_setoran.status_pemilahan', 'dipilah')
-            ->select([
-                'tarif_items.nama_item',
-                'tarif_items.tipe_sampah',
-                DB::raw('SUM(item_setoran.berat_kg) as total_kg'),
-                DB::raw('COUNT(DISTINCT setoran.id) as jumlah_setoran'),
-            ])
-            ->groupBy('tarif_items.id', 'tarif_items.nama_item', 'tarif_items.tipe_sampah')
-            ->orderByDesc('total_kg')
-            ->get();
-
-        // ── Komposisi sampah (bulan dipilih) ───────────────────────
-        // From old-model item_setoran (has per-type data)
-        $komposisi = DB::table('item_setoran')
-            ->join('setoran', 'setoran.id', '=', 'item_setoran.setoran_id')
-            ->whereBetween('setoran.tanggal_setoran', [$awal, $akhir])
-            ->select([
-                'item_setoran.tipe_sampah',
-                'item_setoran.status_pemilahan',
-                DB::raw('SUM(item_setoran.berat_kg) as total_kg'),
-            ])
-            ->groupBy('item_setoran.tipe_sampah', 'item_setoran.status_pemilahan')
-            ->get();
-
-        $kgOrganik      = (float) $komposisi->where('tipe_sampah', 'organik')->sum('total_kg');
-        $kgAnorganik    = (float) $komposisi->where('tipe_sampah', 'anorganik')->sum('total_kg');
-        $kgTidakDipilah = (float) $komposisi->where('status_pemilahan', 'tidak_dipilah')->sum('total_kg');
-
-        // Add v5.1 setoran totals (aggregate/penyetor without per-item type breakdown)
-        $v5Totals = DB::table('setoran')
-            ->whereNull('warga_id')
-            ->whereBetween('tanggal_setoran', [$awal, $akhir])
-            ->selectRaw('SUM(COALESCE(total_kg_dipilah, 0)) as sum_dipilah')
-            ->selectRaw('SUM(COALESCE(total_kg_tidak_dipilah, 0)) as sum_tidak_dipilah')
-            ->first();
-
-        $kgTidakDipilah  += (float) ($v5Totals->sum_tidak_dipilah ?? 0);
-        $kgDipilahAgregat = (float) ($v5Totals->sum_dipilah ?? 0); // dipilah without organik/anorganik split
+        // ── Komposisi sampah (bulan dipilih) — dipilah vs tidak dipilah
+        $kpiBulanTmp    = $this->kpiMonth($bulan);
+        $kgDipilah      = (float) $kpiBulanTmp['kg_dipilah'];
+        $kgTidakDipilah = max(0, (float) $kpiBulanTmp['total_kg'] - $kgDipilah);
 
         // ── Per-RW breakdown (bulan dipilih) ───────────────────────
         // Query 1: warga-linked setoran (old model + v5.1 penyetor with single warga)
@@ -100,6 +60,7 @@ class AnalitikController extends Controller
                 DB::raw("SUM(CASE WHEN item_setoran.status_pemilahan = 'dipilah' THEN item_setoran.berat_kg ELSE 0 END) as kg_dipilah"),
                 DB::raw('COUNT(DISTINCT warga.id) as jumlah_warga'),
             ])
+            ->whereNotNull('warga.rw')
             ->groupBy('warga.rw', 'warga.dusun');
 
         // Query 2: v5.1 setoran with area_rw (aggregate mode, multi-penyetor)
@@ -161,6 +122,7 @@ class AnalitikController extends Controller
             ->whereBetween('setoran.tanggal_setoran', [$awal, $akhir])
             ->select([
                 'warga.nama',
+                'warga.alamat',
                 'warga.rt',
                 'warga.rw',
                 'warga.dusun',
@@ -168,7 +130,7 @@ class AnalitikController extends Controller
                 DB::raw("SUM(CASE WHEN item_setoran.status_pemilahan = 'dipilah' THEN item_setoran.berat_kg ELSE 0 END) as kg_dipilah"),
                 DB::raw('COUNT(DISTINCT setoran.id) as jumlah_setoran'),
             ])
-            ->groupBy('warga.id', 'warga.nama', 'warga.rt', 'warga.rw', 'warga.dusun')
+            ->groupBy('warga.id', 'warga.nama', 'warga.alamat', 'warga.rt', 'warga.rw', 'warga.dusun')
             ->orderByDesc('kg_dipilah')
             ->limit(10)
             ->get()
@@ -192,7 +154,7 @@ class AnalitikController extends Controller
             ->whereBetween('tanggal_setoran', [$awal, $akhir])
             ->count();
 
-        $kpiBulan = $this->kpiMonth($bulan);
+        $kpiBulan = $kpiBulanTmp;
 
         return view('sips.analitik.index', [
             'bulanDipilih'        => $bulan,
@@ -204,13 +166,9 @@ class AnalitikController extends Controller
             'trenDipilah'         => $trenDipilah,
             'trenPencairan'       => $trenPencairan,
             'trenPersen'          => $trenPersen,
-            // Per-item chart (old model / penyetor dipilah)
-            'perItem'             => $perItem,
-            // Komposisi donut
-            'kgOrganik'           => $kgOrganik,
-            'kgAnorganik'         => $kgAnorganik,
+            // Komposisi
+            'kgDipilah'           => $kgDipilah,
             'kgTidakDipilah'      => $kgTidakDipilah,
-            'kgDipilahAgregat'    => $kgDipilahAgregat, // v5.1 dipilah without per-type breakdown
             // Per-RW bar (both models)
             'rwData'              => $rwData,
             // Payment status

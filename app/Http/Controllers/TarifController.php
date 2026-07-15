@@ -50,11 +50,12 @@ class TarifController extends Controller
             ->get();
 
         $settings = [
-            'tarif_flat_per_kg' => (float) PengaturanSistem::get('tarif_flat_per_kg', 500),
+            'tarif_flat_per_kg'   => (float) PengaturanSistem::get('tarif_flat_per_kg', 500),
             'nilai_dipilah_per_kg' => (float) PengaturanSistem::get(
                 'nilai_dipilah_per_kg',
                 PengaturanSistem::get('tarif_flat_per_kg', 500)
             ),
+            'nama_tps'            => PengaturanSistem::get('nama_tps', 'TPS 3R Banjarsari'),
         ];
 
         return view('sips.tarif.index', compact('tarifItems', 'ringkasanTipe', 'riwayatTerbaru', 'settings'));

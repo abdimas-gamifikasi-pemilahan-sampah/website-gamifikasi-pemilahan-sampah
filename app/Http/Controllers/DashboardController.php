@@ -3,16 +3,22 @@
 namespace App\Http\Controllers;
 
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $bulan     = Carbon::now()->startOfMonth();
+        // Period selection — default to current month
+        $selectedBulanParam = $request->get('bulan'); // 'YYYY-MM'
+        $bulan = $selectedBulanParam
+            ? Carbon::createFromFormat('Y-m', $selectedBulanParam)->startOfMonth()
+            : Carbon::now()->startOfMonth();
+
         $bulanLalu = $bulan->copy()->subMonth();
 
-        // ── KPI bulan ini ──────────────────────────────────────────
+        // ── KPI for selected period ────────────────────────────────
         $kpiBulanIni  = $this->kpiMonth($bulan);
         $kpiBulanLalu = $this->kpiMonth($bulanLalu);
 
@@ -23,49 +29,19 @@ class DashboardController extends Controller
         // ── Warga aktif ────────────────────────────────────────────
         $wargaAktif = DB::table('warga')->where('status_keanggotaan', 'aktif')->count();
 
-        // ── Komposisi sampah bulan ini ─────────────────────────────
-        // From old-model item_setoran (has per-type breakdown)
-        $komposisi = DB::table('item_setoran')
-            ->join('setoran', 'setoran.id', '=', 'item_setoran.setoran_id')
-            ->whereBetween('setoran.tanggal_setoran', [
-                $bulan->copy()->startOfMonth(),
-                $bulan->copy()->endOfMonth(),
-            ])
-            ->select([
-                'item_setoran.tipe_sampah',
-                'item_setoran.status_pemilahan',
-                DB::raw('SUM(item_setoran.berat_kg) as total_kg'),
-            ])
-            ->groupBy('item_setoran.tipe_sampah', 'item_setoran.status_pemilahan')
-            ->get();
+        // ── Komposisi sampah periode terpilih ──────────────────────
+        $kgDipilah      = (float) $kpiBulanIni['kg_dipilah'];
+        $kgTidakDipilah = max(0, (float) $kpiBulanIni['total_kg'] - $kgDipilah);
+        $totalKgAll     = max($kpiBulanIni['total_kg'], 0.01);
 
-        $kgOrganik      = $komposisi->where('tipe_sampah', 'organik')->sum('total_kg');
-        $kgAnorganik    = $komposisi->where('tipe_sampah', 'anorganik')->sum('total_kg');
-        $kgTidakDipilah = $komposisi->where('status_pemilahan', 'tidak_dipilah')->sum('total_kg');
-        $kgTidakDicatat = $komposisi->whereNull('status_pemilahan')->sum('total_kg');
+        // ── Peringkat RW (5 teratas, periode terpilih) ─────────────
+        $awalBulan  = $bulan->copy()->startOfMonth();
+        $akhirBulan = $bulan->copy()->endOfMonth();
 
-        // Add v5.1 setoran totals (no per-item type data)
-        $v5Totals = DB::table('setoran')
-            ->whereNull('warga_id')
-            ->whereBetween('tanggal_setoran', [
-                $bulan->copy()->startOfMonth(),
-                $bulan->copy()->endOfMonth(),
-            ])
-            ->selectRaw('SUM(COALESCE(total_kg_tidak_dipilah, 0)) as sum_tidak_dipilah')
-            ->first();
-        $kgTidakDipilah += (float) ($v5Totals->sum_tidak_dipilah ?? 0);
-
-        $totalKgAll = max($kpiBulanIni['total_kg'], 0.01);
-
-        // ── Peringkat RW (5 teratas) ───────────────────────────────
-        // Query 1: warga-linked setoran (old model + v5.1 penyetor single warga)
         $rwWarga = DB::table('item_setoran')
             ->join('setoran', 'setoran.id', '=', 'item_setoran.setoran_id')
             ->join('warga', 'warga.id', '=', 'setoran.warga_id')
-            ->whereBetween('setoran.tanggal_setoran', [
-                $bulan->copy()->startOfMonth(),
-                $bulan->copy()->endOfMonth(),
-            ])
+            ->whereBetween('setoran.tanggal_setoran', [$awalBulan, $akhirBulan])
             ->select([
                 DB::raw("CONCAT('RW ', LPAD(CAST(warga.rw AS CHAR), 2, '0')) as rw_display"),
                 DB::raw('SUM(item_setoran.berat_kg) as total_kg'),
@@ -73,7 +49,6 @@ class DashboardController extends Controller
             ])
             ->groupBy('warga.rw');
 
-        // Query 2: v5.1 area_rw setoran (aggregate / multi-penyetor)
         $rwAreaRw = DB::table('setoran')
             ->leftJoinSub(
                 DB::table('item_setoran')
@@ -85,10 +60,7 @@ class DashboardController extends Controller
                 fn($j) => $j->on('items_agg.setoran_id', '=', 'setoran.id')
             )
             ->whereNull('setoran.warga_id')
-            ->whereBetween('setoran.tanggal_setoran', [
-                $bulan->copy()->startOfMonth(),
-                $bulan->copy()->endOfMonth(),
-            ])
+            ->whereBetween('setoran.tanggal_setoran', [$awalBulan, $akhirBulan])
             ->select([
                 DB::raw("COALESCE(NULLIF(TRIM(setoran.area_rw), ''), 'Area lain') as rw_display"),
                 DB::raw('SUM(COALESCE(setoran.total_kg, items_agg.sum_kg, 0)) as total_kg'),
@@ -107,36 +79,20 @@ class DashboardController extends Controller
                 return $row;
             });
 
-        // ── Tren 5 bulan ───────────────────────────────────────────
-        $tren = [];
-        for ($i = 4; $i >= 0; $i--) {
-            $m      = Carbon::now()->subMonths($i)->startOfMonth();
-            $data   = $this->kpiMonth($m);
-            $tren[] = [
-                'bulan'          => $m->translatedFormat('F'),
-                'total_kg'       => $data['total_kg'],
-                'persen_dipilah' => $data['persen_dipilah'],
-                'pencairan'      => $data['pencairan'],
-                'warga_aktif'    => $wargaAktif,
-            ];
-        }
-
-        // ── Top 5 warga bulan ini (leaderboard preview) ───────────
-        $awalBulan  = $bulan->copy()->startOfMonth();
-        $akhirBulan = $bulan->copy()->endOfMonth();
-
+        // ── Top 5 warga periode terpilih ───────────────────────────
         $topWarga = DB::table('item_setoran')
             ->join('setoran', 'setoran.id', '=', 'item_setoran.setoran_id')
             ->join('warga', 'warga.id', '=', 'setoran.warga_id')
             ->whereBetween('setoran.tanggal_setoran', [$awalBulan, $akhirBulan])
             ->select([
                 'warga.nama',
+                'warga.alamat',
                 'warga.rw',
                 'warga.dusun',
                 DB::raw('SUM(item_setoran.berat_kg) as total_kg'),
                 DB::raw("SUM(CASE WHEN item_setoran.status_pemilahan = 'dipilah' THEN item_setoran.berat_kg ELSE 0 END) as kg_dipilah"),
             ])
-            ->groupBy('warga.id', 'warga.nama', 'warga.rw', 'warga.dusun')
+            ->groupBy('warga.id', 'warga.nama', 'warga.alamat', 'warga.rw', 'warga.dusun')
             ->get()
             ->map(function ($row) {
                 $row->persen_dipilah = $row->total_kg > 0
@@ -149,6 +105,22 @@ class DashboardController extends Controller
             ->take(5)
             ->values();
 
+        // ── Tren 5 bulan (berakhir di periode terpilih) ────────────
+        $tren = [];
+        for ($i = 4; $i >= 0; $i--) {
+            $m    = $bulan->copy()->subMonths($i)->startOfMonth();
+            $data = $this->kpiMonth($m);
+            $tren[] = [
+                'bulan'          => $m->translatedFormat('M Y'),
+                'total_kg'       => $data['total_kg'],
+                'kg_dipilah'     => $data['kg_dipilah'],
+                'kg_tidak'       => max(0, $data['total_kg'] - $data['kg_dipilah']),
+                'persen_dipilah' => $data['persen_dipilah'],
+                'pencairan'      => $data['pencairan'],
+                'warga_aktif'    => $wargaAktif,
+            ];
+        }
+
         // ── Status pembayaran keseluruhan ──────────────────────────
         $statusBayar = DB::table('setoran')
             ->select('status_pembayaran', DB::raw('COUNT(*) as jumlah'))
@@ -159,21 +131,42 @@ class DashboardController extends Controller
             ->where('status_pembayaran', 'belum_dibayar')
             ->sum('total_nilai');
 
+        // ── OCR flat-rate items needing review ─────────────────────
+        $flatRateUnreviewed = DB::table('item_setoran')
+            ->join('setoran', 'setoran.id', '=', 'item_setoran.setoran_id')
+            ->where('setoran.sumber_input', 'ocr')
+            ->where('item_setoran.status_pemilahan', 'dipilah')
+            ->whereNull('item_setoran.tarif_item_id')
+            ->whereNotNull('item_setoran.catatan_item')
+            ->where('item_setoran.catatan_item', 'like', '%flat rate%')
+            ->count();
+
+        // ── Available months for period picker (last 12 months) ────
+        $availableMonths = [];
+        for ($i = 0; $i < 12; $i++) {
+            $m = Carbon::now()->subMonths($i)->startOfMonth();
+            $availableMonths[] = [
+                'value' => $m->format('Y-m'),
+                'label' => $m->translatedFormat('F Y'),
+            ];
+        }
+
         return view('sips.dashboard.index', [
-            'kpi'            => $kpiBulanIni,
-            'totalKgDelta'   => $totalKgDelta,
-            'wargaAktif'     => $wargaAktif,
-            'kgOrganik'      => $kgOrganik,
-            'kgAnorganik'    => $kgAnorganik,
-            'kgTidakDipilah' => $kgTidakDipilah,
-            'kgTidakDicatat' => $kgTidakDicatat,
-            'totalKgAll'     => $totalKgAll,
-            'rwRanking'      => $rwRanking,
-            'topWarga'       => $topWarga,
-            'tren'           => $tren,
-            'statusBayar'    => $statusBayar,
-            'nilaiTertunda'  => $nilaiTertunda,
-            'periodeBulan'   => Carbon::now()->translatedFormat('F Y'),
+            'kpi'                => $kpiBulanIni,
+            'totalKgDelta'       => $totalKgDelta,
+            'wargaAktif'         => $wargaAktif,
+            'kgDipilah'          => $kgDipilah,
+            'kgTidakDipilah'     => $kgTidakDipilah,
+            'totalKgAll'         => $totalKgAll,
+            'rwRanking'          => $rwRanking,
+            'topWarga'           => $topWarga,
+            'tren'               => $tren,
+            'statusBayar'        => $statusBayar,
+            'nilaiTertunda'      => $nilaiTertunda,
+            'flatRateUnreviewed' => $flatRateUnreviewed,
+            'periodeBulan'       => $bulan->translatedFormat('F Y'),
+            'selectedBulan'      => $bulan->format('Y-m'),
+            'availableMonths'    => $availableMonths,
         ]);
     }
 
@@ -182,8 +175,6 @@ class DashboardController extends Controller
         $awal  = $bulan->copy()->startOfMonth();
         $akhir = $bulan->copy()->endOfMonth();
 
-        // Use setoran as primary source (handles v5.1 aggregate mode).
-        // Fall back to item_setoran aggregates for old records where total_kg = NULL.
         $data = DB::table('setoran')
             ->leftJoinSub(
                 DB::table('item_setoran')
@@ -202,13 +193,11 @@ class DashboardController extends Controller
         $totalKg   = (float) ($data->total_kg ?? 0);
         $kgDipilah = (float) ($data->kg_dipilah ?? 0);
 
-        // Pencairan from confirmed payments (old model)
         $pencairan = DB::table('pembayaran')
             ->join('setoran', 'setoran.id', '=', 'pembayaran.setoran_id')
             ->whereBetween('setoran.tanggal_setoran', [$awal, $akhir])
             ->sum('pembayaran.jumlah_dibayar');
 
-        // V5.1: selesai setoran without a pembayaran record
         $pencairanV5 = DB::table('setoran')
             ->whereBetween('tanggal_setoran', [$awal, $akhir])
             ->where('is_selesai', true)

@@ -1,8 +1,8 @@
 @extends('partials.layouts.master')
 
-@section('title', 'Dasbor Analitik SIPS')
+@section('title', 'Dashboard | SIPS')
 @section('title-sub', 'Sistem Informasi Pemilahan Sampah')
-@section('pagetitle', 'Dasbor Analitik Desa Banjarsari')
+@section('pagetitle', 'Dashboard')
 
 @section('css')
 <style>
@@ -11,18 +11,35 @@
         font-weight: 700;
         line-height: 1.1;
     }
-
     .sips-stat-dot {
         width: 10px;
         height: 10px;
         border-radius: 999px;
         display: inline-block;
     }
-
     .badge-bronze {
         background-color: rgba(205,127,50,0.15);
         color: #A0522D;
         border: 1px solid rgba(205,127,50,0.3);
+    }
+    .chart-container {
+        position: relative;
+        height: 240px;
+    }
+    .donut-wrapper {
+        position: relative;
+        width: 110px;
+        height: 110px;
+        flex-shrink: 0;
+    }
+    .donut-center {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
     }
 </style>
 @endsection
@@ -30,24 +47,52 @@
 @section('content')
 <div id="layout-wrapper" class="sips-page-shell">
 
-    {{-- Welcome banner --}}
+    {{-- Welcome banner + Period picker --}}
     <div class="row g-4 mb-1">
         <div class="col-12">
             <div class="card sips-soft-card">
                 <div class="card-body d-flex flex-wrap align-items-center justify-content-between gap-3"
                      style="background: linear-gradient(135deg, rgba(255,126,61,0.08), rgba(59,130,246,0.05)); border-radius: inherit;">
                     <div>
-                        <h4 class="mb-1">Selamat datang kembali, Tim SIPS Desa Banjarsari</h4>
-                        <p class="text-muted mb-0">Berikut ringkasan performa pemilahan sampah terbaru untuk Desa Banjarsari.</p>
+                        <h4 class="mb-1">Selamat datang, {{ auth()->user()->name }}</h4>
+                        <p class="text-muted mb-0">Ringkasan performa pemilahan sampah Desa Banjarsari.</p>
                     </div>
                     <div class="text-md-end">
-                        <p class="mb-1 text-muted fs-13">Periode Laporan</p>
-                        <h6 class="mb-0 fw-semibold">{{ $periodeBulan }}</h6>
+                        <p class="mb-1 text-muted fs-12">Periode Laporan</p>
+                        <form method="GET" action="{{ route('sips.dashboard') }}" id="periodForm">
+                            <select name="bulan" class="form-select form-select-sm fw-semibold"
+                                    style="min-width:160px;" onchange="document.getElementById('periodForm').submit()">
+                                @foreach($availableMonths as $opt)
+                                <option value="{{ $opt['value'] }}" {{ $selectedBulan === $opt['value'] ? 'selected' : '' }}>
+                                    {{ $opt['label'] }}
+                                </option>
+                                @endforeach
+                            </select>
+                        </form>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    {{-- OCR flat-rate notification (admin only) --}}
+    @if(auth()->user()->isAdmin() && ($flatRateUnreviewed ?? 0) > 0)
+    <div class="row g-4 mb-1">
+        <div class="col-12">
+            <div class="alert alert-warning d-flex align-items-center justify-content-between mb-0 py-2">
+                <div>
+                    <i class="ri-sparkling-line me-2" style="color:#7030a0;"></i>
+                    <strong>{{ $flatRateUnreviewed }} item dari import OCR</strong> belum ditetapkan tarif —
+                    dihitung dengan flat rate sementara.
+                </div>
+                <a href="{{ route('sips.import.ocr.flat-rate-review') }}"
+                   class="btn btn-sm text-white flex-shrink-0 ms-3" style="background-color:#7030a0;">
+                    Review Sekarang
+                </a>
+            </div>
+        </div>
+    </div>
+    @endif
 
     {{-- KPI Cards --}}
     <div class="row g-4 mb-1">
@@ -56,13 +101,13 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start mb-2">
                         <p class="text-muted mb-0 fs-13">Total Sampah Terkumpul</p>
-                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle">Bulan ini</span>
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle">{{ $periodeBulan }}</span>
                     </div>
                     <div class="sips-kpi-value">{{ number_format($kpi['total_kg'], 1, ',', '.') }} kg</div>
                     @if($totalKgDelta !== null)
                     <div class="mt-2 fs-13 {{ $totalKgDelta >= 0 ? 'text-success' : 'text-danger' }}">
                         <i class="ri-arrow-{{ $totalKgDelta >= 0 ? 'up' : 'down' }}-line"></i>
-                        {{ $totalKgDelta >= 0 ? '+' : '' }}{{ $totalKgDelta }}% dibanding bulan lalu
+                        {{ $totalKgDelta >= 0 ? '+' : '' }}{{ $totalKgDelta }}% dari bulan sebelumnya
                     </div>
                     @endif
                 </div>
@@ -104,7 +149,7 @@
                     </div>
                     <div class="sips-kpi-value">{{ $wargaAktif }}</div>
                     <div class="mt-2 text-muted fs-13">
-                        {{ $topWarga->count() }} berkontribusi bulan ini
+                        {{ $topWarga->count() }} berkontribusi periode ini
                     </div>
                 </div>
             </div>
@@ -117,56 +162,51 @@
             <div class="card card-h-100">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">Komposisi Sampah Masuk</h5>
-                    <span class="badge border border-primary text-primary">Bulanan</span>
+                    <span class="badge border border-primary text-primary">{{ $periodeBulan }}</span>
                 </div>
                 <div class="card-body">
                     @php
-                        $pctOrganik      = $totalKgAll > 0 ? round(($kgOrganik / $totalKgAll) * 100) : 0;
-                        $pctAnorganik    = $totalKgAll > 0 ? round(($kgAnorganik / $totalKgAll) * 100) : 0;
+                        $pctDipilah      = $totalKgAll > 0 ? round(($kgDipilah / $totalKgAll) * 100) : 0;
                         $pctTidakDipilah = $totalKgAll > 0 ? round(($kgTidakDipilah / $totalKgAll) * 100) : 0;
-                        $pctTidakDicatat = $totalKgAll > 0 ? round(($kgTidakDicatat / $totalKgAll) * 100) : 0;
                     @endphp
-                    <div class="mb-4">
-                        <div class="d-flex justify-content-between mb-2">
-                            <span><span class="sips-stat-dot bg-success me-2"></span>Organik</span>
-                            <strong>{{ number_format($kgOrganik, 1, ',', '.') }} kg</strong>
+                    <div class="d-flex align-items-center gap-4">
+                        {{-- Donut chart --}}
+                        <div class="donut-wrapper">
+                            <canvas id="komposisiDonut"></canvas>
+                            <div class="donut-center">
+                                <div class="fw-bold fs-14">{{ $pctDipilah }}%</div>
+                                <div class="text-muted" style="font-size:9px; line-height:1.2;">dipilah</div>
+                            </div>
                         </div>
-                        <div class="progress" style="height: 10px;">
-                            <div class="progress-bar bg-success" style="width: {{ $pctOrganik }}%"></div>
-                        </div>
-                    </div>
-                    <div class="mb-4">
-                        <div class="d-flex justify-content-between mb-2">
-                            <span><span class="sips-stat-dot bg-info me-2"></span>Anorganik</span>
-                            <strong>{{ number_format($kgAnorganik, 1, ',', '.') }} kg</strong>
-                        </div>
-                        <div class="progress" style="height: 10px;">
-                            <div class="progress-bar bg-info" style="width: {{ $pctAnorganik }}%"></div>
-                        </div>
-                    </div>
-                    <div class="mb-4">
-                        <div class="d-flex justify-content-between mb-2">
-                            <span><span class="sips-stat-dot bg-warning me-2"></span>Tidak Dipilah</span>
-                            <strong>{{ number_format($kgTidakDipilah, 1, ',', '.') }} kg</strong>
-                        </div>
-                        <div class="progress" style="height: 10px;">
-                            <div class="progress-bar bg-warning" style="width: {{ $pctTidakDipilah }}%"></div>
-                        </div>
-                    </div>
-                    <div>
-                        <div class="d-flex justify-content-between mb-2">
-                            <span><span class="sips-stat-dot bg-secondary me-2"></span>Status Tidak Dicatat</span>
-                            <strong>{{ number_format($kgTidakDicatat, 1, ',', '.') }} kg</strong>
-                        </div>
-                        <div class="progress" style="height: 10px;">
-                            <div class="progress-bar bg-secondary" style="width: {{ max($pctTidakDicatat, 1) }}%"></div>
+                        {{-- Progress bars --}}
+                        <div class="flex-grow-1">
+                            <div class="mb-4">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span><span class="sips-stat-dot bg-success me-2"></span>Dipilah</span>
+                                    <strong class="text-success">{{ number_format($kgDipilah, 1, ',', '.') }} kg</strong>
+                                </div>
+                                <div class="progress" style="height: 12px;">
+                                    <div class="progress-bar bg-success" style="width: {{ $pctDipilah }}%"></div>
+                                </div>
+                                <div class="text-muted fs-12 mt-1">{{ $pctDipilah }}% dari total — warga menerima uang</div>
+                            </div>
+                            <div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span><span class="sips-stat-dot bg-danger me-2"></span>Tidak Dipilah</span>
+                                    <strong class="text-danger">{{ number_format($kgTidakDipilah, 1, ',', '.') }} kg</strong>
+                                </div>
+                                <div class="progress" style="height: 12px;">
+                                    <div class="progress-bar bg-danger" style="width: {{ $pctTidakDipilah }}%"></div>
+                                </div>
+                                <div class="text-muted fs-12 mt-1">{{ $pctTidakDipilah }}% dari total — warga bayar iuran</div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        {{-- Peringkat RW: progress bar style (consistent with leaderboard) --}}
+        {{-- Peringkat RW --}}
         <div class="col-xl-5">
             <div class="card card-h-100">
                 <div class="card-header d-flex justify-content-between align-items-center">
@@ -178,7 +218,6 @@
                 <div class="card-body">
                     @php
                     $rwColors  = ['bg-success', 'bg-primary', 'bg-info', 'bg-warning', 'bg-secondary'];
-                    $barColors = ['bg-success', 'bg-primary', 'bg-info', 'bg-warning', 'bg-secondary'];
                     @endphp
                     @forelse($rwRanking->take(5) as $i => $rw)
                     <div class="{{ !$loop->last ? 'mb-4' : '' }}">
@@ -193,7 +232,7 @@
                             <span class="badge {{ $rwColors[$i] ?? 'bg-secondary' }}">#{{ $i + 1 }}</span>
                         </div>
                         <div class="progress" style="height: 8px;">
-                            <div class="progress-bar {{ $barColors[$i] ?? 'bg-secondary' }}"
+                            <div class="progress-bar {{ $rwColors[$i] ?? 'bg-secondary' }}"
                                  style="width: {{ $rw->persen_dipilah }}%"></div>
                         </div>
                     </div>
@@ -210,7 +249,7 @@
         <div class="col-xl-8">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-                    <h5 class="card-title mb-0">Top Warga Bulan Ini</h5>
+                    <h5 class="card-title mb-0">Top Warga Periode Ini</h5>
                     <div class="d-flex gap-2 align-items-center">
                         <span class="badge bg-info-subtle text-info border border-info-subtle">
                             {{ $topWarga->count() }} warga berkontribusi
@@ -238,7 +277,7 @@
                         <div class="flex-grow-1">
                             <div class="fw-medium">{{ $entry->nama }}</div>
                             <div class="text-muted fs-12">
-                                RW {{ $entry->rw }} / {{ $entry->dusun }}
+                                {{ Str::limit($entry->alamat ?? (($entry->rw ? 'RW '.$entry->rw : '').($entry->dusun ? ' / '.$entry->dusun : '')), 38) ?: '' }}
                                 &nbsp;·&nbsp;{{ number_format($entry->kg_dipilah, 1, ',', '.') }} kg dipilah
                                 &nbsp;·&nbsp;{{ $entry->persen_dipilah }}% pilah
                             </div>
@@ -252,14 +291,14 @@
                     @empty
                     <div class="px-4 py-5 text-center text-muted">
                         <i class="ri-trophy-line fs-2 d-block mb-2 text-muted opacity-50"></i>
-                        Belum ada data setoran warga bulan ini.
+                        Belum ada data setoran warga periode ini.
                     </div>
                     @endforelse
                 </div>
             </div>
         </div>
 
-        {{-- Poin Formula (consistent with leaderboard admin sidebar) --}}
+        {{-- Poin Formula --}}
         <div class="col-xl-4">
             <div class="card border-primary-subtle">
                 <div class="card-header bg-primary-subtle border-primary-subtle">
@@ -293,24 +332,27 @@
         </div>
     </div>
 
-    {{-- Tren Bulanan + Status Pembayaran + Aksi Cepat --}}
+    {{-- Tren Bulanan (chart) + Status Pembayaran + Aksi Cepat --}}
     <div class="row g-4">
         <div class="col-xl-8">
             <div class="card card-h-100">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">Ringkasan Tren Bulanan</h5>
-                    <span class="text-muted fs-13">5 Bulan Terakhir</span>
+                    <h5 class="card-title mb-0">Tren 5 Bulan Terakhir</h5>
+                    <span class="text-muted fs-13">Berat (kg) &amp; % Dipilah</span>
                 </div>
                 <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
+                    <div class="chart-container">
+                        <canvas id="trenChart"></canvas>
+                    </div>
+                    {{-- Mini summary table below chart --}}
+                    <div class="table-responsive mt-3">
+                        <table class="table table-sm align-middle mb-0" style="font-size:12px;">
                             <thead class="table-light">
                                 <tr>
                                     <th>Bulan</th>
-                                    <th class="text-end">Total Sampah (kg)</th>
+                                    <th class="text-end">Total (kg)</th>
                                     <th class="text-end">Dipilah (%)</th>
                                     <th class="text-end">Pencairan (Rp)</th>
-                                    <th class="text-end">Warga Aktif</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -324,7 +366,6 @@
                                         </span>
                                     </td>
                                     <td class="text-end">{{ number_format($t['pencairan'], 0, ',', '.') }}</td>
-                                    <td class="text-end">{{ $t['warga_aktif'] }}</td>
                                 </tr>
                                 @endforeach
                             </tbody>
@@ -367,18 +408,21 @@
                 </div>
                 <div class="card-body">
                     <a href="{{ route('sips.setoran.create') }}" class="btn btn-primary w-100 mb-2">
-                        <i class="ri-add-line me-1"></i> Catat Setoran Baru
+                        <i class="ri-add-circle-line me-1"></i> Catat Setoran Baru
+                    </a>
+                    <a href="{{ route('sips.import.setoran.index') }}" class="btn btn-light w-100 mb-2">
+                        <i class="ri-file-excel-2-line me-1"></i> Import Setoran Excel
+                    </a>
+                    <a href="{{ route('sips.setoran.index') }}" class="btn btn-light w-100 mb-2">
+                        <i class="ri-history-line me-1"></i> Riwayat Setoran
+                    </a>
+                    <a href="{{ route('sips.pembayaran.index') }}" class="btn btn-light w-100 mb-2">
+                        <i class="ri-money-dollar-circle-line me-1"></i> Laporan Pembayaran
                     </a>
                     @if(auth()->user()->isAdmin())
-                    <a href="{{ route('sips.warga.index') }}" class="btn btn-light w-100 mb-2">Kelola Data Warga</a>
-                    <a href="{{ route('sips.tarif.index') }}" class="btn btn-light w-100 mb-2">Perbarui Tarif</a>
-                    <a href="{{ route('sips.import.index') }}" class="btn btn-light w-100 mb-2">Import Data Warga</a>
                     <a href="{{ route('sips.ekspor.index') }}" class="btn btn-outline-success w-100">
-                        <i class="ri-file-excel-2-line me-1"></i> Ekspor Laporan Excel
+                        <i class="ri-download-2-line me-1"></i> Ekspor Laporan
                     </a>
-                    @else
-                    <a href="{{ route('sips.setoran.index') }}" class="btn btn-light w-100 mb-2">Lihat Riwayat Setoran</a>
-                    <a href="{{ route('sips.pembayaran.index') }}" class="btn btn-light w-100">Lihat Pembayaran</a>
                     @endif
                 </div>
             </div>
@@ -386,4 +430,135 @@
     </div>
 
 </div>
+@endsection
+
+@section('js')
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    // ── Donut: Komposisi ───────────────────────────────────────
+    const donutCtx = document.getElementById('komposisiDonut');
+    if (donutCtx) {
+        const kgDipilah  = {{ $kgDipilah }};
+        const kgTidak    = {{ $kgTidakDipilah }};
+        new Chart(donutCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Dipilah', 'Tidak Dipilah'],
+                datasets: [{
+                    data: [kgDipilah || 0.01, kgTidak || 0.01],
+                    backgroundColor: ['#198754', '#dc3545'],
+                    borderWidth: 2,
+                    borderColor: 'transparent',
+                    hoverOffset: 4,
+                }]
+            },
+            options: {
+                cutout: '68%',
+                plugins: { legend: { display: false }, tooltip: { enabled: true } },
+                animation: { duration: 600 },
+            }
+        });
+    }
+
+    // ── Bar + Line: Tren 5 Bulan ───────────────────────────────
+    const trenCtx = document.getElementById('trenChart');
+    if (trenCtx) {
+        const trenData = @json($tren);
+        const labels       = trenData.map(d => d.bulan);
+        const kgDipilah    = trenData.map(d => d.kg_dipilah);
+        const kgTidak      = trenData.map(d => d.kg_tidak);
+        const pctDipilah   = trenData.map(d => d.persen_dipilah);
+
+        new Chart(trenCtx, {
+            data: {
+                labels,
+                datasets: [
+                    {
+                        type: 'bar',
+                        label: 'Dipilah (kg)',
+                        data: kgDipilah,
+                        backgroundColor: 'rgba(25, 135, 84, 0.75)',
+                        stack: 'kg',
+                        borderRadius: 3,
+                        order: 2,
+                    },
+                    {
+                        type: 'bar',
+                        label: 'Tidak Dipilah (kg)',
+                        data: kgTidak,
+                        backgroundColor: 'rgba(220, 53, 69, 0.6)',
+                        stack: 'kg',
+                        borderRadius: 3,
+                        order: 2,
+                    },
+                    {
+                        type: 'line',
+                        label: '% Dipilah',
+                        data: pctDipilah,
+                        yAxisID: 'y1',
+                        borderColor: '#f77f00',
+                        backgroundColor: 'rgba(247,127,0,0.1)',
+                        borderWidth: 2.5,
+                        pointBackgroundColor: '#f77f00',
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        tension: 0.35,
+                        fill: false,
+                        order: 1,
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { padding: 16, boxWidth: 12, font: { size: 12 } }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(ctx) {
+                                if (ctx.dataset.yAxisID === 'y1') {
+                                    return ` ${ctx.dataset.label}: ${ctx.raw}%`;
+                                }
+                                return ` ${ctx.dataset.label}: ${ctx.raw.toLocaleString('id-ID', {minimumFractionDigits:1})} kg`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { font: { size: 12 } }
+                    },
+                    y: {
+                        stacked: true,
+                        beginAtZero: true,
+                        grid: { color: 'rgba(0,0,0,0.06)' },
+                        ticks: {
+                            font: { size: 11 },
+                            callback: v => v + ' kg'
+                        }
+                    },
+                    y1: {
+                        type: 'linear',
+                        position: 'right',
+                        min: 0,
+                        max: 100,
+                        grid: { drawOnChartArea: false },
+                        ticks: {
+                            font: { size: 11 },
+                            callback: v => v + '%'
+                        }
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
 @endsection

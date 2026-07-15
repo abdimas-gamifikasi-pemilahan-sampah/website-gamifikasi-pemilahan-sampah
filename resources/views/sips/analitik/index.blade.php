@@ -157,28 +157,18 @@
                     <small class="text-muted">{{ $bulanDipilih->translatedFormat('F Y') }}</small>
                 </div>
                 <div class="card-body d-flex flex-column align-items-center justify-content-center">
-                    <div class="chart-container w-100" style="height: 260px;">
+                    <div class="chart-container w-100" style="height: 240px;">
                         <canvas id="chartKomposisi"></canvas>
                     </div>
-                    <div class="d-flex flex-wrap gap-3 mt-3 justify-content-center">
+                    <div class="d-flex flex-wrap gap-4 mt-3 justify-content-center">
                         <div class="text-center">
-                            <div class="fw-semibold text-success">{{ number_format($kgOrganik, 1, ',', '.') }} kg</div>
-                            <div class="text-muted fs-12">Organik</div>
+                            <div class="fw-semibold text-success fs-5">{{ number_format($kgDipilah, 1, ',', '.') }} kg</div>
+                            <div class="text-muted fs-12">Dipilah</div>
                         </div>
                         <div class="text-center">
-                            <div class="fw-semibold text-primary">{{ number_format($kgAnorganik, 1, ',', '.') }} kg</div>
-                            <div class="text-muted fs-12">Anorganik</div>
-                        </div>
-                        <div class="text-center">
-                            <div class="fw-semibold text-danger">{{ number_format($kgTidakDipilah, 1, ',', '.') }} kg</div>
+                            <div class="fw-semibold text-danger fs-5">{{ number_format($kgTidakDipilah, 1, ',', '.') }} kg</div>
                             <div class="text-muted fs-12">Tidak Dipilah</div>
                         </div>
-                        @if($kgDipilahAgregat > 0)
-                        <div class="text-center">
-                            <div class="fw-semibold text-warning">{{ number_format($kgDipilahAgregat, 1, ',', '.') }} kg</div>
-                            <div class="text-muted fs-12">Dipilah (Agregat)</div>
-                        </div>
-                        @endif
                     </div>
                 </div>
             </div>
@@ -198,74 +188,6 @@
         </div>
     </div>
 
-    {{-- Per-item breakdown --}}
-    <div class="row g-3 mb-4">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-transparent border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
-                    <div>
-                        <h5 class="card-title mb-0">Kontribusi per Jenis Item</h5>
-                        <small class="text-muted">Berat dipilah per item — {{ $bulanDipilih->translatedFormat('F Y') }}</small>
-                    </div>
-                    <div class="d-flex gap-2">
-                        <span class="badge bg-success-subtle text-success border border-success-subtle fs-12">&#9679; Organik</span>
-                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle fs-12">&#9679; Anorganik</span>
-                    </div>
-                </div>
-                <div class="card-body">
-                    @if($perItem->isEmpty())
-                    <p class="text-muted text-center py-4">Belum ada data item dipilah untuk periode ini.</p>
-                    @else
-                    <div class="row g-4">
-                        <div class="col-xl-7">
-                            @php $chartItemHeight = max(220, $perItem->count() * 38); @endphp
-                            <div class="chart-container" style="height: {{ min($chartItemHeight, 480) }}px;">
-                                <canvas id="chartPerItem"></canvas>
-                            </div>
-                        </div>
-                        <div class="col-xl-5">
-                            <div class="table-responsive">
-                                <table class="table table-sm align-middle mb-0">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>Item</th>
-                                            <th>Tipe</th>
-                                            <th class="text-end">Berat (kg)</th>
-                                            <th class="text-end">Setoran</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach($perItem as $item)
-                                        <tr>
-                                            <td class="fw-medium">{{ $item->nama_item }}</td>
-                                            <td>
-                                                @if($item->tipe_sampah === 'organik')
-                                                    <span class="badge bg-success-subtle text-success">Organik</span>
-                                                @else
-                                                    <span class="badge bg-primary-subtle text-primary">Anorganik</span>
-                                                @endif
-                                            </td>
-                                            <td class="text-end fw-semibold">{{ number_format($item->total_kg, 1, ',', '.') }}</td>
-                                            <td class="text-end text-muted">{{ $item->jumlah_setoran }}x</td>
-                                        </tr>
-                                        @endforeach
-                                    </tbody>
-                                    <tfoot class="table-light">
-                                        <tr>
-                                            <td colspan="2" class="fw-semibold">Total Dipilah</td>
-                                            <td class="text-end fw-bold">{{ number_format($perItem->sum('total_kg'), 1, ',', '.') }}</td>
-                                            <td></td>
-                                        </tr>
-                                    </tfoot>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                    @endif
-                </div>
-            </div>
-        </div>
-    </div>
 
     {{-- Tingkat Pemilahan per RW + Payment Donut --}}
     <div class="row g-3 mb-4">
@@ -403,8 +325,10 @@
                                 @endphp
                                 <tr>
                                     <td class="text-center">{!! $medal !!}</td>
-                                    <td class="fw-semibold">{{ $w->nama }}</td>
-                                    <td class="text-muted fs-13">RT {{ $w->rt }} / RW {{ $w->rw }} / {{ $w->dusun }}</td>
+                                    <td>
+                                        <div class="fw-semibold">{{ $w->nama }}</div>
+                                        <small class="text-muted">{{ Str::limit($w->alamat ?? (($w->rt ? 'RT '.$w->rt : '').($w->rw ? ' RW '.$w->rw : '').($w->dusun ? ' / '.$w->dusun : '')), 42) ?: '-' }}</small>
+                                    </td>
                                     <td class="text-end">{{ number_format($w->total_kg, 1, ',', '.') }}</td>
                                     <td class="text-end">{{ number_format($w->kg_dipilah, 1, ',', '.') }}</td>
                                     <td style="min-width: 120px;">
@@ -524,14 +448,6 @@
                                     <tr>
                                         <td class="text-muted">Berhasil Dipilah</td>
                                         <td class="fw-semibold text-success">{{ number_format($kpi['kg_dipilah'], 1, ',', '.') }} kg ({{ $kpi['persen_dipilah'] }}%)</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="text-muted">Organik</td>
-                                        <td class="fw-semibold">{{ number_format($kgOrganik, 1, ',', '.') }} kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="text-muted">Anorganik</td>
-                                        <td class="fw-semibold">{{ number_format($kgAnorganik, 1, ',', '.') }} kg</td>
                                     </tr>
                                     <tr>
                                         <td class="text-muted">Tidak Dipilah</td>
@@ -671,35 +587,18 @@
     } catch (e) { console.error('chartTren:', e); }
 
     // ── 2. Komposisi donut ────────────────────────────────────
-    const organik         = @json($kgOrganik);
-    const anorganik       = @json($kgAnorganik);
-    const tidakPilah      = @json($kgTidakDipilah);
-    const dipilahAgregat  = @json($kgDipilahAgregat); // v5.1 dipilah without organik/anorganik split
-
-    // Build dynamic labels/data (skip zero segments to keep chart clean)
-    const komposisiData   = [];
-    const komposisiLabels = [];
-    const komposisiBg     = [];
-    const palette = [
-        ['Organik',            organik,        'rgba(16,185,129,0.75)'],
-        ['Anorganik',          anorganik,       'rgba(59,130,246,0.75)'],
-        ['Tidak Dipilah',      tidakPilah,      'rgba(239,68,68,0.75)'],
-        ['Dipilah (Agregat)',  dipilahAgregat,  'rgba(245,158,11,0.75)'],
-    ];
-    palette.forEach(([label, val, color]) => {
-        if (val > 0) { komposisiLabels.push(label); komposisiData.push(val); komposisiBg.push(color); }
-    });
-    // If all zero, push a placeholder so the chart renders
-    if (komposisiData.length === 0) { komposisiLabels.push('Belum ada data'); komposisiData.push(1); komposisiBg.push('rgba(200,200,200,0.4)'); }
+    const kgDipilah      = @json($kgDipilah);
+    const kgTidakDipilah = @json($kgTidakDipilah);
+    const isEmpty        = kgDipilah === 0 && kgTidakDipilah === 0;
 
     try {
         new Chart(document.getElementById('chartKomposisi'), {
             type: 'doughnut',
             data: {
-                labels: komposisiLabels,
+                labels: isEmpty ? ['Belum ada data'] : ['Dipilah', 'Tidak Dipilah'],
                 datasets: [{
-                    data: komposisiData,
-                    backgroundColor: komposisiBg,
+                    data:            isEmpty ? [1] : [kgDipilah, kgTidakDipilah],
+                    backgroundColor: isEmpty ? ['rgba(200,200,200,0.4)'] : ['rgba(16,185,129,0.75)', 'rgba(239,68,68,0.75)'],
                     borderWidth: 2,
                     borderColor: '#fff',
                     hoverOffset: 6,
@@ -713,7 +612,7 @@
                     legend: { position: 'bottom' },
                     tooltip: {
                         callbacks: {
-                            label: (ctx) => ` ${ctx.label}: ${ctx.parsed.toLocaleString('id-ID', { maximumFractionDigits: 1 })} kg`,
+                            label: (ctx) => isEmpty ? '' : ` ${ctx.label}: ${ctx.parsed.toLocaleString('id-ID', { maximumFractionDigits: 1 })} kg`,
                         },
                     },
                 },
@@ -838,56 +737,6 @@
             },
         });
     } catch (e) { console.error('chartPersen:', e); }
-
-    // ── 6. Per-item horizontal bar ────────────────────────────
-    @php
-        $perItemLabels = $perItem->pluck('nama_item')->toArray();
-        $perItemKg     = $perItem->map(fn ($r) => round((float) $r->total_kg, 1))->values()->toArray();
-        $perItemBg     = $perItem->map(fn ($r) => $r->tipe_sampah === 'organik'
-            ? 'rgba(16,185,129,0.65)'
-            : 'rgba(59,130,246,0.65)')->values()->toArray();
-        $perItemBorder = $perItem->map(fn ($r) => $r->tipe_sampah === 'organik'
-            ? 'rgba(16,185,129,1)'
-            : 'rgba(59,130,246,1)')->values()->toArray();
-    @endphp
-    @if($perItem->isNotEmpty())
-    try {
-        new Chart(document.getElementById('chartPerItem'), {
-            type: 'bar',
-            data: {
-                labels: @json($perItemLabels),
-                datasets: [{
-                    label: 'Berat Dipilah (kg)',
-                    data: @json($perItemKg),
-                    backgroundColor: @json($perItemBg),
-                    borderColor: @json($perItemBorder),
-                    borderWidth: 1,
-                    borderRadius: 4,
-                }],
-            },
-            options: {
-                indexAxis: 'y',
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        callbacks: {
-                            label: (ctx) => ` ${ctx.parsed.x.toLocaleString('id-ID', { maximumFractionDigits: 1 })} kg`,
-                        },
-                    },
-                },
-                scales: {
-                    x: {
-                        title: { display: true, text: 'Berat (kg)' },
-                        grid: { color: 'rgba(0,0,0,0.05)' },
-                    },
-                    y: { grid: { display: false } },
-                },
-            },
-        });
-    } catch (e) { console.error('chartPerItem:', e); }
-    @endif
 
 })();
 </script>

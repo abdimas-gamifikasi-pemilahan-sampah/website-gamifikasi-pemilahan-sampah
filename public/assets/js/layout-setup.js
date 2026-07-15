@@ -226,27 +226,11 @@ if (currentUrl === "/")
 const currentLayout = htmlElement.getAttribute("data-layout");
 const currentSidebar = htmlElement.getAttribute("data-sidebar");
 
-function normalizePath(path) {
-    if (!path) return "/";
-    const cleaned = path.split("?")[0].split("#")[0];
-    if (cleaned.length > 1 && cleaned.endsWith("/")) {
-        return cleaned.slice(0, -1);
-    }
-    return cleaned;
-}
-
-const normalizedCurrentUrl = normalizePath(currentUrl);
-
 menuLinks.forEach((link) => {
     const linkHref = link.getAttribute("href"); // Get the href attribute of the link
-    if (!linkHref || linkHref.startsWith("#") || linkHref.startsWith("javascript:")) {
-        return;
-    }
 
-    const normalizedLinkHref = normalizePath(linkHref);
-
-    // Activate only exact path matches to avoid prefix collisions.
-    if (normalizedCurrentUrl === normalizedLinkHref) {
+    // Check if the current URL contains the link's href
+    if (currentUrl.includes(linkHref)) {
         link.classList.add("active"); // Add active class to the link
 
         // Function to open all parent dropdowns
@@ -280,12 +264,7 @@ const horizontalMenuLinks = document.querySelectorAll("#horizontal-menu .pe-nav-
 
 horizontalMenuLinks.forEach((link) => {
     const linkHref = link.getAttribute("href"); // Get the href attribute of the link
-    if (!linkHref || linkHref.startsWith("#") || linkHref.startsWith("javascript:")) {
-        return;
-    }
-
-    const normalizedLinkHref = normalizePath(linkHref);
-    if (normalizedCurrentUrl === normalizedLinkHref) {
+    if (currentUrl.includes(linkHref)) {
         link.classList.add("active");
         const parentDropdown = link.closest(".pe-has-sub");
         if (parentDropdown) {

@@ -41,7 +41,11 @@
                             @if($setoran->warga)
                                 <p class="text-muted mb-1 fs-12">WARGA</p>
                                 <p class="fw-semibold mb-0">{{ $setoran->warga->nama }}</p>
-                                <small class="text-muted">RT {{ $setoran->warga->rt }} / {{ $setoran->warga->dusun }}</small>
+                                <small class="text-muted">
+                                    @if($setoran->warga->alamat){{ $setoran->warga->alamat }}
+                                    @elseif($setoran->warga->rt || $setoran->warga->dusun)RT {{ $setoran->warga->rt ?? '-' }}{{ $setoran->warga->dusun ? ' / ' . $setoran->warga->dusun : '' }}
+                                    @else-@endif
+                                </small>
                             @else
                                 <p class="text-muted mb-1 fs-12">PENYETOR</p>
                                 @php

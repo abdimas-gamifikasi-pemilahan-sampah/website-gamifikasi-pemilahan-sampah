@@ -95,12 +95,18 @@
     <table>
         <tr>
             <td class="label">Warga</td>
-            <td>{{ $setoran->warga->nama }}</td>
+            <td>{{ $setoran->warga?->nama ?? '(Tidak Terdaftar)' }}</td>
         </tr>
+        @if($setoran->warga)
         <tr>
-            <td class="label">RT / Dusun</td>
-            <td>RT {{ $setoran->warga->rt }} / {{ $setoran->warga->dusun }}</td>
+            <td class="label">Alamat</td>
+            <td>
+                @if($setoran->warga->alamat){{ $setoran->warga->alamat }}
+                @elseif($setoran->warga->rt || $setoran->warga->dusun)RT {{ $setoran->warga->rt ?? '-' }}{{ $setoran->warga->dusun ? ' / ' . $setoran->warga->dusun : '' }}
+                @else-@endif
+            </td>
         </tr>
+        @endif
         <tr>
             <td class="label">Tanggal</td>
             <td>{{ $setoran->tanggal_setoran->format('d/m/Y H:i') }}</td>

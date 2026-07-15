@@ -14,41 +14,52 @@
     </div>
 
     <div class="col-md-6">
-        <label for="no_kk" class="form-label">Nomor KK <span class="text-danger">*</span></label>
+        <label for="no_kk" class="form-label">Nomor KK <span class="text-muted fw-normal fs-12">(opsional)</span></label>
         <input type="text" class="form-control @error('no_kk') is-invalid @enderror"
-               id="no_kk" name="no_kk" maxlength="16" minlength="16"
-               inputmode="numeric" pattern="[0-9]{16}"
+               id="no_kk" name="no_kk" maxlength="16"
+               inputmode="numeric"
                value="{{ old('no_kk', $warga->no_kk ?? '') }}"
                oninput="this.value = this.value.replace(/\D/g, '').slice(0, 16)"
-               required>
-        <div class="form-text">Nomor KK harus terdiri dari tepat 16 digit angka.</div>
+               placeholder="16 digit angka">
+        <div class="form-text">Jika diisi, harus tepat 16 digit angka. Digunakan sebagai kunci deduplikasi saat import.</div>
         @error('no_kk')
         <div class="invalid-feedback">{{ $message }}</div>
         @enderror
     </div>
 
+    <div class="col-md-12">
+        <label for="alamat" class="form-label">Alamat <span class="text-danger">*</span></label>
+        <textarea class="form-control @error('alamat') is-invalid @enderror"
+                  id="alamat" name="alamat" rows="2" maxlength="500"
+                  placeholder="Jalan, nomor rumah, RT/RW, dusun, dll."
+                  required>{{ old('alamat', $warga->alamat ?? '') }}</textarea>
+        @error('alamat')
+        <div class="invalid-feedback">{{ $message }}</div>
+        @enderror
+    </div>
+
     <div class="col-md-2">
-        <label for="rt" class="form-label">RT <span class="text-danger">*</span></label>
+        <label for="rt" class="form-label">RT <span class="text-muted fw-normal fs-12">(opsional)</span></label>
         <input type="number" class="form-control @error('rt') is-invalid @enderror"
-               id="rt" name="rt" min="1" max="999" value="{{ old('rt', $warga->rt ?? $prefill['rt'] ?? '') }}" required>
+               id="rt" name="rt" min="1" max="999" value="{{ old('rt', $warga->rt ?? $prefill['rt'] ?? '') }}">
         @error('rt')
         <div class="invalid-feedback">{{ $message }}</div>
         @enderror
     </div>
 
     <div class="col-md-2">
-        <label for="rw" class="form-label">RW <span class="text-danger">*</span></label>
+        <label for="rw" class="form-label">RW <span class="text-muted fw-normal fs-12">(opsional)</span></label>
         <input type="number" class="form-control @error('rw') is-invalid @enderror"
-               id="rw" name="rw" min="1" max="999" value="{{ old('rw', $warga->rw ?? $prefill['rw'] ?? '') }}" required>
+               id="rw" name="rw" min="1" max="999" value="{{ old('rw', $warga->rw ?? $prefill['rw'] ?? '') }}">
         @error('rw')
         <div class="invalid-feedback">{{ $message }}</div>
         @enderror
     </div>
 
     <div class="col-md-4">
-        <label for="dusun" class="form-label">Dusun <span class="text-danger">*</span></label>
+        <label for="dusun" class="form-label">Dusun <span class="text-muted fw-normal fs-12">(opsional)</span></label>
         <input type="text" class="form-control @error('dusun') is-invalid @enderror"
-               id="dusun" name="dusun" value="{{ old('dusun', $warga->dusun ?? '') }}" required>
+               id="dusun" name="dusun" value="{{ old('dusun', $warga->dusun ?? '') }}">
         @error('dusun')
         <div class="invalid-feedback">{{ $message }}</div>
         @enderror

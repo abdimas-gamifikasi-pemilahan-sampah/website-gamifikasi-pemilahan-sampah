@@ -17,13 +17,18 @@
                 <a href="{{ route('sips.dashboard') }}"
                    class="pe-nav-link {{ request()->routeIs('sips.dashboard') ? 'active' : '' }}">
                     <i class="bi bi-bar-chart-line pe-nav-icon"></i>
-                    <span class="pe-nav-content">Dasbor Ringkasan</span>
+                    <span class="pe-nav-content">Dashboard</span>
                 </a>
             </li>
 
             {{-- Data Master (admin only) --}}
             @if(auth()->user()->isAdmin())
-            @php $masterActive = request()->routeIs('sips.warga.*', 'sips.tarif.*', 'sips.import.*'); @endphp
+            @php
+                $masterActive = request()->routeIs(
+                    'sips.warga.*', 'sips.tarif.*', 'sips.petugas.*',
+                    'sips.import.index', 'sips.import.preview', 'sips.import.confirm', 'sips.import.template'
+                );
+            @endphp
             <li class="pe-slide pe-has-sub">
                 <a href="#collapseMasterData"
                    class="pe-nav-link {{ $masterActive ? 'active' : '' }}"
@@ -40,8 +45,14 @@
                     </li>
                     <li class="pe-slide-item">
                         <a href="{{ route('sips.warga.index') }}"
-                           class="pe-nav-link {{ request()->routeIs('sips.warga.*') ? 'active' : '' }}">
+                           class="pe-nav-link {{ request()->routeIs('sips.warga.*', 'sips.import.index', 'sips.import.preview', 'sips.import.confirm', 'sips.import.template') ? 'active' : '' }}">
                             Data Warga
+                        </a>
+                    </li>
+                    <li class="pe-slide-item">
+                        <a href="{{ route('sips.petugas.index') }}"
+                           class="pe-nav-link {{ request()->routeIs('sips.petugas.*') ? 'active' : '' }}">
+                            Data Petugas
                         </a>
                     </li>
                     <li class="pe-slide-item">
@@ -50,18 +61,29 @@
                             Manajemen Tarif
                         </a>
                     </li>
-                    <li class="pe-slide-item">
-                        <a href="{{ route('sips.import.index') }}"
-                           class="pe-nav-link {{ request()->routeIs('sips.import.*') ? 'active' : '' }}">
-                            Import Data Warga
-                        </a>
-                    </li>
                 </ul>
             </li>
             @endif
 
             {{-- Transaksi --}}
-            @php $transaksiActive = request()->routeIs('sips.setoran.*', 'sips.pembayaran.*'); @endphp
+            @php
+                $transaksiActive = request()->routeIs(
+                    'sips.setoran.*', 'sips.pembayaran.*',
+                    'sips.import.setoran.*', 'sips.import.ocr.flat-rate-review', 'sips.import.ocr.assign-tarif'
+                );
+
+                $flatRateCount = 0;
+                if (auth()->user()->isAdmin()) {
+                    $flatRateCount = \Illuminate\Support\Facades\DB::table('item_setoran')
+                        ->join('setoran', 'setoran.id', '=', 'item_setoran.setoran_id')
+                        ->where('setoran.sumber_input', 'ocr')
+                        ->where('item_setoran.status_pemilahan', 'dipilah')
+                        ->whereNull('item_setoran.tarif_item_id')
+                        ->whereNotNull('item_setoran.catatan_item')
+                        ->where('item_setoran.catatan_item', 'like', '%flat rate%')
+                        ->count();
+                }
+            @endphp
             <li class="pe-slide pe-has-sub">
                 <a href="#collapseTransactions"
                    class="pe-nav-link {{ $transaksiActive ? 'active' : '' }}"
@@ -74,13 +96,31 @@
                 </a>
                 <ul class="pe-slide-menu collapse {{ $transaksiActive ? 'show' : '' }}" id="collapseTransactions">
                     <li class="slide pe-nav-content1">
-                        <a href="javascript:void(0)">Transaksi</a>
+                        <a href="javascript:void(0)">Input Setoran</a>
                     </li>
                     <li class="pe-slide-item">
                         <a href="{{ route('sips.setoran.create') }}"
                            class="pe-nav-link {{ request()->routeIs('sips.setoran.create') ? 'active' : '' }}">
-                            Input Setoran
+                            Input Manual
                         </a>
+                    </li>
+                    <li class="pe-slide-item">
+                        <a href="{{ route('sips.import.setoran.index') }}"
+                           class="pe-nav-link {{ request()->routeIs('sips.import.setoran.*') ? 'active' : '' }}">
+                            Import Setoran Excel
+                        </a>
+                    </li>
+                    @if(auth()->user()->isAdmin() && $flatRateCount > 0)
+                    <li class="pe-slide-item">
+                        <a href="{{ route('sips.import.ocr.flat-rate-review') }}"
+                           class="pe-nav-link {{ request()->routeIs('sips.import.ocr.flat-rate-review', 'sips.import.ocr.assign-tarif') ? 'active' : '' }}">
+                            Review Flat Rate
+                            <span class="badge bg-warning text-dark ms-1" style="font-size:9px;">{{ $flatRateCount }}</span>
+                        </a>
+                    </li>
+                    @endif
+                    <li class="slide pe-nav-content1">
+                        <a href="javascript:void(0)">Riwayat & Laporan</a>
                     </li>
                     <li class="pe-slide-item">
                         <a href="{{ route('sips.setoran.index') }}"

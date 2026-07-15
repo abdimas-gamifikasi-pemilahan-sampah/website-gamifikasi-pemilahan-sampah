@@ -13,6 +13,7 @@ class Warga extends Model
     protected $fillable = [
         'nama',
         'no_kk',
+        'alamat',
         'rt',
         'rw',
         'dusun',
@@ -31,7 +32,12 @@ class Warga extends Model
     protected function noKk(): Attribute
     {
         return Attribute::make(
-            set: fn (mixed $value) => substr(preg_replace('/\D/', '', trim((string) $value)), 0, 16),
+            set: function (mixed $value) {
+                if ($value === null || $value === '') {
+                    return null;
+                }
+                return substr(preg_replace('/\D/', '', trim((string) $value)), 0, 16) ?: null;
+            },
         );
     }
 

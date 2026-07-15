@@ -6,18 +6,54 @@
 
 @section('css')
 <style>
+    /* ── Base (light mode) ─────────────────────────────────── */
     .format-card {
         border: 2px solid #e9ecef;
         border-radius: 12px;
         cursor: pointer;
         transition: border-color .15s, box-shadow .15s, background-color .15s;
     }
-    .format-card:hover { border-color: #86b7fe; background-color: #f8fbff; }
+    .format-card:hover   { border-color: #86b7fe; background-color: #f8fbff; }
     .format-card.selected { border-color: #0d6efd; background-color: #f0f5ff; box-shadow: 0 0 0 3px rgba(13,110,253,.15); }
     .format-card input[type="radio"] { display: none; }
-    .format-badge-rivan { background-color: #d1e7dd; color: #0a3622; }
+
+    .format-badge-rivan     { background-color: #d1e7dd; color: #0a3622; }
     .format-badge-perolehan { background-color: #cff4fc; color: #055160; }
-    .preview-stat { background: #f8f9fa; border-radius: 8px; padding: 12px 16px; }
+
+    .preview-stat {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 12px 16px;
+    }
+
+    .eksport-icon-wrapper {
+        width: 64px; height: 64px;
+        background: #e8f5e9;
+        border-radius: 16px;
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 12px;
+    }
+    .eksport-tips { background: #f8f9fa; }
+
+    /* ── Dark mode ─────────────────────────────────────────── */
+    @media (prefers-color-scheme: dark) {
+        .format-card                { border-color: rgba(255,255,255,0.12); }
+        .format-card:hover          { border-color: #86b7fe; background-color: rgba(13,110,253,0.10); }
+        .format-card.selected       { border-color: #4d94ff; background-color: rgba(13,110,253,0.18); box-shadow: 0 0 0 3px rgba(77,148,255,.2); }
+        .format-badge-rivan         { background-color: rgba(25,135,84,0.25); color: #75d5a4; }
+        .format-badge-perolehan     { background-color: rgba(13,202,240,0.18); color: #79ddf6; }
+        .preview-stat               { background: rgba(255,255,255,0.06); }
+        .eksport-icon-wrapper       { background: rgba(25,135,84,0.20); }
+        .eksport-tips               { background: rgba(255,255,255,0.05); }
+    }
+    :root[data-theme="dark"] .format-card            { border-color: rgba(255,255,255,0.12); }
+    :root[data-theme="dark"] .format-card:hover      { border-color: #86b7fe; background-color: rgba(13,110,253,0.10); }
+    :root[data-theme="dark"] .format-card.selected   { border-color: #4d94ff; background-color: rgba(13,110,253,0.18); box-shadow: 0 0 0 3px rgba(77,148,255,.2); }
+    :root[data-theme="dark"] .format-badge-rivan     { background-color: rgba(25,135,84,0.25); color: #75d5a4; }
+    :root[data-theme="dark"] .format-badge-perolehan { background-color: rgba(13,202,240,0.18); color: #79ddf6; }
+    :root[data-theme="dark"] .preview-stat           { background: rgba(255,255,255,0.06); }
+    :root[data-theme="dark"] .eksport-icon-wrapper   { background: rgba(25,135,84,0.20); }
+    :root[data-theme="dark"] .eksport-tips           { background: rgba(255,255,255,0.05); }
 </style>
 @endsection
 
@@ -99,7 +135,7 @@
                                             <small class="text-muted fw-medium">Kolom:</small>
                                             <div class="d-flex flex-wrap gap-1 mt-1">
                                                 @foreach(['No','Hari/Tanggal','RW','Jumlah Sampah','Rp','Jumlah','Pengeluaran*'] as $col)
-                                                <span class="badge bg-light text-dark border fs-11">{{ $col }}</span>
+                                                <span class="badge bg-secondary-subtle text-secondary border fs-11">{{ $col }}</span>
                                                 @endforeach
                                             </div>
                                             <div class="text-muted fs-11 mt-1">* kolom kosong untuk diisi admin</div>
@@ -109,7 +145,7 @@
                             </label>
                         </div>
 
-                        {{-- Rivan --}}
+                        {{-- Pengelolaan --}}
                         <div class="col-md-6">
                             <label class="format-card d-block p-3 w-100" id="card-rivan">
                                 <input type="radio" name="format" value="rivan" required
@@ -121,19 +157,19 @@
                                         </span>
                                     </div>
                                     <div>
-                                        <div class="fw-semibold mb-1">DATA PENGELOLAAN (Pak Rivan)</div>
+                                        <div class="fw-semibold mb-1">DATA PENGELOLAAN</div>
                                         <div class="text-muted fs-12">
-                                            Format laporan 2-mingguan ke Pak Rivan.
-                                            Kolom olahan dikosongkan untuk diisi Pak Rivan.
+                                            Format laporan 2-mingguan pengelolaan sampah.
+                                            Kolom olahan dikosongkan untuk diisi pengelola.
                                         </div>
                                         <div class="mt-2">
                                             <small class="text-muted fw-medium">Kolom:</small>
                                             <div class="d-flex flex-wrap gap-1 mt-1">
                                                 @foreach(['No','Tanggal','Kompos*','Pakan Magot*','Residu*','Daur Ulang*','Jumlah Sampah','Iuran'] as $col)
-                                                <span class="badge {{ str_contains($col,'*') ? 'bg-warning-subtle text-warning border border-warning-subtle' : 'bg-light text-dark border' }} fs-11">{{ $col }}</span>
+                                                <span class="badge {{ str_contains($col,'*') ? 'bg-warning-subtle text-warning border border-warning-subtle' : 'bg-secondary-subtle text-secondary border' }} fs-11">{{ $col }}</span>
                                                 @endforeach
                                             </div>
-                                            <div class="text-muted fs-11 mt-1">* dikosongkan — diisi Pak Rivan</div>
+                                            <div class="text-muted fs-11 mt-1">* dikosongkan — diisi pengelola</div>
                                         </div>
                                     </div>
                                 </div>
@@ -179,7 +215,7 @@
                     {{-- Quick select buttons --}}
                     <div class="mt-3">
                         <small class="text-muted fw-medium d-block mb-2">Pilih cepat:</small>
-                        <div class="d-flex flex-wrap gap-2">
+                        <div class="d-flex flex-wrap gap-2 mb-2">
                             <button type="button" class="btn btn-outline-secondary btn-sm"
                                     onclick="setRange(14)">2 Minggu Terakhir</button>
                             <button type="button" class="btn btn-outline-secondary btn-sm"
@@ -188,6 +224,14 @@
                                     onclick="setCurrentMonth()">Bulan Ini</button>
                             <button type="button" class="btn btn-outline-secondary btn-sm"
                                     onclick="setLastMonth()">Bulan Lalu</button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm"
+                                    onclick="setMonthsAgo(2)">2 Bulan Terakhir</button>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <small class="text-muted fw-medium text-nowrap">Atau pilih bulan:</small>
+                            <input type="month" id="monthPicker" class="form-control form-control-sm" style="width:160px;"
+                                   max="{{ now()->format('Y-m') }}"
+                                   onchange="setFromMonthPicker(this.value)">
                         </div>
                     </div>
                 </div>
@@ -239,7 +283,7 @@
             <div class="card border-0 shadow-sm">
                 <div class="card-body p-4">
                     <div class="text-center mb-4">
-                        <div style="width:64px;height:64px;background:#e8f5e9;border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+                        <div class="eksport-icon-wrapper">
                             <i class="ri-file-excel-2-line text-success" style="font-size:2rem;"></i>
                         </div>
                         <p class="text-muted fs-13 mb-0">
@@ -252,11 +296,11 @@
                         Unduh Excel
                     </button>
 
-                    <div class="mt-3 p-3 bg-light rounded fs-12 text-muted">
+                    <div class="mt-3 p-3 rounded fs-12 text-muted eksport-tips">
                         <i class="ri-lightbulb-line me-1 text-warning"></i>
-                        <strong>Tips:</strong> Format <em>Pengelolaan (Rivan)</em> sebaiknya diekspor setiap 2 minggu
-                        sesuai siklus laporan ke Pak Rivan. Kolom berwarna kuning dikosongkan
-                        untuk diisi Pak Rivan.
+                        <strong>Tips:</strong> Format <em>Pengelolaan</em> sebaiknya diekspor setiap 2 minggu
+                        sesuai siklus laporan pengelolaan. Kolom berwarna kuning dikosongkan
+                        untuk diisi pengelola.
                     </div>
                 </div>
             </div>
@@ -265,6 +309,97 @@
 
     </div>
     </form>
+
+    {{-- ── Arsip Laporan Bulanan ── --}}
+    <div class="row g-4 mt-1">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-bottom d-flex align-items-center gap-2">
+                    <i class="ri-archive-line text-primary fs-5"></i>
+                    <h5 class="card-title mb-0">Arsip Laporan Bulanan</h5>
+                    <span class="badge bg-secondary-subtle text-secondary ms-1 fs-12">6 bulan terakhir</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0 fs-13">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width:160px;">Bulan</th>
+                                    <th class="text-center" style="width:100px;">Setoran</th>
+                                    <th class="text-center" style="width:120px;">Total Sampah</th>
+                                    <th class="text-center" style="width:130px;">Total Nilai</th>
+                                    <th class="text-center" colspan="2">Unduh Langsung</th>
+                                </tr>
+                                <tr class="table-light border-top-0">
+                                    <th colspan="4"></th>
+                                    <th class="text-center fs-11 text-muted fw-normal py-1">
+                                        <i class="ri-file-excel-2-line text-info me-1"></i>Perolehan
+                                    </th>
+                                    <th class="text-center fs-11 text-muted fw-normal py-1">
+                                        <i class="ri-recycle-line text-success me-1"></i>Pengelolaan
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            @foreach($arsipBulanan as $bulan)
+                            <tr>
+                                <td class="fw-medium">{{ $bulan['label'] }}</td>
+                                <td class="text-center">
+                                    @if($bulan['jumlah'] > 0)
+                                        <span class="badge bg-primary-subtle text-primary rounded-pill">{{ $bulan['jumlah'] }}</span>
+                                    @else
+                                        <span class="text-muted">–</span>
+                                    @endif
+                                </td>
+                                <td class="text-center">
+                                    @if($bulan['total_kg'] > 0)
+                                        <span>{{ number_format($bulan['total_kg'], 1, ',', '.') }} kg</span>
+                                    @else
+                                        <span class="text-muted">–</span>
+                                    @endif
+                                </td>
+                                <td class="text-center">
+                                    @if($bulan['total_nilai'] != 0)
+                                        <span>Rp {{ number_format(abs($bulan['total_nilai']), 0, ',', '.') }}</span>
+                                    @else
+                                        <span class="text-muted">–</span>
+                                    @endif
+                                </td>
+                                <td class="text-center">
+                                    @if($bulan['jumlah'] > 0)
+                                    <a href="{{ route('sips.ekspor.download', ['format' => 'perolehan', 'dari' => $bulan['dari'], 'sampai' => $bulan['sampai']]) }}"
+                                       class="btn btn-sm btn-outline-info py-0 px-2" title="Unduh Perolehan {{ $bulan['label'] }}">
+                                        <i class="ri-download-line"></i>
+                                    </a>
+                                    @else
+                                        <span class="text-muted fs-12">kosong</span>
+                                    @endif
+                                </td>
+                                <td class="text-center">
+                                    @if($bulan['jumlah'] > 0)
+                                    <a href="{{ route('sips.ekspor.download', ['format' => 'rivan', 'dari' => $bulan['dari'], 'sampai' => $bulan['sampai']]) }}"
+                                       class="btn btn-sm btn-outline-success py-0 px-2" title="Unduh Pengelolaan {{ $bulan['label'] }}">
+                                        <i class="ri-download-line"></i>
+                                    </a>
+                                    @else
+                                        <span class="text-muted fs-12">kosong</span>
+                                    @endif
+                                </td>
+                            </tr>
+                            @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-top py-2">
+                    <small class="text-muted">
+                        <i class="ri-information-line me-1"></i>
+                        Klik tombol unduh untuk langsung mengunduh laporan per bulan tanpa perlu memilih tanggal.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
 
 </div>
 @endsection
@@ -309,6 +444,25 @@
         const now   = new Date();
         const from  = new Date(now.getFullYear(), now.getMonth() - 1, 1);
         const until = new Date(now.getFullYear(), now.getMonth(), 0);
+        document.getElementById('dari').value   = toInput(from);
+        document.getElementById('sampai').value = toInput(until);
+        updatePreview();
+    };
+
+    window.setMonthsAgo = function (n) {
+        const now   = new Date();
+        const from  = new Date(now.getFullYear(), now.getMonth() - n, 1);
+        const until = new Date(now.getFullYear(), now.getMonth(), 0);
+        document.getElementById('dari').value   = toInput(from);
+        document.getElementById('sampai').value = toInput(until);
+        updatePreview();
+    };
+
+    window.setFromMonthPicker = function (val) {
+        if (!val) return;
+        const [year, month] = val.split('-').map(Number);
+        const from  = new Date(year, month - 1, 1);
+        const until = new Date(year, month, 0);
         document.getElementById('dari').value   = toInput(from);
         document.getElementById('sampai').value = toInput(until);
         updatePreview();

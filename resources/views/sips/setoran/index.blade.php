@@ -143,7 +143,7 @@
                                     <td>
                                         @if($s->warga)
                                             <div class="fw-semibold">{{ $s->warga->nama }}</div>
-                                            <small class="text-muted">RT {{ $s->warga->rt }} / {{ $s->warga->dusun }}</small>
+                                            <small class="text-muted">{{ Str::limit($s->warga->alamat ?? (($s->warga->rt ? 'RT '.$s->warga->rt : '').($s->warga->dusun ? ' / '.$s->warga->dusun : '')), 40) ?: '-' }}</small>
                                         @else
                                             @php
                                                 $namaList = $s->items->pluck('nama_penyetor')->filter()->unique()->values();

@@ -130,9 +130,7 @@
                                     <td>
                                         @if($p->setoran->warga)
                                             <div class="fw-semibold">{{ $p->setoran->warga->nama }}</div>
-                                            <small class="text-muted">
-                                                RT {{ $p->setoran->warga->rt }} / {{ $p->setoran->warga->dusun }}
-                                            </small>
+                                            <small class="text-muted">{{ Str::limit($p->setoran->warga->alamat ?? '', 40) ?: ($p->setoran->warga->rt ? 'RT '.$p->setoran->warga->rt : '') }}</small>
                                         @else
                                             @php
                                                 $names = $p->setoran->items->pluck('nama_penyetor')->filter()->unique()->values();

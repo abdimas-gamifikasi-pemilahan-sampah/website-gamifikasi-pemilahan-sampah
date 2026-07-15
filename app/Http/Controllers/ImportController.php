@@ -20,9 +20,10 @@ class ImportController extends Controller
     public function downloadTemplate(): StreamedResponse
     {
         $rows = [
-            ['nama', 'no_kk', 'rt', 'rw', 'dusun', 'no_hp', 'tanggal_terdaftar'],
-            ['Siti Rahayu', '1234567890123456', '1', '1', 'Melati', '081234567890', '2026-01-15'],
-            ['Budi Santoso', '9876543210987654', '2', '2', 'Anggrek', '', '2026-02-01'],
+            ['nama', 'no_kk', 'alamat', 'rt', 'rw', 'dusun', 'no_hp', 'tanggal_terdaftar'],
+            ['Siti Rahayu', '1234567890123456', 'Jl. Melati No. 5', '1', '1', 'Melati', '081234567890', '2026-01-15'],
+            ['Budi Santoso', '9876543210987654', 'Jl. Anggrek No. 12', '2', '2', 'Anggrek', '', '2026-02-01'],
+            ['Dewi Lestari', '', 'Jl. Mawar No. 3 RT 3 RW 1', '', '', '', '', '2026-03-10'],
         ];
 
         return response()->streamDownload(function () use ($rows) {
@@ -51,7 +52,7 @@ class ImportController extends Controller
             $header = fgetcsv($handle);
             $header = array_map('trim', $header);
 
-            $expected = ['nama', 'no_kk', 'rt', 'rw', 'dusun', 'no_hp', 'tanggal_terdaftar'];
+            $expected = ['nama', 'rt', 'rw', 'dusun', 'no_hp', 'tanggal_terdaftar'];
             $missing  = array_diff($expected, $header);
             if (!empty($missing)) {
                 return back()->withErrors(['csv_file' => 'Kolom wajib tidak ada: ' . implode(', ', $missing)]);
@@ -70,10 +71,8 @@ class ImportController extends Controller
                 // Basic validation
                 $rowErrors = [];
                 if (empty($row['nama']))    $rowErrors[] = 'nama kosong';
-                if (strlen($row['no_kk'] ?? '') !== 16) $rowErrors[] = 'no_kk harus 16 digit';
-                if (empty($row['rt']))      $rowErrors[] = 'rt kosong';
-                if (empty($row['rw']))      $rowErrors[] = 'rw kosong';
-                if (empty($row['dusun']))   $rowErrors[] = 'dusun kosong';
+                if (!empty($row['no_kk']) && strlen($row['no_kk']) !== 16) $rowErrors[] = 'no_kk harus 16 digit';
+                // rt, rw, dusun are optional — empty values are allowed
                 if (!empty($row['tanggal_terdaftar'])) {
                     try { Carbon::parse($row['tanggal_terdaftar']); }
                     catch (\Exception $e) { $rowErrors[] = 'tanggal_terdaftar tidak valid'; }
@@ -136,18 +135,22 @@ class ImportController extends Controller
                     $row = array_combine($header, array_map('trim', $data));
 
                     try {
-                        Warga::updateOrCreate(
-                            ['no_kk' => $row['no_kk']],
-                            [
-                                'nama'               => $row['nama'],
-                                'rt'                 => $row['rt'],
-                                'rw'                 => $row['rw'],
-                                'dusun'              => $row['dusun'],
-                                'no_hp'              => $row['no_hp'] ?? null,
-                                'tanggal_terdaftar'  => Carbon::parse($row['tanggal_terdaftar']),
-                                'status_keanggotaan' => 'aktif',
-                            ]
-                        );
+                        $attributes = [
+                            'nama'               => $row['nama'],
+                            'alamat'             => $row['alamat'] ?? null ?: null,
+                            'rt'                 => !empty($row['rt']) ? $row['rt'] : null,
+                            'rw'                 => !empty($row['rw']) ? $row['rw'] : null,
+                            'dusun'              => !empty($row['dusun']) ? $row['dusun'] : null,
+                            'no_hp'              => $row['no_hp'] ?? null ?: null,
+                            'tanggal_terdaftar'  => Carbon::parse($row['tanggal_terdaftar']),
+                            'status_keanggotaan' => 'aktif',
+                        ];
+
+                        if (!empty($row['no_kk'])) {
+                            Warga::updateOrCreate(['no_kk' => $row['no_kk']], $attributes);
+                        } else {
+                            Warga::create(array_merge($attributes, ['no_kk' => null]));
+                        }
                         $berhasil++;
                     } catch (\Exception $e) {
                         $gagal++;

@@ -30,55 +30,11 @@
                     <h5 class="card-title mb-0"><i class="ri-download-2-line me-2"></i> Unduh Template</h5>
                 </div>
                 <div class="card-body">
-                    <p class="text-muted mb-3">Unduh salah satu template sesuai format data yang dimiliki, isi datanya, lalu upload di bawah.</p>
+                    <p class="text-muted mb-3">Unduh template sesuai format data yang dimiliki, isi datanya, lalu upload di bawah.</p>
                     <div class="row g-3">
 
-                        <div class="col-md-4">
-                            <div class="border rounded p-3 h-100">
-                                <div class="d-flex align-items-center mb-2">
-                                    <div class="bg-primary-subtle rounded p-2 me-3">
-                                        <i class="ri-file-excel-line text-primary fs-4"></i>
-                                    </div>
-                                    <div>
-                                        <h6 class="mb-0">Template Perolehan</h6>
-                                        <small class="text-muted">DATA PEROLEHAN SAMPAH</small>
-                                    </div>
-                                </div>
-                                <p class="text-muted fs-13 mb-3">
-                                    Format: No, Hari/Tanggal, RW, Jumlah Sampah/kg, Rp, Jumlah, Pengeluaran.
-                                    Satu baris = satu pengangkutan.
-                                </p>
-                                <a href="{{ route('sips.import.setoran.template', 'perolehan') }}"
-                                   class="btn btn-sm btn-outline-primary w-100">
-                                    <i class="ri-download-line me-1"></i> Unduh .xlsx
-                                </a>
-                            </div>
-                        </div>
-
-                        <div class="col-md-4">
-                            <div class="border rounded p-3 h-100">
-                                <div class="d-flex align-items-center mb-2">
-                                    <div class="bg-warning-subtle rounded p-2 me-3">
-                                        <i class="ri-file-excel-line text-warning fs-4"></i>
-                                    </div>
-                                    <div>
-                                        <h6 class="mb-0">Template Rivan</h6>
-                                        <small class="text-muted">DATA PENGELOLAAN SAMPAH</small>
-                                    </div>
-                                </div>
-                                <p class="text-muted fs-13 mb-3">
-                                    Format: Tanggal, Kompos*, Pakan Magot*, Residu*, Daur Ulang*, Jumlah Sampah, Iuran.
-                                    <em>*kolom kosong untuk Pak Rivan.</em>
-                                </p>
-                                <a href="{{ route('sips.import.setoran.template', 'rivan') }}"
-                                   class="btn btn-sm btn-outline-warning w-100">
-                                    <i class="ri-download-line me-1"></i> Unduh .xlsx
-                                </a>
-                            </div>
-                        </div>
-
-                        <div class="col-md-4">
-                            <div class="border rounded p-3 h-100">
+                        <div class="col-12">
+                            <div class="border rounded p-3">
                                 <div class="d-flex align-items-center mb-2">
                                     <div class="bg-success-subtle rounded p-2 me-3">
                                         <i class="ri-file-excel-line text-success fs-4"></i>
@@ -96,6 +52,19 @@
                                    class="btn btn-sm btn-outline-success w-100">
                                     <i class="ri-download-line me-1"></i> Unduh .xlsx
                                 </a>
+                                <div class="text-center mt-2">
+                                    @if($chatGptLink)
+                                        <a href="{{ $chatGptLink }}" target="_blank" rel="noopener noreferrer"
+                                           class="btn btn-link fs-12 p-0 text-muted">
+                                            <i class="ri-openai-line me-1"></i> Buka ChatGPT untuk bantu isi data dari foto
+                                        </a>
+                                    @else
+                                        <button type="button" onclick="openChatGPT()"
+                                                class="btn btn-link fs-12 p-0 text-muted">
+                                            <i class="ri-openai-line me-1"></i> Buka ChatGPT untuk bantu isi data dari foto
+                                        </button>
+                                    @endif
+                                </div>
                             </div>
                         </div>
 
@@ -126,7 +95,7 @@
 
                         <div class="mb-3" id="tanggal-wrapper">
                             <label class="form-label">Tanggal Setoran
-                                <span class="text-muted fs-12">(untuk format Detail — diabaikan untuk Perolehan/Rivan)</span>
+                                <span class="text-muted fs-12">(hanya untuk format Detail)</span>
                             </label>
                             <input type="date" class="form-control" name="tanggal_setoran"
                                    value="{{ date('Y-m-d') }}" max="{{ date('Y-m-d') }}">
@@ -202,4 +171,33 @@
 
     </div>
 </div>
+@endsection
+
+@section('js')
+<script>
+function openChatGPT() {
+    const prompt = `Kamu membantu petugas TPS 3R mencatat data setoran sampah dari foto catatan lapangan.
+
+Ubah foto/catatan ini menjadi tabel dengan TEPAT 7 kolom berikut (header harus persis sama):
+No | Nama Penyetor | RW | RT | Berat (kg) | Status Pilah | Keterangan
+
+Penjelasan setiap kolom:
+- No: nomor urut (1, 2, 3, ...)
+- Nama Penyetor: nama orang, toko, atau usaha yang menyetorkan sampah
+- RW: nomor RW saja (angka, tanpa "RW")
+- RT: nomor RT saja (angka, tanpa "RT") — kosongkan jika tidak ada
+- Berat (kg): berat sampah dalam kg (angka, boleh desimal seperti 12.5)
+- Status Pilah: isi HANYA "Dipilah" atau "Tidak Dipilah"
+  → Dipilah = sampah sudah dipisah-pisah (kardus, plastik, dll. sudah dikelompokkan)
+  → Tidak Dipilah = sampah campur, belum dipisah
+- Keterangan: catatan tambahan (boleh kosong)
+
+Aturan:
+1. Satu baris = satu penyetor (bukan per jenis sampah)
+2. Jika nama tidak terbaca, tulis "???"
+3. Kembalikan HANYA tabel (baris header + baris data), tanpa penjelasan lain
+4. Jangan tambahkan kolom baru di luar 7 kolom di atas`;
+    window.open('https://chatgpt.com/?q=' + encodeURIComponent(prompt), '_blank');
+}
+</script>
 @endsection

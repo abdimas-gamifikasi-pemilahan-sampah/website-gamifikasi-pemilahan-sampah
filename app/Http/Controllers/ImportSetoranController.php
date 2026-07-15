@@ -33,17 +33,20 @@ class ImportSetoranController extends Controller
             ->latest()
             ->paginate(10);
 
-        return view('sips.import.setoran.index', compact('logs'));
+        $chatGptLink = PengaturanSistem::get('chatgpt_ocr_link', '');
+
+        return view('sips.import.setoran.index', compact('logs', 'chatGptLink'));
     }
 
     public function downloadTemplate(string $format): StreamedResponse
     {
-        abort_unless(in_array($format, ['perolehan', 'rivan', 'detail']), 404);
+        abort_unless(in_array($format, ['perolehan', 'rivan', 'detail', 'ocr']), 404);
 
         $spreadsheet = match ($format) {
             'perolehan' => $this->buildPerolehanTemplate(),
             'rivan'     => $this->buildRivanTemplate(),
             'detail'    => $this->buildDetailTemplate(),
+            'ocr'       => $this->buildOcrTemplate(),
         };
 
         $writer = new Xlsx($spreadsheet);
@@ -74,6 +77,30 @@ class ImportSetoranController extends Controller
 
         $result['tanggal_setoran'] = $request->input('tanggal_setoran', today()->format('Y-m-d'));
 
+        // For detail format: fuzzy-match each nama_penyetor against registered warga
+        if ($result['format'] === 'detail') {
+            $wargaAll = \App\Models\Warga::select('id', 'nama', 'rt', 'rw')->orderBy('nama')->get();
+            foreach ($result['rows'] as &$row) {
+                $row['warga_id']    = null;
+                $row['warga_score'] = 0;
+                $namaInput = $this->stripHonorifics(strtolower($row['nama_penyetor'] ?? ''));
+                if ($namaInput && $namaInput !== '???') {
+                    $best = 0; $bestId = null;
+                    foreach ($wargaAll as $w) {
+                        similar_text($namaInput, strtolower($w->nama), $pct);
+                        if ($pct > $best) { $best = $pct; $bestId = $w->id; }
+                    }
+                    if ($best >= 70) {
+                        $row['warga_id']    = $bestId;
+                        $row['warga_score'] = (int) round($best);
+                    }
+                }
+            }
+            unset($row);
+        } else {
+            $wargaAll = collect();
+        }
+
         session(['import_setoran' => $result]);
 
         $errorCount = collect($result['rows'])->filter(fn($r) => !empty($r['errors']))->count();
@@ -85,6 +112,7 @@ class ImportSetoranController extends Controller
             'totalRows'       => count($result['rows']),
             'errorCount'      => $errorCount,
             'validCount'      => count($result['rows']) - $errorCount,
+            'wargaList'       => $wargaAll,
         ]);
     }
 
@@ -97,10 +125,51 @@ class ImportSetoranController extends Controller
                 ->withErrors(['confirm' => 'Sesi import habis. Ulangi upload file.']);
         }
 
-        $validRows   = collect($preview['rows'])->filter(fn($r) => empty($r['errors']))->values();
-        $format      = $preview['format'];
-        $tarif       = (float) PengaturanSistem::get('tarif_flat_per_kg', 500);
-        $tanggal     = $request->input('tanggal_setoran', $preview['tanggal_setoran'] ?? today()->format('Y-m-d'));
+        $format  = $preview['format'];
+        $tarif   = (float) PengaturanSistem::get('tarif_flat_per_kg', 500);
+        $tanggal = $request->input('tanggal_setoran', $preview['tanggal_setoran'] ?? today()->format('Y-m-d'));
+
+        // Merge user edits from the preview form into session rows, then re-validate
+        $rows = $preview['rows'];
+        if ($request->has('rows')) {
+            $edited = $request->input('rows', []);
+            foreach ($rows as $i => &$row) {
+                $e = $edited[$i] ?? [];
+                if ($format === 'detail') {
+                    $wargaId = isset($e['warga_id']) && is_numeric($e['warga_id']) && (int)$e['warga_id'] > 0
+                               ? (int) $e['warga_id'] : null;
+                    $row['warga_id']         = $wargaId;
+                    $row['nama_penyetor']    = trim($e['nama_penyetor']    ?? $row['nama_penyetor']    ?? '');
+                    $row['rw']               = trim($e['rw']               ?? $row['rw']               ?? '');
+                    $row['rt']               = trim($e['rt']               ?? $row['rt']               ?? '');
+                    $row['berat_kg']         = is_numeric($e['berat_kg'] ?? '') ? (float) $e['berat_kg'] : ($row['berat_kg'] ?? null);
+                    $row['status_pemilahan'] = in_array($e['status_pemilahan'] ?? '', ['dipilah', 'tidak_dipilah'])
+                                               ? $e['status_pemilahan']
+                                               : ($row['status_pemilahan'] ?? 'dipilah');
+                    // If warga selected but nama empty, fill from warga record
+                    if ($wargaId && empty($row['nama_penyetor'])) {
+                        $row['nama_penyetor'] = \App\Models\Warga::find($wargaId)?->nama ?? '';
+                    }
+                    $row['errors'] = [];
+                    if (empty($row['nama_penyetor'])) $row['errors'][] = 'Nama penyetor kosong';
+                    if ($row['berat_kg'] === null || $row['berat_kg'] <= 0) $row['errors'][] = 'Berat harus lebih dari 0';
+                } elseif ($format === 'perolehan') {
+                    $row['tanggal'] = trim($e['tanggal'] ?? $row['tanggal'] ?? '');
+                    $row['area_rw'] = trim($e['area_rw'] ?? $row['area_rw'] ?? '');
+                    $row['kg']      = is_numeric($e['kg'] ?? '') ? (float) $e['kg'] : ($row['kg'] ?? null);
+                    $row['errors'] = [];
+                    if ($row['kg'] === null || $row['kg'] <= 0) $row['errors'][] = 'Berat harus lebih dari 0';
+                } elseif ($format === 'rivan') {
+                    $row['tanggal'] = trim($e['tanggal'] ?? $row['tanggal'] ?? '');
+                    $row['kg']      = is_numeric($e['kg'] ?? '') ? (float) $e['kg'] : ($row['kg'] ?? null);
+                    $row['errors'] = [];
+                    if ($row['kg'] === null || $row['kg'] <= 0) $row['errors'][] = 'Berat harus lebih dari 0';
+                }
+            }
+            unset($row);
+        }
+
+        $validRows = collect($rows)->filter(fn($r) => empty($r['errors']))->values();
 
         if ($validRows->isEmpty()) {
             return back()->withErrors(['confirm' => 'Tidak ada baris valid untuk diimpor.']);
@@ -404,6 +473,7 @@ class ImportSetoranController extends Controller
             }
 
             $itemRows[] = [
+                'warga_id'              => $row['warga_id'] ?? null,
                 'nama_penyetor'         => $row['nama_penyetor'],
                 'tarif_item_id'         => null,
                 'riwayat_tarif_id'      => null,
@@ -486,7 +556,7 @@ class ImportSetoranController extends Controller
         $sheet->getColumnDimension('B')->setWidth(26);
         $sheet->getColumnDimension('D')->setWidth(18);
 
-        return $sp->getParent() ?? $sp;
+        return $sp;
     }
 
     private function buildRivanTemplate(): Spreadsheet
@@ -544,7 +614,7 @@ class ImportSetoranController extends Controller
         $sheet->getColumnDimension('A')->setWidth(14);
         $sheet->getColumnDimension('F')->setWidth(20);
 
-        return $sp->getParent() ?? $sp;
+        return $sp;
     }
 
     private function buildDetailTemplate(): Spreadsheet
@@ -589,17 +659,80 @@ class ImportSetoranController extends Controller
         $sheet->getColumnDimension('B')->setWidth(25);
         $sheet->getColumnDimension('F')->setWidth(16);
 
-        return $sp->getParent() ?? $sp;
+        return $sp;
+    }
+
+    private function buildOcrTemplate(): Spreadsheet
+    {
+        $sp    = new Spreadsheet();
+        $sheet = $sp->getActiveSheet()->setTitle('Template OCR');
+
+        $sheet->mergeCells('A1:H1');
+        $sheet->setCellValue('A1', 'Template Import Setoran dari AI / OCR');
+        $sheet->getStyle('A1')->applyFromArray([
+            'font'      => ['bold' => true, 'size' => 13],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+        ]);
+
+        $sheet->mergeCells('A2:H2');
+        $sheet->setCellValue('A2', 'Dihasilkan dari foto catatan kertas menggunakan AI (Gemini/ChatGPT)');
+        $sheet->getStyle('A2')->applyFromArray([
+            'font'      => ['italic' => true, 'size' => 10, 'color' => ['argb' => 'FF666666']],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+        ]);
+
+        $headers = ['tanggal', 'nama_penyetor', 'rt', 'rw', 'status_pemilahan', 'jenis_sampah', 'berat_kg', 'catatan'];
+        foreach ($headers as $i => $h) {
+            $col = Coordinate::stringFromColumnIndex($i + 1);
+            $sheet->setCellValue("{$col}4", $h);
+        }
+        $sheet->getStyle('A4:H4')->applyFromArray([
+            'font' => ['bold' => true, 'color' => ['argb' => 'FFFFFFFF']],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF7030A0']],
+        ]);
+
+        $samples = [
+            ['2026-07-08', 'Budi Santoso', '02', '06', 'dipilah', 'kardus', 3.5, ''],
+            ['2026-07-08', 'Budi Santoso', '02', '06', 'dipilah', 'botol plastik', 1.2, ''],
+            ['2026-07-08', 'Ibu Siti Rahayu', '01', '06', 'tidak_dipilah', '', 8.0, 'sampah campur'],
+            ['2026-07-08', '???', '', '05', 'dipilah', 'kertas koran', 2.0, 'nama tidak terbaca'],
+        ];
+        foreach ($samples as $ri => $row) {
+            foreach ($row as $ci => $val) {
+                $col = Coordinate::stringFromColumnIndex($ci + 1);
+                $sheet->setCellValue("{$col}" . (5 + $ri), $val);
+            }
+        }
+
+        $sheet->setCellValue('A10', 'Keterangan:');
+        $sheet->setCellValue('A11', 'status_pemilahan: isi "dipilah" atau "tidak_dipilah"');
+        $sheet->setCellValue('A12', 'jenis_sampah: boleh kosong jika tidak dipilah');
+        $sheet->setCellValue('A13', 'Jika nama tidak terbaca, tulis "???" dan sistem akan meminta klarifikasi');
+        $sheet->setCellValue('A14', 'Satu baris = satu jenis sampah dari satu orang (pisahkan jika lebih dari satu jenis)');
+        $sheet->getStyle('A10')->getFont()->setBold(true);
+        $sheet->getStyle('A11:A14')->getFont()->setItalic(true)->setSize(10);
+
+        $sheet->getColumnDimension('A')->setWidth(14);
+        $sheet->getColumnDimension('B')->setWidth(22);
+        $sheet->getColumnDimension('E')->setWidth(16);
+        $sheet->getColumnDimension('F')->setWidth(18);
+
+        return $sp;
     }
 
     // ── Utilities ─────────────────────────────────────────────────────────────
+
+    private function stripHonorifics(string $name): string
+    {
+        return trim(preg_replace('/^(bu|pak|bapak|ibu|hj|h|dr|drs)\s+/i', '', $name));
+    }
 
     private function rowValues(\PhpOffice\PhpSpreadsheet\Worksheet\Worksheet $sheet, int $row): array
     {
         $maxCol = Coordinate::columnIndexFromString($sheet->getHighestColumn());
         $values = [];
         for ($c = 1; $c <= $maxCol; $c++) {
-            $values[] = $sheet->getCellByColumnAndRow($c, $row)->getFormattedValue();
+            $values[] = $sheet->getCell([$c, $row])->getFormattedValue();
         }
         return $values;
     }

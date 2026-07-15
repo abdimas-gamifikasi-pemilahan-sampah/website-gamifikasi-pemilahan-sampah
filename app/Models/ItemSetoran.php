@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Warga;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ItemSetoran extends Model
@@ -13,6 +14,7 @@ class ItemSetoran extends Model
 
     protected $fillable = [
         'setoran_id',
+        'warga_id',
         'nama_penyetor',
         'rw',
         'rt',
@@ -23,6 +25,7 @@ class ItemSetoran extends Model
         'berat_kg',
         'harga_per_kg_saat_itu',
         'subtotal',
+        'catatan_item',
     ];
 
     public static function statusPemilahanOptions(): array
@@ -42,6 +45,11 @@ class ItemSetoran extends Model
     public function setoran(): BelongsTo
     {
         return $this->belongsTo(Setoran::class);
+    }
+
+    public function warga(): BelongsTo
+    {
+        return $this->belongsTo(Warga::class);
     }
 
     public function tarifItem(): BelongsTo

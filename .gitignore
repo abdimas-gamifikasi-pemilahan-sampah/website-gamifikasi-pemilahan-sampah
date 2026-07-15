@@ -28,6 +28,10 @@ yarn-error.log
 # Microsoft Office temp/lock files
 ~$*.docx
 ~$*.xlsx
+
+# Deploy scripts (server-specific, sensitive)
+/sips-setup.php
+/index.deploy.php
 ~$*.pptx
 
 # Temp extraction scripts & output

@@ -87,8 +87,8 @@
                         <span class="badge bg-info-subtle text-info border border-info-subtle">Top RW</span>
                     </div>
                     @if($rwTerbaik)
-                    <h3 class="mb-1">RW {{ $rwTerbaik->rw }}</h3>
-                    <small class="text-muted">{{ $rwTerbaik->dusun }} · {{ $rwTerbaik->persen_dipilah }}% pemilahan</small>
+                    <h3 class="mb-1">RW {{ $rwTerbaik->rw ?? '-' }}</h3>
+                    <small class="text-muted">{{ $rwTerbaik->dusun ?? '' }}{{ $rwTerbaik->dusun ? ' · ' : '' }}{{ $rwTerbaik->persen_dipilah }}% pemilahan</small>
                     @else
                     <h3 class="mb-1">-</h3>
                     <small class="text-muted">Belum ada data</small>
@@ -151,8 +151,10 @@
                                     <td class="text-center">
                                         <span class="badge rounded-pill {{ $badgeClass }}">#{{ $rank }}</span>
                                     </td>
-                                    <td class="fw-medium">{{ $entry->nama }}</td>
-                                    <td class="text-muted fs-13">RW {{ $entry->rw }} / {{ $entry->dusun }}</td>
+                                    <td>
+                                        <div class="fw-medium">{{ $entry->nama }}</div>
+                                        <small class="text-muted">{{ Str::limit($entry->alamat ?? (($entry->rw ? 'RW '.$entry->rw : '').($entry->dusun ? ' / '.$entry->dusun : '')), 42) ?: '-' }}</small>
+                                    </td>
                                     <td class="text-end">{{ number_format($entry->kg_dipilah, 1, ',', '.') }}</td>
                                     <td class="text-end">{{ $entry->persen_dipilah }}%</td>
                                     <td class="text-end fw-semibold">{{ (int) $entry->poin }}</td>
@@ -230,7 +232,7 @@
                 <div class="card-footer bg-warning-subtle border-warning-subtle fs-12 text-warning-emphasis">
                     <i class="ri-information-line me-1"></i>
                     Klik <strong>Daftarkan</strong> di tiap baris untuk membuka form pendaftaran dengan nama sudah terisi otomatis.
-                    Lengkapi No. KK, RT/RW, dan Dusun untuk menyimpan.
+                    Lengkapi <strong>Alamat</strong> untuk menyimpan (RT/RW dan Dusun opsional).
                 </div>
             </div>
         </div>
@@ -253,7 +255,7 @@
                     <div class="{{ !$loop->last ? 'mb-4' : '' }}">
                         <div class="d-flex justify-content-between align-items-center mb-1">
                             <div>
-                                <strong class="fs-13">RW {{ $rw->rw }} / {{ $rw->dusun }}</strong>
+                                <strong class="fs-13">RW {{ $rw->rw ?? '-' }}{{ $rw->dusun ? ' / '.$rw->dusun : '' }}</strong>
                                 <div class="text-muted" style="font-size:0.75rem;">
                                     {{ $rw->persen_dipilah }}% pemilahan · {{ $rw->jumlah_warga }} warga
                                 </div>

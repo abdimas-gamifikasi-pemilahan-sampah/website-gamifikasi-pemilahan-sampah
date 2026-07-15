@@ -212,7 +212,7 @@
                         <div class="rounded-circle d-inline-flex align-items-center justify-content-center fw-bold text-white mb-3" style="width: 34px; height: 34px; background: linear-gradient(135deg, #9aa5b8, #b8c4d4); font-size: 0.8rem;">#2</div>
                         <div class="rounded-circle d-inline-flex align-items-center justify-content-center fw-bold text-white mb-3" style="width: 62px; height: 62px; background: linear-gradient(135deg, #9aa5b8, #c0cce0); font-size: 1.3rem; box-shadow: 0 6px 16px rgba(154,165,184,0.4);">{{ initials($rank2->nama) }}</div>
                         <h6 class="fw-bold mb-1">{{ $rank2->nama }}</h6>
-                        <p class="text-muted small mb-3">RW {{ $rank2->rw }} / {{ $rank2->dusun }}</p>
+                        <p class="text-muted small mb-3">{{ Str::limit($rank2->alamat ?? (($rank2->rw ? 'RW '.$rank2->rw : '').($rank2->dusun ? ' / '.$rank2->dusun : '')), 38) ?: '' }}</p>
                         <h4 class="text-primary fw-bold mb-0">{{ (int) $rank2->poin }}</h4>
                         <small class="text-muted">poin · {{ number_format($rank2->total_kg, 1, ',', '.') }} kg</small>
                     </div>
@@ -231,7 +231,7 @@
                         <div class="rounded-circle d-inline-flex align-items-center justify-content-center fw-bold mb-2" style="width: 72px; height: 72px; background: white; color: #2f55d4; font-size: 1.4rem; box-shadow: 0 8px 24px rgba(0,0,0,0.15);">{{ initials($rank1->nama) }}</div>
                         <span class="badge mb-3 px-3 py-1" style="background: rgba(255,255,255,0.2); color: white; border-radius: 50px; font-size: 0.7rem; letter-spacing: 0.5px;">JUARA 1</span>
                         <h5 class="text-white fw-bold mb-1">{{ $rank1->nama }}</h5>
-                        <p class="mb-3" style="color: rgba(255,255,255,0.65); font-size: 0.875rem;">RW {{ $rank1->rw }} / {{ $rank1->dusun }}</p>
+                        <p class="mb-3" style="color: rgba(255,255,255,0.65); font-size: 0.875rem;">{{ Str::limit($rank1->alamat ?? (($rank1->rw ? 'RW '.$rank1->rw : '').($rank1->dusun ? ' / '.$rank1->dusun : '')), 38) ?: '' }}</p>
                         <h3 class="text-white fw-bold mb-0">{{ (int) $rank1->poin }}</h3>
                         <small style="color: rgba(255,255,255,0.65);">poin · {{ number_format($rank1->total_kg, 1, ',', '.') }} kg</small>
                     </div>
@@ -246,7 +246,7 @@
                         <div class="rounded-circle d-inline-flex align-items-center justify-content-center fw-bold text-white mb-3" style="width: 34px; height: 34px; background: linear-gradient(135deg, #cd7f32, #e8964a); font-size: 0.8rem;">#3</div>
                         <div class="rounded-circle d-inline-flex align-items-center justify-content-center fw-bold text-white mb-3" style="width: 62px; height: 62px; background: linear-gradient(135deg, #cd7f32, #e8964a); font-size: 1.3rem; box-shadow: 0 6px 16px rgba(205,127,50,0.35);">{{ initials($rank3->nama) }}</div>
                         <h6 class="fw-bold mb-1">{{ $rank3->nama }}</h6>
-                        <p class="text-muted small mb-3">RW {{ $rank3->rw }} / {{ $rank3->dusun }}</p>
+                        <p class="text-muted small mb-3">{{ Str::limit($rank3->alamat ?? (($rank3->rw ? 'RW '.$rank3->rw : '').($rank3->dusun ? ' / '.$rank3->dusun : '')), 38) ?: '' }}</p>
                         <h4 class="text-info fw-bold mb-0">{{ (int) $rank3->poin }}</h4>
                         <small class="text-muted">poin · {{ number_format($rank3->total_kg, 1, ',', '.') }} kg</small>
                     </div>
@@ -301,7 +301,7 @@
                         <div class="flex-grow-1">
                             <div class="fw-semibold" style="font-size: 0.9rem; line-height: 1.3;">{{ $entry->nama }}</div>
                             <div class="lb-subtitle text-muted" style="font-size: 0.78rem;">
-                                RW {{ $entry->rw }} / {{ $entry->dusun }}
+                                {{ Str::limit($entry->alamat ?? (($entry->rw ? 'RW '.$entry->rw : '').($entry->dusun ? ' / '.$entry->dusun : '')), 42) ?: '' }}
                                 &nbsp;·&nbsp;{{ number_format($entry->total_kg, 1, ',', '.') }} kg total
                                 &nbsp;·&nbsp;{{ number_format($entry->kg_dipilah, 1, ',', '.') }} kg dipilah
                                 &nbsp;·&nbsp;{{ $entry->persen_dipilah }}% pilah
@@ -364,7 +364,7 @@
                     <div class="{{ !$loop->last ? 'mb-4' : '' }}">
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <div>
-                                <span class="fw-semibold" style="color: {{ $color }}; font-size: 0.9rem;">RW {{ $rw->rw }} / {{ $rw->dusun }}</span>
+                                <span class="fw-semibold" style="color: {{ $color }}; font-size: 0.9rem;">RW {{ $rw->rw ?? '-' }}{{ $rw->dusun ? ' / '.$rw->dusun : '' }}</span>
                                 <div class="text-muted" style="font-size: 0.75rem;">{{ $rw->persen_dipilah }}% pemilahan · {{ $rw->jumlah_warga }} warga aktif</div>
                             </div>
                             <div class="rounded-circle d-inline-flex align-items-center justify-content-center fw-bold text-white shrink-0 ms-2" style="width: 28px; height: 28px; background: {{ $gradient }}; font-size: 0.68rem;">#{{ $i + 1 }}</div>
@@ -389,7 +389,7 @@
                             </div>
                             <h6 class="mb-0 fw-bold">Sorotan Bulan Ini</h6>
                         </div>
-                        <h6 class="mb-1 fw-bold" style="color: #2eca8b;">RW {{ $rwTerbaik->rw }} / {{ $rwTerbaik->dusun }}</h6>
+                        <h6 class="mb-1 fw-bold" style="color: #2eca8b;">RW {{ $rwTerbaik->rw ?? '-' }}{{ $rwTerbaik->dusun ? ' / '.$rwTerbaik->dusun : '' }}</h6>
                         <p class="text-muted small mb-3">{{ $rwTerbaik->persen_dipilah }}% tingkat pemilahan · {{ number_format($rwTerbaik->total_kg, 0, ',', '.') }} kg total</p>
                         <div class="rounded-pill overflow-hidden" style="height: 10px; background: #f0f2f5;">
                             <div class="h-100 rounded-pill" style="width: {{ $rwTerbaik->persen_dipilah }}%; background: linear-gradient(90deg, #2eca8b, #06d6a0);"></div>
@@ -453,7 +453,7 @@
                             <i data-feather="file-text" style="width: 28px; height: 28px; color: #2eca8b; stroke-width: 2;"></i>
                         </div>
                         <h6 class="fw-bold mb-2">Berikan Data Diri</h6>
-                        <p class="text-muted small mb-0">Siapkan nama lengkap, nomor KK, RT/RW/Dusun, dan nomor HP (opsional). Petugas yang menginput ke sistem.</p>
+                        <p class="text-muted small mb-0">Siapkan nama lengkap, alamat, dan nomor HP (opsional). RT/RW/Dusun opsional. Petugas yang menginput ke sistem.</p>
                     </div>
                     <div style="height: 4px; background: linear-gradient(90deg, #55a0ee, #2eca8b);"></div>
                 </div>

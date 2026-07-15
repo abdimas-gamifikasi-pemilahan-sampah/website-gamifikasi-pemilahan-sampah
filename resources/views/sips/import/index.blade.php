@@ -22,6 +22,12 @@
     </div>
     @endif
 
+    <div class="mb-3">
+        <a href="{{ route('sips.warga.index') }}" class="btn btn-sm btn-outline-secondary">
+            <i class="ri-arrow-left-line me-1"></i> Kembali ke Data Warga
+        </a>
+    </div>
+
     <div class="row g-4">
         {{-- Upload form --}}
         <div class="col-lg-5">
@@ -34,12 +40,13 @@
                         Upload file CSV dengan kolom berikut (baris pertama = header):
                     </p>
                     <div class="alert alert-info py-2 fs-13">
-                        <code>nama, no_kk, rt, rw, dusun, no_hp, tanggal_terdaftar</code>
+                        <code>nama, no_kk, alamat, rt, rw, dusun, no_hp, tanggal_terdaftar</code>
                     </div>
                     <p class="text-muted fs-12 mb-4">
-                        <strong>no_kk</strong> digunakan sebagai kunci unik — jika sudah ada, data warga akan diperbarui.<br>
-                        <strong>tanggal_terdaftar</strong> format: <code>YYYY-MM-DD</code><br>
-                        <strong>no_hp</strong> boleh kosong.
+                        <strong>no_kk</strong> boleh kosong — jika diisi dan sudah ada di sistem, data warga akan diperbarui; jika kosong, selalu dibuat baru.<br>
+                        <strong>alamat</strong> boleh kosong (direkomendasikan diisi).<br>
+                        <strong>rt, rw, dusun</strong> boleh kosong.<br>
+                        <strong>tanggal_terdaftar</strong> format: <code>YYYY-MM-DD</code>
                     </p>
 
                     <form method="POST" action="{{ route('sips.import.preview') }}" enctype="multipart/form-data">
@@ -64,9 +71,10 @@
                             <i class="ri-download-2-line me-1"></i> Unduh Template
                         </a>
                     </div>
-                    <pre class="bg-white p-2 rounded fs-12 mb-0" style="overflow-x:auto;">nama,no_kk,rt,rw,dusun,no_hp,tanggal_terdaftar
-Siti Rahayu,1234567890123456,01,01,Melati,081234567890,2026-01-15
-Budi Santoso,9876543210987654,02,02,Anggrek,,2026-02-01</pre>
+                    <pre class="bg-white p-2 rounded fs-12 mb-0" style="overflow-x:auto;">nama,no_kk,alamat,rt,rw,dusun,no_hp,tanggal_terdaftar
+Siti Rahayu,1234567890123456,Jl. Melati No. 5,01,01,Melati,081234567890,2026-01-15
+Budi Santoso,9876543210987654,Jl. Anggrek No. 12,02,02,Anggrek,,2026-02-01
+Dewi Lestari,,Jl. Mawar No. 3 RT 3 RW 1,,,,, 2026-03-10</pre>
                 </div>
             </div>
         </div>

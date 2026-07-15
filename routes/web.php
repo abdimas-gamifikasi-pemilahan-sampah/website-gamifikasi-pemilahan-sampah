@@ -11,8 +11,11 @@ use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\AnalitikController;
 use App\Http\Controllers\ImportSetoranController;
+use App\Http\Controllers\ImportOcrController;
+use App\Http\Controllers\SinonimSampahController;
 use App\Http\Controllers\PengaturanSistemController;
 use App\Http\Controllers\EksporController;
+use App\Http\Controllers\PetugasController;
 
 Route::get('/', function () {
     return view('public.landing');
@@ -36,9 +39,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/sips/warga', [WargaController::class, 'index'])->name('sips.warga.index');
         Route::get('/sips/warga/create', [WargaController::class, 'create'])->name('sips.warga.create');
         Route::post('/sips/warga', [WargaController::class, 'store'])->name('sips.warga.store');
+        Route::post('/sips/warga/quick-store', [WargaController::class, 'quickStore'])->name('sips.warga.quick-store');
         Route::get('/sips/warga/{warga}/edit', [WargaController::class, 'edit'])->name('sips.warga.edit');
         Route::match(['put', 'patch'], '/sips/warga/{warga}', [WargaController::class, 'update'])->name('sips.warga.update');
         Route::patch('/sips/warga/{warga}/status', [WargaController::class, 'updateStatus'])->name('sips.warga.status');
+        Route::delete('/sips/warga/{warga}', [WargaController::class, 'destroy'])->name('sips.warga.destroy');
 
         Route::get('/sips/tarif', [TarifController::class, 'index'])->name('sips.tarif.index');
         Route::get('/sips/tarif/create', [TarifController::class, 'create'])->name('sips.tarif.create');
@@ -59,14 +64,38 @@ Route::middleware('auth')->group(function () {
         Route::get('/sips/import/template', [ImportController::class, 'downloadTemplate'])->name('sips.import.template');
         Route::post('/sips/import/preview', [ImportController::class, 'preview'])->name('sips.import.preview');
         Route::post('/sips/import/confirm', [ImportController::class, 'confirm'])->name('sips.import.confirm');
+
+        // Sinonim Sampah (admin only)
+        Route::get('/sips/sinonim', [SinonimSampahController::class, 'index'])->name('sips.sinonim.index');
+        Route::post('/sips/sinonim', [SinonimSampahController::class, 'store'])->name('sips.sinonim.store');
+        Route::put('/sips/sinonim/{sinonim}', [SinonimSampahController::class, 'update'])->name('sips.sinonim.update');
+        Route::delete('/sips/sinonim/{sinonim}', [SinonimSampahController::class, 'destroy'])->name('sips.sinonim.destroy');
+
+        // OCR flat-rate review (admin only)
+        Route::get('/sips/import/ocr/flat-rate-review', [ImportOcrController::class, 'flatRateReview'])->name('sips.import.ocr.flat-rate-review');
+        Route::post('/sips/import/ocr/assign-tarif', [ImportOcrController::class, 'assignTarifItem'])->name('sips.import.ocr.assign-tarif');
+        Route::post('/sips/import/ocr/save-ai-links', [ImportOcrController::class, 'saveAiLinks'])->name('sips.import.ocr.save-ai-links');
+
+        // Manajemen Petugas (admin only)
+        Route::get('/sips/petugas', [PetugasController::class, 'index'])->name('sips.petugas.index');
+        Route::post('/sips/petugas', [PetugasController::class, 'store'])->name('sips.petugas.store');
+        Route::put('/sips/petugas/{user}', [PetugasController::class, 'update'])->name('sips.petugas.update');
+        Route::patch('/sips/petugas/{user}/status', [PetugasController::class, 'toggleStatus'])->name('sips.petugas.status');
+        Route::delete('/sips/petugas/{user}', [PetugasController::class, 'destroy'])->name('sips.petugas.destroy');
     });
 
     Route::middleware('role:admin,petugas')->group(function () {
         // Import Setoran (Excel)
         Route::get('/sips/import/setoran', [ImportSetoranController::class, 'index'])->name('sips.import.setoran.index');
-        Route::get('/sips/import/setoran/template/{format}', [ImportSetoranController::class, 'downloadTemplate'])->name('sips.import.setoran.template')->where('format', 'perolehan|rivan|detail');
+        Route::get('/sips/import/setoran/template/{format}', [ImportSetoranController::class, 'downloadTemplate'])->name('sips.import.setoran.template')->where('format', 'perolehan|rivan|detail|ocr');
         Route::post('/sips/import/setoran/preview', [ImportSetoranController::class, 'preview'])->name('sips.import.setoran.preview');
         Route::post('/sips/import/setoran/confirm', [ImportSetoranController::class, 'confirm'])->name('sips.import.setoran.confirm');
+
+        // Import OCR / AI
+        Route::get('/sips/import/ocr', [ImportOcrController::class, 'index'])->name('sips.import.ocr.index');
+        Route::get('/sips/import/ocr/panduan', [ImportOcrController::class, 'panduan'])->name('sips.import.ocr.panduan');
+        Route::post('/sips/import/ocr/preview', [ImportOcrController::class, 'preview'])->name('sips.import.ocr.preview');
+        Route::post('/sips/import/ocr/confirm', [ImportOcrController::class, 'confirm'])->name('sips.import.ocr.confirm');
 
         Route::get('/sips/setoran', [SetoranController::class, 'index'])->name('sips.setoran.index');
         Route::get('/sips/setoran/create', [SetoranController::class, 'create'])->name('sips.setoran.create');

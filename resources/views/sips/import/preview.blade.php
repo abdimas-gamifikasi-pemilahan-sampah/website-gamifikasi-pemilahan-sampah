@@ -56,6 +56,7 @@
                             <th>#</th>
                             <th>Nama</th>
                             <th>No KK</th>
+                            <th>Alamat</th>
                             <th>RT</th>
                             <th>RW</th>
                             <th>Dusun</th>
@@ -70,6 +71,7 @@
                             <td class="text-muted fs-12">{{ $row['_line'] }}</td>
                             <td>{{ $row['nama'] ?? '-' }}</td>
                             <td class="fs-12">{{ $row['no_kk'] ?? '-' }}</td>
+                            <td class="fs-12">{{ Str::limit($row['alamat'] ?? '', 30) ?: '-' }}</td>
                             <td>{{ $row['rt'] ?? '-' }}</td>
                             <td>{{ $row['rw'] ?? '-' }}</td>
                             <td>{{ $row['dusun'] ?? '-' }}</td>
@@ -87,7 +89,7 @@
                         </tr>
                         @if(!empty($row['_errors']))
                         <tr class="table-danger">
-                            <td colspan="9" class="pt-0 pb-1 px-3">
+                            <td colspan="10" class="pt-0 pb-1 px-3">
                                 <small class="text-danger"><i class="ri-error-warning-line me-1"></i>{{ implode(' · ', $row['_errors']) }}</small>
                             </td>
                         </tr>

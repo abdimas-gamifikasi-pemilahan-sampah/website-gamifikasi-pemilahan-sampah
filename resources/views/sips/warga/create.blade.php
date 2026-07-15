@@ -31,7 +31,7 @@
                     Data dari setoran sudah diisi: <strong>{{ $prefill['nama'] }}</strong>
                     @if(!empty($prefill['rw'])) · RW {{ $prefill['rw'] }} @endif
                     @if(!empty($prefill['rt'])) · RT {{ $prefill['rt'] }} @endif.
-                    Lengkapi <strong>No. KK</strong> dan <strong>Dusun</strong>, lalu klik <strong>Simpan Warga</strong>.
+                    Lengkapi <strong>Dusun</strong>, lalu klik <strong>Simpan Warga</strong>.
                 </div>
                 @endif
                 <div class="card-body">

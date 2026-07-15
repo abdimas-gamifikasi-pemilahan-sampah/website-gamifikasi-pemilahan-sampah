@@ -111,18 +111,19 @@ class WargaController extends Controller
     protected function validatePayload(Request $request, ?Warga $warga = null): array
     {
         return $request->validate([
-            'nama' => ['required', 'string', 'max:255'],
-            'no_kk' => [
-                'required',
+            'nama'   => ['required', 'string', 'max:255'],
+            'no_kk'  => [
+                'nullable',
                 'string',
                 'regex:/^\d{16}$/',
                 Rule::unique('warga', 'no_kk')->ignore($warga?->id),
             ],
-            'rt' => ['required', 'string', 'max:5'],
-            'rw' => ['required', 'string', 'max:5'],
-            'dusun' => ['required', 'string', 'max:255'],
-            'no_hp' => ['nullable', 'string', 'max:20'],
-            'tanggal_terdaftar' => ['required', 'date'],
+            'alamat' => ['required', 'string', 'max:500'],
+            'rt'     => ['nullable', 'integer', 'min:1', 'max:999'],
+            'rw'     => ['nullable', 'integer', 'min:1', 'max:999'],
+            'dusun'  => ['nullable', 'string', 'max:255'],
+            'no_hp'  => ['nullable', 'string', 'max:20'],
+            'tanggal_terdaftar'  => ['required', 'date'],
             'status_keanggotaan' => ['required', Rule::in(['aktif', 'non_aktif'])],
         ], [
             'no_kk.regex' => 'Nomor KK harus 16 digit angka.',
@@ -132,14 +133,15 @@ class WargaController extends Controller
     protected function transformWarga(Warga $warga): array
     {
         return [
-            'id' => $warga->id,
-            'nama' => $warga->nama,
-            'no_kk' => $warga->no_kk,
-            'rt' => $warga->rt,
-            'rw' => $warga->rw,
-            'dusun' => $warga->dusun,
-            'no_hp' => $warga->no_hp,
-            'tanggal_terdaftar' => optional($warga->tanggal_terdaftar)->toDateString(),
+            'id'     => $warga->id,
+            'nama'   => $warga->nama,
+            'no_kk'  => $warga->no_kk,
+            'alamat' => $warga->alamat,
+            'rt'     => $warga->rt,
+            'rw'     => $warga->rw,
+            'dusun'  => $warga->dusun,
+            'no_hp'  => $warga->no_hp,
+            'tanggal_terdaftar'  => optional($warga->tanggal_terdaftar)->toDateString(),
             'status_keanggotaan' => $warga->status_keanggotaan,
             'status_partisipasi_bulan_ini' => ($warga->memiliki_setoran_bulan_ini ?? false) ? 'aktif' : 'non_aktif',
         ];

@@ -165,22 +165,12 @@
                             <i class="ri-information-line me-1"></i> Panduan
                         </h6>
                         <ul class="text-muted mb-0 fs-13 ps-3">
-                            <li>Dipilah: <strong>Rp {{ number_format($tarifDipilah, 0, ',', '.') }}/kg</strong> &nbsp;·&nbsp; Tidak dipilah: <strong>Rp {{ number_format($tarifTidak, 0, ',', '.') }}/kg</strong></li>
-                            <li><strong>Dipilah</strong> = warga <span class="text-success">menerima uang</span></li>
-                            <li><strong>Tidak dipilah</strong> = warga <span class="text-danger">bayar iuran</span></li>
-                            <li>Pilih <em>Jenis Item</em> untuk harga spesifik, atau kosongkan untuk flat.</li>
+                            <li><strong>Dipilah</strong>: <span class="text-success">Rp {{ number_format($tarifDipilah, 0, ',', '.') }}/kg</span> — warga <span class="text-success">menerima uang</span></li>
+                            <li><strong>Tidak dipilah</strong>: <span class="text-danger">Rp {{ number_format($tarifTidak, 0, ',', '.') }}/kg</span> — warga <span class="text-danger">bayar iuran</span></li>
                             <li>Gunakan <i class="ri-search-line"></i> untuk cari warga terdaftar.</li>
                         </ul>
                     </div>
                 </div>
-
-                @if($tarifItems->isEmpty())
-                <div class="alert alert-warning fs-13 mt-2">
-                    <i class="ri-alert-line me-1"></i>
-                    Belum ada tarif item aktif.
-                    <a href="{{ route('sips.tarif.index') }}">Tambah di menu Tarif</a>.
-                </div>
-                @endif
 
             </div>
 
@@ -281,14 +271,14 @@
 </div>
 </template>
 
-{{-- Desktop item row — original layout with dropdown for status pilah --}}
+{{-- Desktop item row --}}
 <template id="item-tpl-desktop">
 <div class="item-row border rounded p-2 mb-2">
     <input type="hidden" class="pilah-hidden" name="penyetor[__P__][items][__I__][status_pemilahan]" value="">
-    <div class="row g-2">
+    <div class="row g-2 align-items-end">
 
         {{-- Status Pilah --}}
-        <div class="col-6">
+        <div class="col-5">
             <label class="form-label form-label-sm text-muted mb-1">Status Pilah *</label>
             <select class="form-select desktop-pilah"
                     onchange="applyPilahUI(this.closest('.item-row'), this.value)">
@@ -298,27 +288,8 @@
             </select>
         </div>
 
-        {{-- Jenis Item --}}
-        <div class="col-6">
-            <label class="form-label form-label-sm text-muted mb-1">Jenis Item</label>
-            <div class="jenis-wrapper d-none">
-                <select name="penyetor[__P__][items][__I__][tarif_item_id]"
-                        class="form-select tarif-select">
-                    <option value="">— flat (Rp {{ number_format($tarifDipilah, 0, ',', '.') }}/kg) —</option>
-                    @foreach($tarifItems as $t)
-                    <option value="{{ $t->id }}" data-harga="{{ $t->activeRate->harga_per_kg }}">
-                        {{ $t->nama_item }} · Rp {{ number_format($t->activeRate->harga_per_kg, 0, ',', '.') }}/kg
-                    </option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="tidak-note d-none pt-2 ps-1">
-                <small class="text-muted"><i class="ri-arrow-right-s-line"></i> Iuran — tarif flat</small>
-            </div>
-        </div>
-
-        {{-- Berat + subnilai + delete --}}
-        <div class="col-7">
+        {{-- Berat --}}
+        <div class="col-5">
             <label class="form-label form-label-sm text-muted mb-1">Berat *</label>
             <div class="input-group">
                 <input type="number"
@@ -330,7 +301,7 @@
             </div>
         </div>
 
-        <div class="col-5 d-flex flex-column align-items-end justify-content-end gap-1">
+        <div class="col-2 d-flex flex-column align-items-end gap-1">
             <span class="subnilai-display fw-bold fs-13 text-muted">—</span>
             <button type="button" class="btn btn-sm btn-outline-danger"
                     onclick="removeItemRow(this)" title="Hapus item">
@@ -441,7 +412,7 @@
 </div>
 </template>
 
-{{-- Mobile item row — toggle buttons for status pilah --}}
+{{-- Mobile item row --}}
 <template id="item-tpl-mobile">
 <div class="item-row border rounded p-2 mb-2">
 
@@ -461,27 +432,6 @@
                 <i class="ri-close-line me-1"></i> Tidak Dipilah
             </button>
         </div>
-    </div>
-
-    {{-- Jenis item (shown when dipilah) --}}
-    <div class="jenis-wrapper mb-2 d-none">
-        <div class="fs-12 text-muted mb-1">Jenis Item</div>
-        <select name="penyetor[__P__][items][__I__][tarif_item_id]"
-                class="form-select tarif-select">
-            <option value="">— flat (Rp {{ number_format($tarifDipilah, 0, ',', '.') }}/kg) —</option>
-            @foreach($tarifItems as $t)
-            <option value="{{ $t->id }}" data-harga="{{ $t->activeRate->harga_per_kg }}">
-                {{ $t->nama_item }} · Rp {{ number_format($t->activeRate->harga_per_kg, 0, ',', '.') }}/kg
-            </option>
-            @endforeach
-        </select>
-    </div>
-
-    {{-- Tidak dipilah note --}}
-    <div class="tidak-note mb-2 d-none">
-        <small class="text-danger fs-12">
-            <i class="ri-information-line me-1"></i> Iuran — tarif flat dikenakan
-        </small>
     </div>
 
     {{-- Berat + subnilai + delete --}}
@@ -531,6 +481,15 @@ function openWargaSearch(card) {
     setTimeout(() => input.focus(), 350);
 }
 
+function wargaLoc(w) {
+    if (w.alamat) return w.alamat;
+    const parts = [];
+    if (w.rt) parts.push('RT ' + w.rt);
+    if (w.rw) parts.push('RW ' + w.rw);
+    const rtRw = parts.join(' · ');
+    return rtRw + (w.dusun ? (rtRw ? ' — ' + w.dusun : w.dusun) : '');
+}
+
 function filterWarga(q) {
     q = q.toLowerCase().trim();
     const list = document.getElementById('warga-list');
@@ -546,7 +505,7 @@ function filterWarga(q) {
                 class="list-group-item list-group-item-action py-3"
                 onclick="selectWarga(${w.id})">
             <div class="fw-semibold">${w.nama}</div>
-            <small class="text-muted">RT ${w.rt} · RW ${w.rw}${w.dusun ? ' — ' + w.dusun : ''}</small>
+            <small class="text-muted">${wargaLoc(w)}</small>
         </button>`).join('');
 
     if (!hits.length) {
@@ -573,8 +532,7 @@ function selectWarga(id) {
     const statePick = activeCard.querySelector('.state-pick');
     if (statePick) {
         activeCard.querySelector('.warga-nama').textContent = w.nama;
-        activeCard.querySelector('.warga-info').textContent =
-            `RT ${w.rt} · RW ${w.rw}${w.dusun ? ' — ' + w.dusun : ''}`;
+        activeCard.querySelector('.warga-info').textContent = wargaLoc(w);
         statePick.classList.add('d-none');
         activeCard.querySelector('.state-manual')?.classList.add('d-none');
         activeCard.querySelector('.state-selected').classList.remove('d-none');
@@ -661,7 +619,6 @@ function addItemRow(card) {
     const row = temp.firstElementChild;
 
     row.querySelector('.berat-input').addEventListener('input', recalc);
-    row.querySelector('.tarif-select').addEventListener('change', recalc);
 
     card.querySelector('.item-container').appendChild(row);
     card.dataset.iidx = iidx + 1;
@@ -694,23 +651,8 @@ function setPilah(btn, value) {
     applyPilahUI(row, value);
 }
 
-// Shared: sync pilah value + show/hide jenis & note (works for both templates)
 function applyPilahUI(row, value) {
     row.querySelector('.pilah-hidden').value = value;
-
-    const jenisWrapper = row.querySelector('.jenis-wrapper');
-    const tidakNote    = row.querySelector('.tidak-note');
-    const tarifSel     = row.querySelector('.tarif-select');
-
-    if (value === 'dipilah') {
-        jenisWrapper?.classList.remove('d-none');
-        tidakNote?.classList.add('d-none');
-    } else {
-        jenisWrapper?.classList.add('d-none');
-        tidakNote?.classList.remove('d-none');
-        if (tarifSel) tarifSel.value = '';
-    }
-
     recalc();
 }
 
@@ -726,10 +668,9 @@ function recalc() {
         let cardKg = 0, cardNilai = 0;
 
         card.querySelectorAll('.item-row').forEach(row => {
-            const pilah    = row.querySelector('.pilah-hidden').value;
-            const tarifSel = row.querySelector('.tarif-select');
-            const berat    = parseFloat(row.querySelector('.berat-input').value || 0);
-            const subEl    = row.querySelector('.subnilai-display');
+            const pilah = row.querySelector('.pilah-hidden').value;
+            const berat = parseFloat(row.querySelector('.berat-input').value || 0);
+            const subEl = row.querySelector('.subnilai-display');
 
             if (!pilah || berat <= 0) {
                 subEl.textContent = '—';
@@ -738,15 +679,10 @@ function recalc() {
             }
 
             const dipilah = pilah === 'dipilah';
-            let harga     = dipilah ? TARIF_DIPILAH : TARIF_TIDAK;
-
-            if (dipilah && tarifSel.value) {
-                harga = parseFloat(tarifSel.options[tarifSel.selectedIndex]?.dataset.harga || TARIF_DIPILAH);
-            }
-
-            const sub  = berat * harga * (dipilah ? 1 : -1);
-            cardKg    += berat;
-            cardNilai += sub;
+            const harga   = dipilah ? TARIF_DIPILAH : TARIF_TIDAK;
+            const sub     = berat * harga * (dipilah ? 1 : -1);
+            cardKg       += berat;
+            cardNilai    += sub;
 
             subEl.textContent = (sub >= 0 ? '+' : '−') + 'Rp ' + fmt(Math.abs(sub));
             subEl.className   = 'subnilai-display fw-bold fs-13 ' + (dipilah ? 'text-success' : 'text-danger');
@@ -822,7 +758,7 @@ function showTypeahead(input) {
                 onmousedown="event.preventDefault()"
                 onclick="selectWargaInline(this, ${w.id})">
             <div class="fw-semibold fs-13">${escHtml(w.nama)}</div>
-            <small class="text-muted">RT ${escHtml(String(w.rt))} · RW ${escHtml(String(w.rw))}${w.dusun ? ' — ' + escHtml(w.dusun) : ''}</small>
+            <small class="text-muted">${escHtml(wargaLoc(w))}</small>
         </button>`).join('');
     dropdown.classList.remove('d-none');
 }
@@ -868,7 +804,7 @@ function showMatchWarning(card, nama) {
             <div class="alert alert-warning py-2 px-3 fs-13 mb-0">
                 <i class="ri-user-search-line me-1"></i>
                 Warga serupa: <strong>${escHtml(match.nama)}</strong>
-                <span class="text-muted">(RT ${match.rt} · RW ${match.rw})</span>
+                ${wargaLoc(match) ? `<span class="text-muted">(${wargaLoc(match)})</span>` : ''}
                 <div class="mt-2 d-flex gap-2 flex-wrap">
                     <button type="button" class="btn btn-warning btn-sm"
                             onclick="selectWargaFromAlert(this, ${match.id})">

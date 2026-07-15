@@ -74,13 +74,14 @@ class LeaderboardController extends Controller
             ->select([
                 'warga.id',
                 'warga.nama',
+                'warga.alamat',
                 'warga.rt',
                 'warga.rw',
                 'warga.dusun',
                 DB::raw('SUM(item_setoran.berat_kg) as total_kg'),
                 DB::raw("SUM(CASE WHEN item_setoran.status_pemilahan = 'dipilah' THEN item_setoran.berat_kg ELSE 0 END) as kg_dipilah"),
             ])
-            ->groupBy('warga.id', 'warga.nama', 'warga.rt', 'warga.rw', 'warga.dusun')
+            ->groupBy('warga.id', 'warga.nama', 'warga.alamat', 'warga.rt', 'warga.rw', 'warga.dusun')
             ->get()
             ->map(function ($row) {
                 $row->persen_dipilah = $row->total_kg > 0
@@ -104,6 +105,7 @@ class LeaderboardController extends Controller
                 DB::raw('SUM(item_setoran.berat_kg) as total_kg'),
                 DB::raw("SUM(CASE WHEN item_setoran.status_pemilahan = 'dipilah' THEN item_setoran.berat_kg ELSE 0 END) as kg_dipilah"),
             ])
+            ->whereNotNull('warga.rw')
             ->groupBy('warga.rw', 'warga.dusun')
             ->get()
             ->map(function ($row) {

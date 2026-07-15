@@ -23,7 +23,22 @@ class EksporController extends Controller
 
         $preview = $this->previewStats($dari, $sampai);
 
-        return view('sips.ekspor.index', compact('dari', 'sampai', 'preview'));
+        // Last 6 months for the archive section
+        $arsipBulanan = collect();
+        for ($i = 0; $i < 6; $i++) {
+            $m      = Carbon::now()->subMonths($i)->startOfMonth();
+            $stats  = $this->previewStats($m->format('Y-m-d'), $m->copy()->endOfMonth()->format('Y-m-d'));
+            $arsipBulanan->push([
+                'label'       => $m->translatedFormat('F Y'),
+                'dari'        => $m->format('Y-m-d'),
+                'sampai'      => $m->copy()->endOfMonth()->format('Y-m-d'),
+                'jumlah'      => $stats['jumlah'],
+                'total_kg'    => $stats['total_kg'],
+                'total_nilai' => $stats['total_nilai'],
+            ]);
+        }
+
+        return view('sips.ekspor.index', compact('dari', 'sampai', 'preview', 'arsipBulanan'));
     }
 
     public function download(Request $request)

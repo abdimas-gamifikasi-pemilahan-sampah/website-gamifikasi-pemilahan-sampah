@@ -13,6 +13,13 @@
     </div>
     @endif
 
+    @if(session('error'))
+    <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+        <i class="ri-error-warning-line me-1"></i> {{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    @endif
+
     <div class="row">
         <div class="col-12">
             <div class="card card-h-100">
@@ -21,9 +28,16 @@
                         <h5 class="card-title mb-1">Daftar Warga Terdaftar</h5>
                         <p class="text-muted mb-0 fs-13">Data ini dipakai sebagai referensi utama saat petugas mencatat setoran.</p>
                     </div>
-                    <a href="{{ route('sips.warga.create') }}" class="btn btn-primary btn-sm">
-                        <i class="bi bi-plus-circle me-1"></i> Tambah Warga
-                    </a>
+                    <div class="d-flex align-items-center gap-2">
+                        @if(auth()->user()->isAdmin())
+                        <a href="{{ route('sips.import.index') }}" class="text-muted fs-13">
+                            <i class="ri-upload-2-line me-1"></i>Import CSV
+                        </a>
+                        @endif
+                        <a href="{{ route('sips.warga.create') }}" class="btn btn-primary btn-sm">
+                            <i class="bi bi-plus-circle me-1"></i> Tambah Warga
+                        </a>
+                    </div>
                 </div>
                 <div class="card-body">
                     @php
@@ -142,12 +156,12 @@
                         <table class="table text-nowrap align-middle mb-0 table-hover">
                             <thead class="table-light sips-table-head">
                                 <tr>
-                                    <th>Nama Lengkap</th>
-                                    <th>Nomor KK</th>
+                                    <th>Nama &amp; Alamat</th>
                                     <th>Wilayah</th>
+                                    <th>No. KK</th>
                                     <th>Nomor HP</th>
-                                    <th>Tanggal Terdaftar</th>
-                                    <th>Partisipasi Bulan Ini</th>
+                                    <th>Terdaftar</th>
+                                    <th>Partisipasi</th>
                                     <th>Status</th>
                                     <th>Aksi</th>
                                 </tr>
@@ -157,10 +171,20 @@
                                 <tr>
                                     <td>
                                         <div class="fw-semibold">{{ $item->nama }}</div>
-                                        <small class="text-muted">RT {{ $item->rt }} / RW {{ $item->rw }}</small>
+                                        @if($item->alamat)
+                                        <small class="text-muted">{{ Str::limit($item->alamat, 48) }}</small>
+                                        @else
+                                        <small class="text-muted fst-italic">Alamat belum diisi</small>
+                                        @endif
                                     </td>
-                                    <td>{{ $item->no_kk }}</td>
-                                    <td>Dusun {{ $item->dusun }}</td>
+                                    <td>
+                                        @if($item->rt || $item->rw)
+                                        <div class="text-nowrap">RT {{ $item->rt ?? '-' }} / RW {{ $item->rw ?? '-' }}</div>
+                                        @endif
+                                        @if($item->dusun)<small class="text-muted">Dusun {{ $item->dusun }}</small>@endif
+                                        @if(!$item->rt && !$item->rw && !$item->dusun)<span class="text-muted">-</span>@endif
+                                    </td>
+                                    <td>{{ $item->no_kk ?? '-' }}</td>
                                     <td>{{ $item->no_hp ?: '-' }}</td>
                                     <td>{{ optional($item->tanggal_terdaftar)->translatedFormat('d M Y') }}</td>
                                     <td>
@@ -196,6 +220,17 @@
                                                         class="btn btn-sm {{ $item->status_keanggotaan === 'aktif' ? 'btn-outline-danger' : 'btn-outline-success' }}"
                                                         title="{{ $item->status_keanggotaan === 'aktif' ? 'Nonaktifkan warga' : 'Aktifkan warga' }}">
                                                     <i class="ri-{{ $item->status_keanggotaan === 'aktif' ? 'user-unfollow' : 'user-follow' }}-line"></i>
+                                                </button>
+                                            </form>
+                                            <form method="POST"
+                                                  action="{{ route('sips.warga.destroy', $item->id) }}"
+                                                  onsubmit="return confirm('Hapus data warga {{ addslashes($item->nama) }}?\n\nTindakan ini permanen dan tidak dapat dibatalkan.')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit"
+                                                        class="btn btn-sm btn-light border text-danger"
+                                                        title="Hapus data warga">
+                                                    <i class="ri-delete-bin-line"></i>
                                                 </button>
                                             </form>
                                         </div>

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Warga;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -86,6 +87,41 @@ class WargaController extends Controller
             ->with('success', 'Data warga berhasil ditambahkan.');
     }
 
+    public function quickStore(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'nama'   => ['required', 'string', 'max:255'],
+            'alamat' => ['nullable', 'string', 'max:500'],
+            'rt'     => ['nullable', 'integer', 'min:1', 'max:999'],
+            'rw'     => ['nullable', 'integer', 'min:1', 'max:999'],
+            'dusun'  => ['nullable', 'string', 'max:255'],
+            'no_kk'  => ['nullable', 'string', 'regex:/^\d{16}$/'],
+        ]);
+
+        $warga = Warga::create([
+            'nama'               => $validated['nama'],
+            'alamat'             => $validated['alamat'] ?? null,
+            'rt'                 => $validated['rt'] ?? null,
+            'rw'                 => $validated['rw'] ?? null,
+            'dusun'              => $validated['dusun'] ?? null,
+            'no_kk'              => $validated['no_kk'] ?? null,
+            'tanggal_terdaftar'  => today(),
+            'status_keanggotaan' => 'aktif',
+        ]);
+
+        $loc = ($warga->rt || $warga->rw)
+            ? "RT {$warga->rt}/RW {$warga->rw}"
+            : ($warga->dusun ?? '');
+
+        return response()->json([
+            'id'    => $warga->id,
+            'nama'  => $warga->nama,
+            'rt'    => $warga->rt,
+            'rw'    => $warga->rw,
+            'label' => $loc ? "{$warga->nama} ({$loc})" : $warga->nama,
+        ]);
+    }
+
     public function edit(Warga $warga): View
     {
         return view('sips.warga.edit', compact('warga'));
@@ -126,21 +162,35 @@ class WargaController extends Controller
             ->with('success', 'Status warga berhasil diperbarui.');
     }
 
+    public function destroy(Warga $warga): RedirectResponse
+    {
+        if ($warga->setoran()->exists()) {
+            return back()->with('error', "Warga \"{$warga->nama}\" memiliki catatan setoran dan tidak dapat dihapus. Gunakan tombol nonaktifkan sebagai gantinya.");
+        }
+
+        $nama = $warga->nama;
+        $warga->delete();
+
+        return redirect()->route('sips.warga.index')
+            ->with('success', "Data warga \"{$nama}\" berhasil dihapus.");
+    }
+
     protected function validatePayload(Request $request, ?Warga $warga = null): array
     {
         return $request->validate([
-            'nama' => ['required', 'string', 'max:255'],
-            'no_kk' => [
-                'required',
+            'nama'   => ['required', 'string', 'max:255'],
+            'no_kk'  => [
+                'nullable',
                 'string',
                 'regex:/^\d{16}$/',
                 Rule::unique('warga', 'no_kk')->ignore($warga?->id),
             ],
-            'rt' => ['required', 'integer', 'min:1', 'max:999'],
-            'rw' => ['required', 'integer', 'min:1', 'max:999'],
-            'dusun' => ['required', 'string', 'max:255'],
-            'no_hp' => ['nullable', 'string', 'max:20'],
-            'tanggal_terdaftar' => ['required', 'date'],
+            'alamat' => ['required', 'string', 'max:500'],
+            'rt'     => ['nullable', 'integer', 'min:1', 'max:999'],
+            'rw'     => ['nullable', 'integer', 'min:1', 'max:999'],
+            'dusun'  => ['nullable', 'string', 'max:255'],
+            'no_hp'  => ['nullable', 'string', 'max:20'],
+            'tanggal_terdaftar'  => ['required', 'date'],
             'status_keanggotaan' => ['required', Rule::in(['aktif', 'non_aktif'])],
         ], [
             'no_kk.regex' => 'Nomor KK harus 16 digit angka.',

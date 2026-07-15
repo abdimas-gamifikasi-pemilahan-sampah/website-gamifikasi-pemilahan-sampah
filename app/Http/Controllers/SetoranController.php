@@ -69,32 +69,18 @@ class SetoranController extends Controller
 
         $warga = Warga::where('status_keanggotaan', 'aktif')
             ->orderBy('nama')
-            ->get(['id', 'nama', 'rt', 'rw', 'dusun']);
-
-        // For legacy per-item mode
-        $tarifItems = TarifItem::where('status', 'aktif')
-            ->get()
-            ->each(fn($item) => $item->activeRate = $item->tarifAktif())
-            ->filter(fn($item) => $item->activeRate !== null)
-            ->values();
-
-        $tarifJson = $tarifItems->mapWithKeys(fn($item) => [
-            $item->id => [
-                'nama'  => $item->nama_item,
-                'tipe'  => $item->tipe_sampah,
-                'harga' => (float) $item->activeRate->harga_per_kg,
-            ],
-        ]);
+            ->get(['id', 'nama', 'alamat', 'rt', 'rw', 'dusun']);
 
         $wargaJson = $warga->map(fn($w) => [
-            'id'    => $w->id,
-            'nama'  => $w->nama,
-            'rt'    => $w->rt,
-            'rw'    => $w->rw,
-            'dusun' => $w->dusun,
+            'id'     => $w->id,
+            'nama'   => $w->nama,
+            'alamat' => $w->alamat,
+            'rt'     => $w->rt,
+            'rw'     => $w->rw,
+            'dusun'  => $w->dusun,
         ]);
 
-        return view('sips.setoran.create', compact('tarifTidak', 'tarifDipilah', 'tarifItems', 'tarifJson', 'wargaJson'));
+        return view('sips.setoran.create', compact('tarifTidak', 'tarifDipilah', 'wargaJson'));
     }
 
     public function store(Request $request): RedirectResponse
