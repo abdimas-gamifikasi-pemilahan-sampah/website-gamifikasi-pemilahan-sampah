@@ -32,19 +32,25 @@
     h1.heading { font-size: 1.45rem !important; }
     .section { padding: 32px 0 !important; }
 
-    /* Hero CTAs: stack buttons vertically */
-    .list-inline-item { display: block !important; margin: 0 0 10px 0 !important; text-align: center; }
-    .list-inline-item .btn { width: 100%; }
+    /* Hero CTAs only — scope tightly so social icons stay inline */
+    .title-heading .list-inline-item { display: block !important; margin: 0 0 10px 0 !important; text-align: center; }
+    .title-heading .list-inline-item .btn { width: 100%; }
+
+    /* Social icon row — force inline even on small screens */
+    ul.social-icons-row li, ul.social-icons-row .list-inline-item {
+        display: inline-block !important;
+        margin: 0 6px !important;
+    }
 
     /* Step cards: reduce inner padding */
     .card-body.px-4.py-5 { padding: 20px 16px !important; }
-    .card-body.px-4.py-5 div[style*="4rem"] { font-size: 2.8rem !important; }
+    .card-body.px-4.py-5 div[style*="4rem"] { font-size: 2.6rem !important; }
 
     /* Feature section col order: image second on mobile */
-    .col-lg-5.order-1.order-md-2 { display: none; } /* hide illustrator on xs */
+    .col-lg-5.order-1.order-md-2 { display: none; }
 
-    /* Info box items */
-    .row.g-2 .col-md-6 { margin-bottom: 6px; }
+    /* Info box: items full width, tighter spacing */
+    .row.g-2 .col-md-6 { margin-bottom: 6px; width: 100%; max-width: 100%; flex: 0 0 100%; }
 }
 </style>
 @endsection
@@ -143,60 +149,60 @@
 
         <div class="row g-4">
             <!-- Step 1 -->
-            <div class="col-lg-3 col-md-6">
+            <div class="col-6 col-lg-3">
                 <div class="card border-0 shadow h-100 text-center overflow-hidden" style="border-radius: 1rem;">
                     <div class="card-body px-4 py-5 d-flex flex-column align-items-center">
                         <div class="mb-3" style="font-size: 4rem; font-weight: 900; color: rgba(47,85,212,0.18); line-height: 1; user-select: none; letter-spacing: -2px;">01</div>
                         <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-4" style="width: 68px; height: 68px; background: linear-gradient(135deg, #dde6ff, #eef2ff);">
-                            <i data-feather="map-pin" style="width: 28px; height: 28px; color: #2f55d4; stroke-width: 2;"></i>
+                            <i data-feather="user-plus" style="width: 28px; height: 28px; color: #2f55d4; stroke-width: 2;"></i>
                         </div>
-                        <h6 class="fw-bold mb-2">Datang ke Kantor Desa</h6>
-                        <p class="text-muted small mb-0">Kunjungi Kantor Desa Banjarsari di gedung utama pada jam layanan yang tersedia.</p>
+                        <h6 class="fw-bold mb-2">Daftar ke Petugas</h6>
+                        <p class="text-muted small mb-0">Temui petugas TPS 3R Banjarsari atau hubungi via WhatsApp untuk mendaftarkan nama dan alamat Anda.</p>
                     </div>
                     <div style="height: 4px; background: linear-gradient(90deg, #2f55d4, #7796ee);"></div>
                 </div>
             </div><!--end col-->
 
             <!-- Step 2 -->
-            <div class="col-lg-3 col-md-6">
+            <div class="col-6 col-lg-3">
                 <div class="card border-0 shadow h-100 text-center overflow-hidden" style="border-radius: 1rem;">
                     <div class="card-body px-4 py-5 d-flex flex-column align-items-center">
                         <div class="mb-3" style="font-size: 4rem; font-weight: 900; color: rgba(47,85,212,0.18); line-height: 1; user-select: none; letter-spacing: -2px;">02</div>
                         <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-4" style="width: 68px; height: 68px; background: linear-gradient(135deg, #d5eeff, #eef7ff);">
-                            <i data-feather="message-square" style="width: 28px; height: 28px; color: #2f55d4; stroke-width: 2;"></i>
+                            <i data-feather="layers" style="width: 28px; height: 28px; color: #2f55d4; stroke-width: 2;"></i>
                         </div>
-                        <h6 class="fw-bold mb-2">Temui Petugas Bank Sampah</h6>
-                        <p class="text-muted small mb-0">Sampaikan keinginan Anda untuk bergabung program bank sampah kepada petugas yang bertugas.</p>
+                        <h6 class="fw-bold mb-2">Siapkan Sampah Terpilah</h6>
+                        <p class="text-muted small mb-0">Pisahkan sampah organik (sisa makanan) dari anorganik (plastik, kertas, logam) di rumah sebelum hari pengambilan.</p>
                     </div>
                     <div style="height: 4px; background: linear-gradient(90deg, #2f55d4, #55a0ee);"></div>
                 </div>
             </div><!--end col-->
 
             <!-- Step 3 -->
-            <div class="col-lg-3 col-md-6">
+            <div class="col-6 col-lg-3">
                 <div class="card border-0 shadow h-100 text-center overflow-hidden" style="border-radius: 1rem;">
                     <div class="card-body px-4 py-5 d-flex flex-column align-items-center">
                         <div class="mb-3" style="font-size: 4rem; font-weight: 900; color: rgba(46,202,139,0.2); line-height: 1; user-select: none; letter-spacing: -2px;">03</div>
                         <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-4" style="width: 68px; height: 68px; background: linear-gradient(135deg, #d0f0e4, #eefaf4);">
-                            <i data-feather="file-text" style="width: 28px; height: 28px; color: #2eca8b; stroke-width: 2;"></i>
+                            <i data-feather="truck" style="width: 28px; height: 28px; color: #2eca8b; stroke-width: 2;"></i>
                         </div>
-                        <h6 class="fw-bold mb-2">Berikan Data Diri</h6>
-                        <p class="text-muted small mb-0">Siapkan nama lengkap, nomor KK, RT/RW/Dusun, dan nomor HP (opsional). Petugas yang menginput ke sistem.</p>
+                        <h6 class="fw-bold mb-2">Petugas Datang Keliling</h6>
+                        <p class="text-muted small mb-0">Petugas akan datang ke rumah Anda sesuai jadwal untuk menimbang dan mencatat setoran sampah terpilah.</p>
                     </div>
                     <div style="height: 4px; background: linear-gradient(90deg, #55a0ee, #2eca8b);"></div>
                 </div>
             </div><!--end col-->
 
             <!-- Step 4 - Done -->
-            <div class="col-lg-3 col-md-6">
+            <div class="col-6 col-lg-3">
                 <div class="card border-0 shadow h-100 text-center overflow-hidden" style="border-radius: 1rem;">
                     <div class="card-body px-4 py-5 d-flex flex-column align-items-center">
                         <div class="mb-3" style="font-size: 4rem; font-weight: 900; color: rgba(46,202,139,0.25); line-height: 1; user-select: none;">✓</div>
                         <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-4" style="width: 68px; height: 68px; background: linear-gradient(135deg, #a8f0d0, #d4f8ea);">
                             <i data-feather="award" style="width: 28px; height: 28px; color: #2eca8b; stroke-width: 2;"></i>
                         </div>
-                        <h6 class="fw-bold mb-2">Mulai Setor &amp; Raih Poin</h6>
-                        <p class="text-muted small mb-0">Setelah terdaftar, langsung setor sampah terpilah dan pantau kontribusi Anda di papan peringkat.</p>
+                        <h6 class="fw-bold mb-2">Raih Poin &amp; Pembayaran</h6>
+                        <p class="text-muted small mb-0">Kontribusi tercatat otomatis di sistem. Poin bertambah dan pembayaran diberikan langsung oleh petugas saat itu.</p>
                     </div>
                     <div style="height: 4px; background: linear-gradient(90deg, #2eca8b, #06d6a0);"></div>
                 </div>
@@ -214,28 +220,28 @@
                         <div class="w-100">
                             <h6 class="fw-bold mb-3">Yang perlu diketahui warga</h6>
                             <div class="row g-2">
-                                <div class="col-md-6">
+                                <div class="col-12 col-md-6">
                                     <div class="d-flex align-items-start gap-2">
                                         <i class="uil uil-check-circle text-primary mt-1" style="font-size: 1.1rem; flex-shrink: 0;"></i>
                                         <p class="text-muted small mb-0">Warga tidak memiliki akun login — semua pencatatan dilakukan oleh petugas.</p>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-12 col-md-6">
                                     <div class="d-flex align-items-start gap-2">
                                         <i class="uil uil-check-circle text-primary mt-1" style="font-size: 1.1rem; flex-shrink: 0;"></i>
-                                        <p class="text-muted small mb-0">Bawa sampah yang sudah dipilah (organik terpisah dari anorganik) untuk mendapat nilai penuh.</p>
+                                        <p class="text-muted small mb-0">Siapkan sampah terpilah di rumah — organik dan anorganik dipisah. Petugas yang datang mengambil, bukan warga yang mengantar.</p>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-12 col-md-6">
                                     <div class="d-flex align-items-start gap-2">
                                         <i class="uil uil-check-circle text-success mt-1" style="font-size: 1.1rem; flex-shrink: 0;"></i>
-                                        <p class="text-muted small mb-0">Pembayaran dilakukan tunai langsung oleh petugas setelah setoran dicatat.</p>
+                                        <p class="text-muted small mb-0">Pembayaran dilakukan tunai langsung oleh petugas saat pengambilan sampah.</p>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-12 col-md-6">
                                     <div class="d-flex align-items-start gap-2">
                                         <i class="uil uil-check-circle text-success mt-1" style="font-size: 1.1rem; flex-shrink: 0;"></i>
-                                        <p class="text-muted small mb-0">Peringkat dihitung otomatis setiap akhir bulan berdasarkan total kg dan konsistensi setoran.</p>
+                                        <p class="text-muted small mb-0">Peringkat dihitung otomatis setiap bulan berdasarkan total kg dipilah dan persentase pemilahan.</p>
                                     </div>
                                 </div>
                             </div>

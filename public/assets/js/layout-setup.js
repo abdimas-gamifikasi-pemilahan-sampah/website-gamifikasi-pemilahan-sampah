@@ -182,13 +182,28 @@ toggleMode.addEventListener("click", () => {
 // vertical toggle button
 const toggleButton = document.getElementById("toggleSidebar");
 const sideBarBackdrop = document.getElementById("sidebar-backdrop");
+const sidebarCloseBtn = document.getElementById("sidebarCloseBtn");
+
+function closeMobileSidebar() {
+    const sidebar = document.getElementById("sidebar");
+    if (sidebar) sidebar.classList.remove("show");
+    if (sideBarBackdrop) sideBarBackdrop.style.display = "none";
+}
+
+function openMobileSidebar() {
+    const sidebar = document.getElementById("sidebar");
+    if (sidebar) sidebar.classList.add("show");
+    if (sideBarBackdrop) sideBarBackdrop.style.display = "block";
+}
+
+sidebarCloseBtn?.addEventListener("click", closeMobileSidebar);
+
 sideBarBackdrop?.addEventListener("click", () => {
     if (htmlElement.getAttribute("data-layout") === "horizontal") {
         const horizontalAside = document.getElementById("horizontal-aside");
-        horizontalAside.classList.toggle("show");
+        horizontalAside?.classList.toggle("show");
     } else {
-        const sidebar = document.getElementById("sidebar");
-        sidebar.classList.remove("show");
+        closeMobileSidebar();
     }
 });
 
@@ -202,12 +217,15 @@ function removeShowClassFromSidebar() {
 toggleButton?.addEventListener("click", () => {
     const currentToggled = htmlElement.getAttribute("data-sidebar");
     if (window.innerWidth < 992) {
-        // Toggle the data-vertical-layout value
         const sidebar = document.getElementById("sidebar");
-        sidebar.classList.add("show");
-        removeHorizontalAttributes()
+        const isOpen = sidebar?.classList.contains("show");
+        if (isOpen) {
+            closeMobileSidebar();
+        } else {
+            removeHorizontalAttributes();
+            openMobileSidebar();
+        }
     } else {
-        // Toggle the data-vertical-layout value
         if (currentToggled === "icon") {
             htmlElement.setAttribute("data-sidebar", "default");
         } else {

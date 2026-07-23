@@ -63,7 +63,7 @@
                         </div>
                         <div class="row">
                             @foreach($ringkasanAkun as $item)
-                            <div class="col-md-4">
+                            <div class="col-6 col-md-4">
                                 <div class="card border border-{{ $item['class'] }} shadow-sm">
                                     <div class="card-body">
                                         <div class="d-flex justify-content-between align-items-start">
@@ -121,12 +121,12 @@
                     </div>
                     @else
                     <div class="table-responsive">
-                        <table class="table text-nowrap align-middle mb-0 table-hover">
+                        <table class="table align-middle mb-0 table-hover">
                             <thead class="table-light sips-table-head">
                                 <tr>
                                     <th>Nama Lengkap</th>
-                                    <th>Username</th>
-                                    <th>Email</th>
+                                    <th class="d-none d-md-table-cell">Username</th>
+                                    <th class="d-none d-md-table-cell">Email</th>
                                     <th>Role</th>
                                     <th>Status</th>
                                     <th>Aksi</th>
@@ -142,9 +142,10 @@
                                             <span class="badge bg-secondary-subtle text-secondary ms-1" style="font-size:10px;">Anda</span>
                                             @endif
                                         </div>
+                                        <small class="d-md-none text-muted">{{ $u->username }} · {{ $u->email }}</small>
                                     </td>
-                                    <td class="text-muted fs-13">{{ $u->username }}</td>
-                                    <td class="fs-13">{{ $u->email }}</td>
+                                    <td class="text-muted fs-13 d-none d-md-table-cell">{{ $u->username }}</td>
+                                    <td class="fs-13 d-none d-md-table-cell">{{ $u->email }}</td>
                                     <td>
                                         @if($u->role === 'admin')
                                         <span class="badge bg-danger-subtle text-danger">Admin</span>

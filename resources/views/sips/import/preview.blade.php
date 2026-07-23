@@ -7,10 +7,10 @@
 @section('content')
 <div id="layout-wrapper">
 
-    @if(!empty($errors))
+    @if(!empty($formatWarnings))
     <div class="alert alert-warning alert-dismissible fade show mb-4" role="alert">
         <strong>Peringatan format:</strong>
-        @foreach($errors as $e)<div>{{ $e }}</div>@endforeach
+        @foreach($formatWarnings as $w)<div>{{ $w }}</div>@endforeach
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
     @endif
@@ -78,12 +78,14 @@
                             <td class="fs-12 text-muted">{{ $row['no_hp'] ?? '-' }}</td>
                             <td class="fs-12">{{ $row['tanggal_terdaftar'] ?? '-' }}</td>
                             <td>
-                                @if(empty($row['_errors']))
-                                    <span class="badge bg-success-subtle text-success">OK</span>
-                                @else
+                                @if(!empty($row['_errors']))
                                     <span class="badge bg-danger-subtle text-danger" title="{{ implode(', ', $row['_errors']) }}">
                                         Error
                                     </span>
+                                @elseif($row['_exists'] ?? false)
+                                    <span class="badge bg-warning-subtle text-warning">Update</span>
+                                @else
+                                    <span class="badge bg-success-subtle text-success">Baru</span>
                                 @endif
                             </td>
                         </tr>

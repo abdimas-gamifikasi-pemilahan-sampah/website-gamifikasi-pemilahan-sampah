@@ -39,6 +39,17 @@ class AuthController extends Controller
             ]);
         }
 
+        // Block non-active accounts immediately after credential check
+        if (! Auth::user()->is_active) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            throw ValidationException::withMessages([
+                'login' => 'Akun Anda telah dinonaktifkan. Hubungi admin untuk mengaktifkan kembali.',
+            ]);
+        }
+
         $request->session()->regenerate();
 
         return redirect()->intended(route('sips.dashboard'))

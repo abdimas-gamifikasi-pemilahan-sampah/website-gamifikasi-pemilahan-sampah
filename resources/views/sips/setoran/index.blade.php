@@ -25,7 +25,7 @@
                 </div>
                 <div class="card-body">
                     @php
-                        $hasSetoranFilter = filled(request('status'));
+                        $hasSetoranFilter = filled(request('status')) || filled(request('dari')) || filled(request('sampai'));
                         $ringkasanSetoran = [
                             [
                                 'label' => 'Jumlah Setoran',
@@ -77,7 +77,7 @@
                         </div>
                         <div class="row">
                             @foreach($ringkasanSetoran as $item)
-                            <div class="col-md-6 col-xl-4">
+                            <div class="col-6 col-md-6 col-xl-4">
                                 <div class="card border border-{{ $item['class'] }} shadow-sm">
                                     <div class="card-body">
                                         <div class="d-flex justify-content-between align-items-start">
@@ -100,17 +100,35 @@
 
                     {{-- Filters --}}
                     <form method="GET" action="{{ route('sips.setoran.index') }}"
-                          class="d-flex flex-wrap gap-2 align-items-center mb-4">
-                        <select class="form-select form-select-sm w-auto" name="status" onchange="this.form.submit()">
-                            <option value="">Semua Status Bayar</option>
-                            <option value="belum_dibayar_warga" {{ request('status') === 'belum_dibayar_warga' ? 'selected' : '' }}>Belum Dibayar Warga</option>
-                            <option value="belum_dibayar_petugas" {{ request('status') === 'belum_dibayar_petugas' ? 'selected' : '' }}>Belum Dibayar Petugas</option>
-                            <option value="sudah_dibayar_warga" {{ request('status') === 'sudah_dibayar_warga' ? 'selected' : '' }}>Sudah Dibayar Warga</option>
-                            <option value="sudah_dibayar_petugas" {{ request('status') === 'sudah_dibayar_petugas' ? 'selected' : '' }}>Sudah Dibayar Petugas</option>
-                        </select>
-                        @if(request('status'))
-                            <a href="{{ route('sips.setoran.index') }}" class="btn btn-sm btn-light">Reset</a>
-                        @endif
+                          class="row g-2 align-items-end mb-4">
+                        <div class="col-sm-auto">
+                            <label class="form-label form-label-sm mb-1">Dari Tanggal</label>
+                            <input type="date" class="form-control form-control-sm"
+                                   name="dari" value="{{ request('dari') }}">
+                        </div>
+                        <div class="col-sm-auto">
+                            <label class="form-label form-label-sm mb-1">Sampai Tanggal</label>
+                            <input type="date" class="form-control form-control-sm"
+                                   name="sampai" value="{{ request('sampai') }}">
+                        </div>
+                        <div class="col-sm-auto">
+                            <label class="form-label form-label-sm mb-1">Status Bayar</label>
+                            <select class="form-select form-select-sm" name="status">
+                                <option value="">Semua Status</option>
+                                <option value="belum_dibayar_warga" {{ request('status') === 'belum_dibayar_warga' ? 'selected' : '' }}>Belum Dibayar Warga</option>
+                                <option value="belum_dibayar_petugas" {{ request('status') === 'belum_dibayar_petugas' ? 'selected' : '' }}>Belum Dibayar Petugas</option>
+                                <option value="sudah_dibayar_warga" {{ request('status') === 'sudah_dibayar_warga' ? 'selected' : '' }}>Sudah Dibayar Warga</option>
+                                <option value="sudah_dibayar_petugas" {{ request('status') === 'sudah_dibayar_petugas' ? 'selected' : '' }}>Sudah Dibayar Petugas</option>
+                            </select>
+                        </div>
+                        <div class="col-sm-auto d-flex gap-2">
+                            <button type="submit" class="btn btn-primary btn-sm">
+                                <i class="ri-filter-line me-1"></i> Filter
+                            </button>
+                            @if($hasSetoranFilter)
+                            <a href="{{ route('sips.setoran.index') }}" class="btn btn-light btn-sm">Reset</a>
+                            @endif
+                        </div>
                     </form>
 
                     @if($setoran->isEmpty())
@@ -122,23 +140,23 @@
                     </div>
                     @else
                     <div class="table-responsive">
-                        <table class="table text-nowrap align-middle mb-0 table-hover">
+                        <table class="table align-middle mb-0 table-hover">
                             <thead class="table-light">
                                 <tr>
-                                    <th>ID</th>
+                                    <th class="d-none d-md-table-cell">ID</th>
                                     <th>Penyetor / Area</th>
                                     <th>Tanggal</th>
-                                    <th>Mode</th>
+                                    <th class="d-none d-md-table-cell">Mode</th>
                                     <th class="text-end">Total (Rp)</th>
                                     <th>Status</th>
-                                    <th>Selesai</th>
+                                    <th class="d-none d-lg-table-cell">Selesai</th>
                                     <th>Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach($setoran as $s)
                                 <tr class="{{ $s->is_selesai ? 'table-success' : '' }}">
-                                    <td class="fw-medium">#{{ str_pad($s->id, 5, '0', STR_PAD_LEFT) }}</td>
+                                    <td class="fw-medium d-none d-md-table-cell">#{{ str_pad($s->id, 5, '0', STR_PAD_LEFT) }}</td>
 
                                     <td>
                                         @if($s->warga)
@@ -174,7 +192,7 @@
                                         @endif
                                     </td>
 
-                                    <td>
+                                    <td class="d-none d-md-table-cell">
                                         @if($s->mode === 'agregat')
                                             <span class="badge bg-primary-subtle text-primary">Agregat</span>
                                         @else
@@ -200,7 +218,7 @@
                                         </span>
                                     </td>
 
-                                    <td>
+                                    <td class="d-none d-lg-table-cell">
                                         @php
                                             $btnLabel = $s->is_selesai
                                                 ? 'Selesai'

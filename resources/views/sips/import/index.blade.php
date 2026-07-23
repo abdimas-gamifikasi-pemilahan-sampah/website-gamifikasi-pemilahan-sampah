@@ -93,11 +93,11 @@ Dewi Lestari,,Jl. Mawar No. 3 RT 3 RW 1,,,,, 2026-03-10</pre>
                                 <tr>
                                     <th>Waktu</th>
                                     <th>File</th>
-                                    <th class="text-center">Baris</th>
+                                    <th class="d-none d-md-table-cell text-center">Baris</th>
                                     <th class="text-center">Berhasil</th>
                                     <th class="text-center">Gagal</th>
                                     <th>Status</th>
-                                    <th>Oleh</th>
+                                    <th class="d-none d-md-table-cell">Oleh</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -107,7 +107,7 @@ Dewi Lestari,,Jl. Mawar No. 3 RT 3 RW 1,,,,, 2026-03-10</pre>
                                     <td class="fs-12" style="max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="{{ $log->filename }}">
                                         {{ $log->filename }}
                                     </td>
-                                    <td class="text-center">{{ $log->total_baris }}</td>
+                                    <td class="d-none d-md-table-cell text-center">{{ $log->total_baris }}</td>
                                     <td class="text-center text-success fw-semibold">{{ $log->berhasil }}</td>
                                     <td class="text-center {{ $log->gagal > 0 ? 'text-danger fw-semibold' : 'text-muted' }}">{{ $log->gagal }}</td>
                                     <td>
@@ -117,7 +117,7 @@ Dewi Lestari,,Jl. Mawar No. 3 RT 3 RW 1,,,,, 2026-03-10</pre>
                                             <span class="badge bg-danger-subtle text-danger">Gagal</span>
                                         @endif
                                     </td>
-                                    <td class="fs-12 text-muted">{{ $log->uploader->name ?? '-' }}</td>
+                                    <td class="d-none d-md-table-cell fs-12 text-muted">{{ $log->uploader->name ?? '-' }}</td>
                                 </tr>
                                 @if($log->catatan)
                                 <tr>

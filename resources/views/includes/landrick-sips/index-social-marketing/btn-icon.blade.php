@@ -27,7 +27,7 @@ $icons = [
 ];
 @endphp
 
-<ul class="text-center mb-0 p-0 list-unstyled">
+<ul class="text-center mb-0 p-0 list-inline social-icons-row">
     @foreach ($icons as $item)
         <li class="list-inline-item mx-2">
             <a href="javascript:void(0)" class="btn btn-icon btn-lg btn-soft-{{ $item['color'] }} rounded-circle">

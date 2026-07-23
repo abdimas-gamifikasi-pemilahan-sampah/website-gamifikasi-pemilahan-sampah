@@ -7,7 +7,11 @@
 @section('css')
 <style>
     .chart-container { position: relative; height: 280px; }
-    .kpi-icon { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border-radius: 12px; font-size: 1.4rem; }
+    .kpi-icon { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border-radius: 12px; font-size: 1.4rem; flex-shrink: 0; }
+    @media (max-width: 575.98px) {
+        .kpi-icon { width: 34px; height: 34px; border-radius: 8px; font-size: 1rem; }
+        .chart-container { height: 220px; }
+    }
     @media print {
         .no-print { display: none !important; }
         .card { break-inside: avoid; }
@@ -58,7 +62,7 @@
 
     {{-- KPI Cards --}}
     <div class="row g-3 mb-4">
-        <div class="col-xl-3 col-sm-6">
+        <div class="col-6 col-sm-6 col-xl-3">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body">
                     <div class="d-flex align-items-center gap-3">
@@ -74,7 +78,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-xl-3 col-sm-6">
+        <div class="col-6 col-sm-6 col-xl-3">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body">
                     <div class="d-flex align-items-center gap-3">
@@ -90,7 +94,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-xl-3 col-sm-6">
+        <div class="col-6 col-sm-6 col-xl-3">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body">
                     <div class="d-flex align-items-center gap-3">
@@ -108,7 +112,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-xl-3 col-sm-6">
+        <div class="col-6 col-sm-6 col-xl-3">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body">
                     <div class="d-flex align-items-center gap-3">
@@ -207,9 +211,9 @@
                                 <tr>
                                     <th>RW / Dusun</th>
                                     <th class="text-end">Total (kg)</th>
-                                    <th class="text-end">Dipilah (kg)</th>
+                                    <th class="d-none d-lg-table-cell text-end">Dipilah (kg)</th>
                                     <th>% Pilah</th>
-                                    <th class="text-end">Warga</th>
+                                    <th class="d-none d-lg-table-cell text-end">Warga</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -221,8 +225,8 @@
                                 <tr>
                                     <td class="fw-medium">{{ $rw->label }}</td>
                                     <td class="text-end">{{ number_format($rw->total_kg, 1, ',', '.') }}</td>
-                                    <td class="text-end">{{ number_format($rw->kg_dipilah, 1, ',', '.') }}</td>
-                                    <td style="min-width: 140px;">
+                                    <td class="d-none d-lg-table-cell text-end">{{ number_format($rw->kg_dipilah, 1, ',', '.') }}</td>
+                                    <td>
                                         <div class="d-flex align-items-center gap-2">
                                             <div class="progress flex-grow-1" style="height:8px;">
                                                 <div class="progress-bar {{ $barColor }}"
@@ -231,7 +235,7 @@
                                             <span class="fs-12 fw-semibold text-nowrap">{{ $rw->persen }}%</span>
                                         </div>
                                     </td>
-                                    <td class="text-end">{{ $rw->jumlah_warga }}</td>
+                                    <td class="d-none d-lg-table-cell text-end">{{ $rw->jumlah_warga }}</td>
                                 </tr>
                                 @endforeach
                             </tbody>
@@ -305,11 +309,10 @@
                                 <tr>
                                     <th style="width:50px">No.</th>
                                     <th>Nama Warga</th>
-                                    <th>RT / RW / Dusun</th>
-                                    <th class="text-end">Total (kg)</th>
-                                    <th class="text-end">Dipilah (kg)</th>
+                                    <th class="d-none d-md-table-cell text-end">Total (kg)</th>
+                                    <th class="d-none d-lg-table-cell text-end">Dipilah (kg)</th>
                                     <th>% Pilah</th>
-                                    <th class="text-end">Setoran</th>
+                                    <th class="d-none d-md-table-cell text-end">Setoran</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -329,9 +332,9 @@
                                         <div class="fw-semibold">{{ $w->nama }}</div>
                                         <small class="text-muted">{{ Str::limit($w->alamat ?? (($w->rt ? 'RT '.$w->rt : '').($w->rw ? ' RW '.$w->rw : '').($w->dusun ? ' / '.$w->dusun : '')), 42) ?: '-' }}</small>
                                     </td>
-                                    <td class="text-end">{{ number_format($w->total_kg, 1, ',', '.') }}</td>
-                                    <td class="text-end">{{ number_format($w->kg_dipilah, 1, ',', '.') }}</td>
-                                    <td style="min-width: 120px;">
+                                    <td class="d-none d-md-table-cell text-end">{{ number_format($w->total_kg, 1, ',', '.') }}</td>
+                                    <td class="d-none d-lg-table-cell text-end">{{ number_format($w->kg_dipilah, 1, ',', '.') }}</td>
+                                    <td>
                                         <div class="d-flex align-items-center gap-2">
                                             <div class="progress flex-grow-1" style="height:6px;">
                                                 <div class="progress-bar bg-success" style="width:{{ $w->persen }}%"></div>
@@ -339,7 +342,7 @@
                                             <span class="fs-12">{{ $w->persen }}%</span>
                                         </div>
                                     </td>
-                                    <td class="text-end">{{ $w->jumlah_setoran }}x</td>
+                                    <td class="d-none d-md-table-cell text-end">{{ $w->jumlah_setoran }}x</td>
                                 </tr>
                                 @endforeach
                             </tbody>

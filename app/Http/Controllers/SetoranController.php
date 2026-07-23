@@ -20,6 +20,8 @@ class SetoranController extends Controller
     {
         $validated = $request->validate([
             'status' => ['nullable', Rule::in(Setoran::paymentStatusFilters())],
+            'dari'   => ['nullable', 'date'],
+            'sampai' => ['nullable', 'date'],
         ]);
 
         $query = Setoran::query()->latest('tanggal_setoran');
@@ -40,6 +42,13 @@ class SetoranController extends Controller
                     ->where('nilai', '>', 0),
                 default => null,
             };
+        }
+
+        if (!empty($validated['dari'])) {
+            $query->whereDate('tanggal_setoran', '>=', $validated['dari']);
+        }
+        if (!empty($validated['sampai'])) {
+            $query->whereDate('tanggal_setoran', '<=', $validated['sampai']);
         }
 
         $setoran = (clone $query)
@@ -451,7 +460,8 @@ class SetoranController extends Controller
                 'tanggal_setoran'   => Carbon::parse($validated['tanggal_setoran'])
                                             ->setTime(now()->hour, now()->minute, now()->second),
                 'catatan_kondisi'   => $validated['catatan_kondisi'] ?? null,
-                'total_nilai'       => $totalNilai,
+                'nilai'             => $totalNilai,
+                'total_nilai'       => abs($totalNilai),
                 'status_pembayaran' => 'belum_dibayar',
                 'mode'              => 'detail',
                 'sumber_input'      => 'manual',

@@ -1,11 +1,18 @@
 <aside class="pe-app-sidebar" id="sidebar">
-    <div class="pe-app-sidebar-logo px-6 d-flex align-items-center position-relative">
+    <div class="pe-app-sidebar-logo px-6 d-flex align-items-center justify-content-between position-relative">
         <a href="{{ route('sips.dashboard') }}" class="fs-18 fw-semibold">
             <img height="30" class="pe-app-sidebar-logo-default d-none" alt="Logo" src="{{ asset('assets/images/logo-dark.png') }}">
             <img height="30" class="pe-app-sidebar-logo-light d-none" alt="Logo" src="{{ asset('assets/images/logo-light.png') }}">
             <img height="30" class="pe-app-sidebar-logo-minimize d-none" alt="Logo" src="{{ asset('assets/images/logo-md.png') }}">
             <img height="30" class="pe-app-sidebar-logo-minimize-light d-none" alt="Logo" src="{{ asset('assets/images/logo-md-light.png') }}">
         </a>
+        {{-- Close button — visible on mobile only --}}
+        <button id="sidebarCloseBtn"
+                class="d-lg-none btn btn-sm btn-light border-0 rounded-circle p-0"
+                style="width:32px; height:32px; display:flex; align-items:center; justify-content:center;"
+                aria-label="Tutup navigasi">
+            <i class="bi bi-x fs-5"></i>
+        </button>
     </div>
 
     <nav class="pe-app-sidebar-menu nav nav-pills" data-simplebar id="sidebar-simplebar">

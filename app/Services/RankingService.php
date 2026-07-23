@@ -100,7 +100,8 @@ class RankingService
         }
 
         // Per-RW ranking
-        $rwGroups = $rows->groupBy(fn($row) => $row->warga->rw ?? 'unknown');
+        $rows->load('warga');
+        $rwGroups = $rows->groupBy(fn($row) => $row->warga?->rw ?? 'unknown');
         foreach ($rwGroups as $rt => $group) {
             $sorted = $group->sortByDesc('poin')->values();
             foreach ($sorted as $i => $row) {

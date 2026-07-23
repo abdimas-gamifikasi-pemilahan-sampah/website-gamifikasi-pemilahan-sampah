@@ -114,7 +114,7 @@
 <section class="section pt-5" id="stats">
     <div class="container">
         <div class="row justify-content-center" id="counter">
-            <div class="col-lg-3 col-md-6 mt-4 pt-2">
+            <div class="col-6 col-lg-3 mt-4 pt-2">
                 <div class="card features feature-primary text-center rounded border-0 shadow">
                     <div class="card-body py-4">
                         <div class="icons rounded-circle shadow-lg d-inline-block mb-3">
@@ -126,7 +126,7 @@
                 </div>
             </div>
 
-            <div class="col-lg-3 col-md-6 mt-4 pt-2">
+            <div class="col-6 col-lg-3 mt-4 pt-2">
                 <div class="card features feature-primary text-center rounded border-0 shadow">
                     <div class="card-body py-4">
                         <div class="icons rounded-circle shadow-lg d-inline-block mb-3">
@@ -138,7 +138,7 @@
                 </div>
             </div>
 
-            <div class="col-lg-3 col-md-6 mt-4 pt-2">
+            <div class="col-6 col-lg-3 mt-4 pt-2">
                 <div class="card features feature-primary text-center rounded border-0 shadow">
                     <div class="card-body py-4">
                         <div class="icons rounded-circle shadow-lg d-inline-block mb-3">
@@ -156,7 +156,7 @@
                 </div>
             </div>
 
-            <div class="col-lg-3 col-md-6 mt-4 pt-2">
+            <div class="col-6 col-lg-3 mt-4 pt-2">
                 <div class="card features feature-primary text-center rounded border-0 shadow">
                     <div class="card-body py-4">
                         <div class="icons rounded-circle shadow-lg d-inline-block mb-3">
@@ -417,57 +417,57 @@
         </div>
 
         <div class="row g-4">
-            <div class="col-lg-3 col-md-6">
+            <div class="col-6 col-lg-3">
                 <div class="card border-0 shadow h-100 text-center overflow-hidden" style="border-radius: 1rem;">
                     <div class="card-body px-4 py-5 d-flex flex-column align-items-center">
                         <div class="mb-3" style="font-size: 4rem; font-weight: 900; color: rgba(47,85,212,0.18); line-height: 1; user-select: none; letter-spacing: -2px;">01</div>
                         <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-4" style="width: 68px; height: 68px; background: linear-gradient(135deg, #dde6ff, #eef2ff);">
-                            <i data-feather="map-pin" style="width: 28px; height: 28px; color: #2f55d4; stroke-width: 2;"></i>
+                            <i data-feather="user-plus" style="width: 28px; height: 28px; color: #2f55d4; stroke-width: 2;"></i>
                         </div>
-                        <h6 class="fw-bold mb-2">Datang ke Kantor Desa</h6>
-                        <p class="text-muted small mb-0">Kunjungi Kantor Desa Banjarsari di gedung utama pada jam layanan yang tersedia.</p>
+                        <h6 class="fw-bold mb-2">Daftar ke Petugas</h6>
+                        <p class="text-muted small mb-0">Temui petugas TPS 3R Banjarsari atau hubungi via WhatsApp untuk mendaftarkan nama dan alamat Anda.</p>
                     </div>
                     <div style="height: 4px; background: linear-gradient(90deg, #2f55d4, #7796ee);"></div>
                 </div>
             </div>
 
-            <div class="col-lg-3 col-md-6">
+            <div class="col-6 col-lg-3">
                 <div class="card border-0 shadow h-100 text-center overflow-hidden" style="border-radius: 1rem;">
                     <div class="card-body px-4 py-5 d-flex flex-column align-items-center">
                         <div class="mb-3" style="font-size: 4rem; font-weight: 900; color: rgba(47,85,212,0.18); line-height: 1; user-select: none; letter-spacing: -2px;">02</div>
                         <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-4" style="width: 68px; height: 68px; background: linear-gradient(135deg, #d5eeff, #eef7ff);">
-                            <i data-feather="message-square" style="width: 28px; height: 28px; color: #2f55d4; stroke-width: 2;"></i>
+                            <i data-feather="layers" style="width: 28px; height: 28px; color: #2f55d4; stroke-width: 2;"></i>
                         </div>
-                        <h6 class="fw-bold mb-2">Temui Petugas Bank Sampah</h6>
-                        <p class="text-muted small mb-0">Sampaikan keinginan Anda untuk bergabung program bank sampah kepada petugas yang bertugas.</p>
+                        <h6 class="fw-bold mb-2">Siapkan Sampah Terpilah</h6>
+                        <p class="text-muted small mb-0">Pisahkan sampah organik dari anorganik (plastik, kertas, logam) di rumah sebelum hari pengambilan.</p>
                     </div>
                     <div style="height: 4px; background: linear-gradient(90deg, #2f55d4, #55a0ee);"></div>
                 </div>
             </div>
 
-            <div class="col-lg-3 col-md-6">
+            <div class="col-6 col-lg-3">
                 <div class="card border-0 shadow h-100 text-center overflow-hidden" style="border-radius: 1rem;">
                     <div class="card-body px-4 py-5 d-flex flex-column align-items-center">
                         <div class="mb-3" style="font-size: 4rem; font-weight: 900; color: rgba(46,202,139,0.2); line-height: 1; user-select: none; letter-spacing: -2px;">03</div>
                         <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-4" style="width: 68px; height: 68px; background: linear-gradient(135deg, #d0f0e4, #eefaf4);">
-                            <i data-feather="file-text" style="width: 28px; height: 28px; color: #2eca8b; stroke-width: 2;"></i>
+                            <i data-feather="truck" style="width: 28px; height: 28px; color: #2eca8b; stroke-width: 2;"></i>
                         </div>
-                        <h6 class="fw-bold mb-2">Berikan Data Diri</h6>
-                        <p class="text-muted small mb-0">Siapkan nama lengkap, alamat, dan nomor HP (opsional). RT/RW/Dusun opsional. Petugas yang menginput ke sistem.</p>
+                        <h6 class="fw-bold mb-2">Petugas Datang Keliling</h6>
+                        <p class="text-muted small mb-0">Petugas akan datang ke rumah Anda sesuai jadwal untuk menimbang dan mencatat setoran sampah.</p>
                     </div>
                     <div style="height: 4px; background: linear-gradient(90deg, #55a0ee, #2eca8b);"></div>
                 </div>
             </div>
 
-            <div class="col-lg-3 col-md-6">
+            <div class="col-6 col-lg-3">
                 <div class="card border-0 shadow h-100 text-center overflow-hidden" style="border-radius: 1rem;">
                     <div class="card-body px-4 py-5 d-flex flex-column align-items-center">
                         <div class="mb-3" style="font-size: 4rem; font-weight: 900; color: rgba(46,202,139,0.25); line-height: 1; user-select: none;">✓</div>
                         <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-4" style="width: 68px; height: 68px; background: linear-gradient(135deg, #a8f0d0, #d4f8ea);">
                             <i data-feather="award" style="width: 28px; height: 28px; color: #2eca8b; stroke-width: 2;"></i>
                         </div>
-                        <h6 class="fw-bold mb-2">Mulai Setor &amp; Raih Poin</h6>
-                        <p class="text-muted small mb-0">Setelah terdaftar, langsung setor sampah terpilah dan pantau kontribusi Anda di papan peringkat.</p>
+                        <h6 class="fw-bold mb-2">Raih Poin &amp; Pembayaran</h6>
+                        <p class="text-muted small mb-0">Kontribusi tercatat otomatis di sistem. Poin bertambah dan pembayaran diberikan langsung oleh petugas saat itu.</p>
                     </div>
                     <div style="height: 4px; background: linear-gradient(90deg, #2eca8b, #06d6a0);"></div>
                 </div>

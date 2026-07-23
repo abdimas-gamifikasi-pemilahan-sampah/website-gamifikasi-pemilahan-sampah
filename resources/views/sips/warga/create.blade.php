@@ -37,6 +37,9 @@
                 <div class="card-body">
                     <form method="POST" action="{{ route('sips.warga.store') }}">
                         @csrf
+                        @if(!empty($linkNama))
+                        <input type="hidden" name="link_nama" value="{{ $linkNama }}">
+                        @endif
                         @include('sips.warga._form')
                     </form>
                 </div>

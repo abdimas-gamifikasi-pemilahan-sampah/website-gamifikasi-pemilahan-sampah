@@ -75,11 +75,11 @@
                         <table class="table table-sm align-middle">
                             <thead class="table-light">
                                 <tr>
-                                    <th>Status Pemilahan</th>
+                                    <th>Status Pilah</th>
                                     <th>Kategori</th>
-                                    <th>Tipe</th>
+                                    <th class="d-none d-md-table-cell">Tipe</th>
                                     <th class="text-end">Berat</th>
-                                    <th class="text-end">Harga/kg</th>
+                                    <th class="d-none d-md-table-cell text-end">Harga/kg</th>
                                     <th class="text-end">Subtotal</th>
                                 </tr>
                             </thead>
@@ -98,7 +98,7 @@
                                     <td class="fw-medium">
                                         {{ $item->tarifItem?->nama_item ?? '—' }}
                                     </td>
-                                    <td>
+                                    <td class="d-none d-md-table-cell">
                                         @if($item->tipe_sampah === 'organik')
                                             <span class="badge bg-success-subtle text-success">Organik</span>
                                         @elseif($item->tipe_sampah === 'anorganik')
@@ -108,7 +108,7 @@
                                         @endif
                                     </td>
                                     <td class="text-end">{{ number_format($item->berat_kg, 1, ',', '.') }} kg</td>
-                                    <td class="text-end">
+                                    <td class="d-none d-md-table-cell text-end">
                                         @if($item->harga_per_kg_saat_itu !== null)
                                             Rp {{ number_format($item->harga_per_kg_saat_itu, 0, ',', '.') }}
                                         @else

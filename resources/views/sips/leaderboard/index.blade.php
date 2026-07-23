@@ -55,7 +55,7 @@
 
     {{-- KPI cards --}}
     <div class="row g-4 mb-4">
-        <div class="col-xl-3 col-md-6">
+        <div class="col-6 col-md-6 col-xl-3">
             <div class="card h-100">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-2">
@@ -67,7 +67,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-xl-3 col-md-6">
+        <div class="col-6 col-md-6 col-xl-3">
             <div class="card h-100">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-2">
@@ -79,7 +79,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-xl-3 col-md-6">
+        <div class="col-6 col-md-6 col-xl-3">
             <div class="card h-100">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-2">
@@ -96,7 +96,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-xl-3 col-md-6">
+        <div class="col-6 col-md-6 col-xl-3">
             <div class="card h-100">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-2">
@@ -113,9 +113,11 @@
     {{-- Main content --}}
     <div class="row g-4">
 
-        {{-- Ranking table --}}
+        {{-- Left column: ranking tables stacked --}}
         <div class="col-xl-8">
-            <div class="card {{ $unregistered->isNotEmpty() ? 'mb-4' : 'h-100' }}">
+
+            {{-- Ranking Warga Terdaftar --}}
+            <div class="card {{ $unregistered->isNotEmpty() ? 'mb-4' : '' }}">
                 <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <h5 class="card-title mb-0">Ranking Warga Terdaftar</h5>
                     <span class="badge bg-info-subtle text-info border border-info-subtle">
@@ -129,9 +131,9 @@
                                 <tr>
                                     <th style="width:60px">Rank</th>
                                     <th>Nama Warga</th>
-                                    <th>RW / Dusun</th>
-                                    <th class="text-end">Dipilah (kg)</th>
-                                    <th class="text-end">% Pilah</th>
+                                    <th class="d-none d-md-table-cell">RW / Dusun</th>
+                                    <th class="d-none d-lg-table-cell text-end">Dipilah (kg)</th>
+                                    <th class="d-none d-lg-table-cell text-end">% Pilah</th>
                                     <th class="text-end">Poin</th>
                                 </tr>
                             </thead>
@@ -153,10 +155,14 @@
                                     </td>
                                     <td>
                                         <div class="fw-medium">{{ $entry->nama }}</div>
-                                        <small class="text-muted">{{ Str::limit($entry->alamat ?? (($entry->rw ? 'RW '.$entry->rw : '').($entry->dusun ? ' / '.$entry->dusun : '')), 42) ?: '-' }}</small>
+                                        <small class="text-muted">{{ Str::limit($entry->alamat ?? '', 42) ?: '-' }}</small>
                                     </td>
-                                    <td class="text-end">{{ number_format($entry->kg_dipilah, 1, ',', '.') }}</td>
-                                    <td class="text-end">{{ $entry->persen_dipilah }}%</td>
+                                    <td class="d-none d-md-table-cell text-muted fs-13">
+                                        @if($entry->rw)RW {{ $entry->rw }}@endif{{ ($entry->rw && $entry->dusun) ? ' / ' : '' }}{{ $entry->dusun ?? '' }}
+                                        @if(!$entry->rw && !$entry->dusun)<span class="text-muted">—</span>@endif
+                                    </td>
+                                    <td class="d-none d-lg-table-cell text-end">{{ number_format($entry->kg_dipilah, 1, ',', '.') }}</td>
+                                    <td class="d-none d-lg-table-cell text-end">{{ $entry->persen_dipilah }}%</td>
                                     <td class="text-end fw-semibold">{{ (int) $entry->poin }}</td>
                                 </tr>
                                 @empty
@@ -171,11 +177,9 @@
                     </div>
                 </div>
             </div>
-        </div>
 
-        {{-- Unregistered penyetor contributions --}}
-        @if($unregistered->isNotEmpty())
-        <div class="col-xl-8">
+            {{-- Penyetor Belum Terdaftar --}}
+            @if($unregistered->isNotEmpty())
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <div>
@@ -193,9 +197,9 @@
                                 <tr>
                                     <th style="width:50px">No.</th>
                                     <th>Nama Penyetor</th>
-                                    <th class="text-end">Total (kg)</th>
-                                    <th class="text-end">Dipilah (kg)</th>
-                                    <th class="text-end">% Pilah</th>
+                                    <th class="d-none d-lg-table-cell text-end">Total (kg)</th>
+                                    <th class="d-none d-lg-table-cell text-end">Dipilah (kg)</th>
+                                    <th class="d-none d-md-table-cell text-end">% Pilah</th>
                                     <th class="text-end">Poin</th>
                                     <th class="text-end">Aksi</th>
                                 </tr>
@@ -205,16 +209,17 @@
                                 <tr>
                                     <td class="text-center text-muted">{{ $i + 1 }}</td>
                                     <td class="fw-medium">{{ $u->nama }}</td>
-                                    <td class="text-end">{{ number_format($u->total_kg, 1, ',', '.') }}</td>
-                                    <td class="text-end">{{ number_format($u->kg_dipilah, 1, ',', '.') }}</td>
-                                    <td class="text-end">{{ $u->persen_dipilah }}%</td>
+                                    <td class="d-none d-lg-table-cell text-end">{{ number_format($u->total_kg, 1, ',', '.') }}</td>
+                                    <td class="d-none d-lg-table-cell text-end">{{ number_format($u->kg_dipilah, 1, ',', '.') }}</td>
+                                    <td class="d-none d-md-table-cell text-end">{{ $u->persen_dipilah }}%</td>
                                     <td class="text-end fw-semibold text-warning">{{ (int) $u->poin }}</td>
                                     <td class="text-end">
                                         @php
                                             $prefillParams = array_filter([
-                                                'nama' => $u->nama,
-                                                'rw'   => $u->rw ? (int) ltrim($u->rw, '0') ?: null : null,
-                                                'rt'   => $u->rt ? (int) ltrim($u->rt, '0') ?: null : null,
+                                                'nama'      => $u->nama,
+                                                'rw'        => $u->rw ? (int) ltrim($u->rw, '0') ?: null : null,
+                                                'rt'        => $u->rt ? (int) ltrim($u->rt, '0') ?: null : null,
+                                                'link_nama' => $u->nama,
                                             ]);
                                         @endphp
                                         <a href="{{ route('sips.warga.create', $prefillParams) }}"
@@ -235,8 +240,9 @@
                     Lengkapi <strong>Alamat</strong> untuk menyimpan (RT/RW dan Dusun opsional).
                 </div>
             </div>
+            @endif
+
         </div>
-        @endif
 
         {{-- Sidebar --}}
         <div class="col-xl-4">

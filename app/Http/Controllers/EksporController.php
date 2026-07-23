@@ -70,8 +70,9 @@ class EksporController extends Controller
             ? $this->buildRivanExcel($rows, $dari, $sampai)
             : $this->buildPerolehanExcel($rows, $dari, $sampai);
 
-        $writer   = new Xlsx($spreadsheet);
-        $filename = "laporan_{$format}_"
+        $writer      = new Xlsx($spreadsheet);
+        $formatLabel = $format === 'rivan' ? 'pengolahan' : $format;
+        $filename    = "laporan_{$formatLabel}_"
             . str_replace('-', '', $dari) . '_'
             . str_replace('-', '', $sampai) . '.xlsx';
 

@@ -75,7 +75,7 @@
                         </div>
                         <div class="row">
                             @foreach($ringkasanWarga as $item)
-                            <div class="col-md-4">
+                            <div class="col-6 col-md-4">
                                 <div class="card border border-{{ $item['class'] }} shadow-sm">
                                     <div class="card-body">
                                         <div class="d-flex justify-content-between align-items-start">
@@ -153,14 +153,14 @@
                     </div>
                     @else
                     <div class="table-responsive">
-                        <table class="table text-nowrap align-middle mb-0 table-hover">
+                        <table class="table align-middle mb-0 table-hover">
                             <thead class="table-light sips-table-head">
                                 <tr>
                                     <th>Nama &amp; Alamat</th>
-                                    <th>Wilayah</th>
-                                    <th>No. KK</th>
-                                    <th>Nomor HP</th>
-                                    <th>Terdaftar</th>
+                                    <th class="d-none d-md-table-cell">Wilayah</th>
+                                    <th class="d-none d-lg-table-cell">No. KK</th>
+                                    <th class="d-none d-lg-table-cell">Nomor HP</th>
+                                    <th class="d-none d-lg-table-cell">Terdaftar</th>
                                     <th>Partisipasi</th>
                                     <th>Status</th>
                                     <th>Aksi</th>
@@ -177,16 +177,16 @@
                                         <small class="text-muted fst-italic">Alamat belum diisi</small>
                                         @endif
                                     </td>
-                                    <td>
+                                    <td class="d-none d-md-table-cell">
                                         @if($item->rt || $item->rw)
-                                        <div class="text-nowrap">RT {{ $item->rt ?? '-' }} / RW {{ $item->rw ?? '-' }}</div>
+                                        <div>RT {{ $item->rt ?? '-' }} / RW {{ $item->rw ?? '-' }}</div>
                                         @endif
                                         @if($item->dusun)<small class="text-muted">Dusun {{ $item->dusun }}</small>@endif
                                         @if(!$item->rt && !$item->rw && !$item->dusun)<span class="text-muted">-</span>@endif
                                     </td>
-                                    <td>{{ $item->no_kk ?? '-' }}</td>
-                                    <td>{{ $item->no_hp ?: '-' }}</td>
-                                    <td>{{ optional($item->tanggal_terdaftar)->translatedFormat('d M Y') }}</td>
+                                    <td class="d-none d-lg-table-cell">{{ $item->no_kk ?? '-' }}</td>
+                                    <td class="d-none d-lg-table-cell">{{ $item->no_hp ?: '-' }}</td>
+                                    <td class="d-none d-lg-table-cell">{{ optional($item->tanggal_terdaftar)->translatedFormat('d M Y') }}</td>
                                     <td>
                                         @if($item->memiliki_setoran_bulan_ini)
                                         <span class="badge bg-success-subtle text-success">Aktif</span>

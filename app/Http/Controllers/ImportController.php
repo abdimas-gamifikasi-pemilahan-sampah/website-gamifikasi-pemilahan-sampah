@@ -45,8 +45,8 @@ class ImportController extends Controller
 
         $file  = $request->file('csv_file');
         $path  = $file->getRealPath();
-        $rows  = [];
-        $errors = [];
+        $rows           = [];
+        $formatWarnings = [];
 
         if (($handle = fopen($path, 'r')) !== false) {
             $header = fgetcsv($handle);
@@ -61,9 +61,9 @@ class ImportController extends Controller
             $lineNum = 1;
             while (($data = fgetcsv($handle)) !== false) {
                 $lineNum++;
+                // Pad baris pendek (trailing kolom kosong sering hilang saat edit di Excel)
                 if (count($data) < count($header)) {
-                    $errors[] = "Baris $lineNum: Jumlah kolom tidak sesuai.";
-                    continue;
+                    $data = array_pad($data, count($header), '');
                 }
                 $row = array_combine($header, array_map('trim', $data));
                 $row['_line'] = $lineNum;
@@ -77,6 +77,10 @@ class ImportController extends Controller
                     try { Carbon::parse($row['tanggal_terdaftar']); }
                     catch (\Exception $e) { $rowErrors[] = 'tanggal_terdaftar tidak valid'; }
                 }
+
+                // Tandai baris yang akan di-upsert (No.KK sudah ada di DB)
+                $row['_exists'] = !empty($row['no_kk'])
+                    && Warga::where('no_kk', $row['no_kk'])->exists();
 
                 $row['_errors'] = $rowErrors;
                 $rows[] = $row;
@@ -96,7 +100,7 @@ class ImportController extends Controller
         $errorCount = count(array_filter($rows, fn($r) => !empty($r['_errors'])));
 
         return view('sips.import.preview', compact(
-            'preview', 'totalRows', 'errorCount', 'tmpPath', 'errors'
+            'preview', 'totalRows', 'errorCount', 'tmpPath', 'formatWarnings'
         ));
     }
 
@@ -126,10 +130,9 @@ class ImportController extends Controller
                     $lineNum++;
                     $total++;
 
+                    // Pad baris pendek (trailing kolom kosong sering hilang saat edit di Excel)
                     if (count($data) < count($header)) {
-                        $gagal++;
-                        $catatan[] = "Baris $lineNum: Jumlah kolom tidak sesuai.";
-                        continue;
+                        $data = array_pad($data, count($header), '');
                     }
 
                     $row = array_combine($header, array_map('trim', $data));
@@ -142,7 +145,9 @@ class ImportController extends Controller
                             'rw'                 => !empty($row['rw']) ? $row['rw'] : null,
                             'dusun'              => !empty($row['dusun']) ? $row['dusun'] : null,
                             'no_hp'              => $row['no_hp'] ?? null ?: null,
-                            'tanggal_terdaftar'  => Carbon::parse($row['tanggal_terdaftar']),
+                            'tanggal_terdaftar'  => !empty($row['tanggal_terdaftar'])
+                                ? Carbon::parse($row['tanggal_terdaftar'])
+                                : today(),
                             'status_keanggotaan' => 'aktif',
                         ];
 

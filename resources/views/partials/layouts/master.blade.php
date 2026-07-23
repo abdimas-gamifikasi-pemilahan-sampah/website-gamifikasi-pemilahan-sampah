@@ -19,6 +19,10 @@
 
 <body>
 
+    <div id="sidebar-backdrop"
+         style="display:none; position:fixed; inset:0; background:transparent; z-index:1004; cursor:pointer;"
+         aria-hidden="true"></div>
+
     @include('partials.header')
     @include('partials.sidebar')
 

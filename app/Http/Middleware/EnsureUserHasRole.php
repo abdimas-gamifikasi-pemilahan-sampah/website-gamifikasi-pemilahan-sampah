@@ -16,6 +16,20 @@ class EnsureUserHasRole
             return redirect()->route('login');
         }
 
+        // Block non-active accounts from accessing any protected page
+        if (! $user->is_active) {
+            auth()->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            if ($request->expectsJson()) {
+                abort(403, 'Akun Anda telah dinonaktifkan.');
+            }
+
+            return redirect()->route('login')
+                ->with('error', 'Akun Anda telah dinonaktifkan. Hubungi admin untuk mengaktifkan kembali.');
+        }
+
         if (! in_array($user->role, $roles, true)) {
             if ($request->expectsJson()) {
                 abort(403, 'Anda tidak memiliki akses ke fitur ini.');

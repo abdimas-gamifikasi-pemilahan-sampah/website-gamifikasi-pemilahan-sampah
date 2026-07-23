@@ -7,6 +7,13 @@
 @section('content')
 <div id="layout-wrapper">
 
+    @if(session('success'))
+    <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+        <i class="ri-checkbox-circle-line me-1"></i> {{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    @endif
+
     <div class="row">
         <div class="col-12">
             <div class="card card-h-100">
@@ -78,7 +85,7 @@
                         </div>
                         <div class="row">
                             @foreach($ringkasanPembayaran as $item)
-                            <div class="col-md-6">
+                            <div class="col-6 col-md-6">
                                 <div class="card border border-{{ $item['class'] }} shadow-sm">
                                     <div class="card-body">
                                         <div class="d-flex justify-content-between align-items-start">
@@ -111,12 +118,12 @@
                                 <tr>
                                     <th>Tgl. Bayar</th>
                                     <th>Warga</th>
-                                    <th>Setoran</th>
-                                    <th class="text-end">Aliran Nilai</th>
+                                    <th class="d-none d-md-table-cell">Setoran</th>
+                                    <th class="d-none d-lg-table-cell text-end">Aliran Nilai</th>
                                     <th class="text-end">Dibayar (Rp)</th>
-                                    <th>Status</th>
-                                    <th>Dibayar Oleh</th>
-                                    <th>Dicatat Oleh</th>
+                                    <th class="d-none d-md-table-cell">Status</th>
+                                    <th class="d-none d-lg-table-cell">Dibayar Oleh</th>
+                                    <th class="d-none d-lg-table-cell">Dicatat Oleh</th>
                                     <th>Aksi</th>
                                 </tr>
                             </thead>
@@ -144,10 +151,10 @@
                                             </small>
                                         @endif
                                     </td>
-                                    <td class="fw-medium">
+                                    <td class="fw-medium d-none d-md-table-cell">
                                         #{{ str_pad($p->setoran_id, 5, '0', STR_PAD_LEFT) }}
                                     </td>
-                                    <td class="text-end">
+                                    <td class="text-end d-none d-lg-table-cell">
                                         <span class="{{ $p->setoran->signedAmountTextClasses() }}">
                                             {{ $p->setoran->nilaiSignedFormatted() }}
                                         </span>
@@ -159,13 +166,13 @@
                                             <br><small class="text-warning">*disesuaikan</small>
                                         @endif
                                     </td>
-                                    <td>
+                                    <td class="d-none d-md-table-cell">
                                         <span class="badge {{ $p->setoran->paymentStatusBadgeClasses() }}">
                                             {{ $p->setoran->paymentStatusLabel() }}
                                         </span>
                                     </td>
-                                    <td>{{ $p->setoran->paymentActorLabel() }}</td>
-                                    <td>{{ $p->petugasPembayar->name ?? '-' }}</td>
+                                    <td class="d-none d-lg-table-cell">{{ $p->setoran->paymentActorLabel() }}</td>
+                                    <td class="d-none d-lg-table-cell">{{ $p->petugasPembayar->name ?? '-' }}</td>
                                     <td>
                                         <div class="d-flex gap-1">
                                             <a href="{{ route('sips.setoran.show', $p->setoran_id) }}"

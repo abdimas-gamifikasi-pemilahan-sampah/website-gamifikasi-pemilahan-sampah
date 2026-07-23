@@ -46,19 +46,19 @@
         .eksport-icon-wrapper       { background: rgba(25,135,84,0.20); }
         .eksport-tips               { background: rgba(255,255,255,0.05); }
     }
-    :root[data-theme="dark"] .format-card            { border-color: rgba(255,255,255,0.12); }
-    :root[data-theme="dark"] .format-card:hover      { border-color: #86b7fe; background-color: rgba(13,110,253,0.10); }
-    :root[data-theme="dark"] .format-card.selected   { border-color: #4d94ff; background-color: rgba(13,110,253,0.18); box-shadow: 0 0 0 3px rgba(77,148,255,.2); }
-    :root[data-theme="dark"] .format-badge-rivan     { background-color: rgba(25,135,84,0.25); color: #75d5a4; }
-    :root[data-theme="dark"] .format-badge-perolehan { background-color: rgba(13,202,240,0.18); color: #79ddf6; }
-    :root[data-theme="dark"] .preview-stat           { background: rgba(255,255,255,0.06); }
-    :root[data-theme="dark"] .eksport-icon-wrapper   { background: rgba(25,135,84,0.20); }
-    :root[data-theme="dark"] .eksport-tips           { background: rgba(255,255,255,0.05); }
+    [data-bs-theme="dark"] .format-card            { border-color: rgba(255,255,255,0.12); }
+    [data-bs-theme="dark"] .format-card:hover      { border-color: #86b7fe; background-color: rgba(13,110,253,0.10); }
+    [data-bs-theme="dark"] .format-card.selected   { border-color: #4d94ff; background-color: rgba(13,110,253,0.18); box-shadow: 0 0 0 3px rgba(77,148,255,.2); }
+    [data-bs-theme="dark"] .format-badge-rivan     { background-color: rgba(25,135,84,0.25); color: #75d5a4; }
+    [data-bs-theme="dark"] .format-badge-perolehan { background-color: rgba(13,202,240,0.18); color: #79ddf6; }
+    [data-bs-theme="dark"] .preview-stat           { background: rgba(255,255,255,0.06); }
+    [data-bs-theme="dark"] .eksport-icon-wrapper   { background: rgba(25,135,84,0.20); }
+    [data-bs-theme="dark"] .eksport-tips           { background: rgba(255,255,255,0.05); }
 </style>
 @endsection
 
 @section('content')
-<div class="container-fluid py-3">
+<div id="layout-wrapper" class="container-fluid py-3">
 
     {{-- Header --}}
     <div class="row g-3 mb-4">
@@ -101,7 +101,7 @@
     <div class="row g-4">
 
         {{-- Column 1: Format + Period --}}
-        <div class="col-xl-7">
+        <div class="col-12 col-xl-7">
 
             {{-- Format selection --}}
             <div class="card border-0 shadow-sm mb-4">
@@ -227,9 +227,10 @@
                             <button type="button" class="btn btn-outline-secondary btn-sm"
                                     onclick="setMonthsAgo(2)">2 Bulan Terakhir</button>
                         </div>
-                        <div class="d-flex align-items-center gap-2">
-                            <small class="text-muted fw-medium text-nowrap">Atau pilih bulan:</small>
-                            <input type="month" id="monthPicker" class="form-control form-control-sm" style="width:160px;"
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <small class="text-muted fw-medium">Atau pilih bulan:</small>
+                            <input type="month" id="monthPicker" class="form-control form-control-sm"
+                                   style="max-width:160px;"
                                    max="{{ now()->format('Y-m') }}"
                                    onchange="setFromMonthPicker(this.value)">
                         </div>
@@ -240,7 +241,7 @@
         </div>
 
         {{-- Column 2: Preview + Download --}}
-        <div class="col-xl-5">
+        <div class="col-12 col-xl-5">
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-header bg-transparent border-bottom">
                     <h5 class="card-title mb-0">

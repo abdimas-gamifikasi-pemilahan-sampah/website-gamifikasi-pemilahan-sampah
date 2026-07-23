@@ -41,7 +41,9 @@
     <div class="col-md-2">
         <label for="rt" class="form-label">RT <span class="text-muted fw-normal fs-12">(opsional)</span></label>
         <input type="number" class="form-control @error('rt') is-invalid @enderror"
-               id="rt" name="rt" min="1" max="999" value="{{ old('rt', $warga->rt ?? $prefill['rt'] ?? '') }}">
+               id="rt" name="rt" min="1" max="999"
+               oninput="if(this.value !== '' && parseInt(this.value) < 1) this.value = ''"
+               value="{{ old('rt', $warga->rt ?? $prefill['rt'] ?? '') }}">
         @error('rt')
         <div class="invalid-feedback">{{ $message }}</div>
         @enderror
@@ -50,7 +52,9 @@
     <div class="col-md-2">
         <label for="rw" class="form-label">RW <span class="text-muted fw-normal fs-12">(opsional)</span></label>
         <input type="number" class="form-control @error('rw') is-invalid @enderror"
-               id="rw" name="rw" min="1" max="999" value="{{ old('rw', $warga->rw ?? $prefill['rw'] ?? '') }}">
+               id="rw" name="rw" min="1" max="999"
+               oninput="if(this.value !== '' && parseInt(this.value) < 1) this.value = ''"
+               value="{{ old('rw', $warga->rw ?? $prefill['rw'] ?? '') }}">
         @error('rw')
         <div class="invalid-feedback">{{ $message }}</div>
         @enderror

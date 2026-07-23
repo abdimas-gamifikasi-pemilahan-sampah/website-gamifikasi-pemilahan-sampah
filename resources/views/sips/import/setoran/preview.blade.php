@@ -9,7 +9,7 @@
 
     {{-- Summary banner --}}
     <div class="row mb-4">
-        <div class="col-md-3">
+        <div class="col-6 col-md-3">
             <div class="card text-center border-0 bg-primary-subtle">
                 <div class="card-body py-3">
                     <div class="fs-24 fw-bold text-primary">{{ $totalRows }}</div>
@@ -17,7 +17,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-6 col-md-3">
             <div class="card text-center border-0 bg-success-subtle">
                 <div class="card-body py-3">
                     <div class="fs-24 fw-bold text-success" id="validCount">{{ $validCount }}</div>
@@ -25,7 +25,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-6 col-md-3">
             <div class="card text-center border-0 {{ $errorCount > 0 ? 'bg-danger-subtle' : 'bg-light' }}">
                 <div class="card-body py-3">
                     <div class="fs-24 fw-bold {{ $errorCount > 0 ? 'text-danger' : 'text-muted' }}" id="errorCount">{{ $errorCount }}</div>
@@ -33,7 +33,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-6 col-md-3">
             <div class="card text-center border-0 bg-info-subtle">
                 <div class="card-body py-3">
                     <div class="fs-14 fw-bold text-info text-capitalize">{{ $format }}</div>
@@ -142,7 +142,7 @@
 
                                 @else
                                     {{-- Detail: warga selector --}}
-                                    <td style="min-width:240px;">
+                                    <td style="min-width:160px;">
                                         @php $matched = ($row['warga_id'] ?? null) !== null; @endphp
 
                                         {{-- Nama asli dari Excel --}}

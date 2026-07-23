@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Setoran;
 use App\Models\Warga;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -72,15 +74,32 @@ class WargaController extends Controller
 
     public function create(Request $request): View
     {
-        $prefill = $request->only(['nama', 'rt', 'rw']);
-        return view('sips.warga.create', compact('prefill'));
+        $prefill  = $request->only(['nama', 'rt', 'rw']);
+        $linkNama = $request->input('link_nama');
+        return view('sips.warga.create', compact('prefill', 'linkNama'));
     }
 
     public function store(Request $request): RedirectResponse
     {
         $validated = $this->validatePayload($request);
 
-        Warga::create($validated);
+        $warga = Warga::create($validated);
+
+        // Jika datang dari leaderboard "Daftarkan", link setoran yang cocok ke warga baru
+        if ($request->filled('link_nama')) {
+            $linkNama    = $request->input('link_nama');
+            $setoranIds  = DB::table('item_setoran')
+                ->select('setoran_id')
+                ->where('nama_penyetor', $linkNama)
+                ->distinct()
+                ->pluck('setoran_id');
+
+            if ($setoranIds->isNotEmpty()) {
+                Setoran::whereIn('id', $setoranIds)
+                    ->whereNull('warga_id')
+                    ->update(['warga_id' => $warga->id]);
+            }
+        }
 
         return redirect()
             ->route('sips.warga.index')
@@ -177,8 +196,16 @@ class WargaController extends Controller
 
     protected function validatePayload(Request $request, ?Warga $warga = null): array
     {
+        // Saat no_kk tidak diisi, cegah duplikat berdasarkan kombinasi nama + alamat
+        $namaRules = ['required', 'string', 'max:255'];
+        if (! $request->filled('no_kk')) {
+            $namaRules[] = Rule::unique('warga')
+                ->where(fn ($q) => $q->where('alamat', $request->input('alamat')))
+                ->ignore($warga?->id);
+        }
+
         return $request->validate([
-            'nama'   => ['required', 'string', 'max:255'],
+            'nama'   => $namaRules,
             'no_kk'  => [
                 'nullable',
                 'string',
@@ -193,7 +220,13 @@ class WargaController extends Controller
             'tanggal_terdaftar'  => ['required', 'date'],
             'status_keanggotaan' => ['required', Rule::in(['aktif', 'non_aktif'])],
         ], [
-            'no_kk.regex' => 'Nomor KK harus 16 digit angka.',
+            'no_kk.regex'  => 'Nomor KK harus 16 digit angka.',
+            'no_kk.unique' => 'Nomor KK sudah terdaftar pada warga lain.',
+            'nama.unique'  => 'Warga dengan nama dan alamat yang sama sudah terdaftar.',
+            'rt.min'       => 'Nomor RT tidak boleh 0.',
+            'rt.max'       => 'Nomor RT maksimal 999.',
+            'rw.min'       => 'Nomor RW tidak boleh 0.',
+            'rw.max'       => 'Nomor RW maksimal 999.',
         ]);
     }
 }

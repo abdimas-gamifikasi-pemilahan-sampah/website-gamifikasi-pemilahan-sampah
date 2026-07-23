@@ -88,6 +88,15 @@
 	background-color: rgba(255, 255, 255, 0.03) !important;
 }
 
+/* Fix plain tbody rows appearing white in dark mode (Landrick theme overrides --bs-table-bg) */
+[data-bs-theme="dark"] #layout-wrapper .table > tbody > tr > td,
+[data-bs-theme="dark"] #layout-wrapper .table > tbody > tr > th,
+[data-bs-theme="dark"] .sips-page-shell .table > tbody > tr > td,
+[data-bs-theme="dark"] .sips-page-shell .table > tbody > tr > th {
+	background-color: var(--bs-table-bg) !important;
+	color: var(--bs-body-color) !important;
+}
+
 [data-bs-theme="dark"] #layout-wrapper .table-light td {
 	background-color: rgba(255, 255, 255, 0.04) !important;
 	color: var(--bs-body-color) !important;
@@ -180,5 +189,48 @@ body {
 
 main.app-wrapper {
     flex: 1;
+}
+
+/* ── Mobile compaction: xs screens (< 576px) ─────────────────────────────── */
+@media (max-width: 575.98px) {
+    /* Card padding — use lower specificity so p-4/p-3 utilities still win on hero cards */
+    #layout-wrapper .card-body { padding: 0.85rem; }
+    #layout-wrapper .card-header { padding: 0.6rem 0.85rem; }
+    .sips-page-shell .card-body { padding: 0.85rem; }
+    .sips-page-shell .card-header { padding: 0.6rem 0.85rem; }
+
+    /* Card title */
+    .card-title { font-size: 0.9rem; }
+
+    /* KPI / stat values and page headings */
+    #layout-wrapper h3,
+    #layout-wrapper h4,
+    .sips-page-shell h3,
+    .sips-page-shell h4 { font-size: 1.05rem; }
+
+    /* Avatar icons next to KPI values */
+    .avatar-sm { width: 2rem !important; height: 2rem !important; }
+    .avatar-sm .avatar-title { font-size: 0.85rem !important; }
+
+    /* Table row padding */
+    #layout-wrapper .table > :not(caption) > * > *,
+    .sips-page-shell .table > :not(caption) > * > * {
+        padding: 0.45rem 0.5rem !important;
+        font-size: 0.82rem !important;
+    }
+
+    /* Badges */
+    .badge { font-size: 0.72rem !important; padding: 0.28em 0.55em !important; }
+
+    /* Buttons — keep tappable but compact */
+    .btn-sm { padding: 0.22rem 0.55rem !important; font-size: 0.775rem !important; }
+
+    /* Page title area */
+    .page-title-box h4 { font-size: 1rem !important; }
+
+    /* Tighter grid gaps on mobile */
+    .row.g-2 { --bs-gutter-x: 0.5rem; --bs-gutter-y: 0.4rem; }
+    .row.g-3 { --bs-gutter-x: 0.6rem; --bs-gutter-y: 0.5rem; }
+    .row.g-4 { --bs-gutter-x: 0.75rem; --bs-gutter-y: 0.6rem; }
 }
 </style>

@@ -41,6 +41,11 @@
         justify-content: center;
         pointer-events: none;
     }
+    @media (max-width: 575.98px) {
+        .komposisi-flex { flex-direction: column !important; align-items: center !important; }
+        .donut-wrapper { width: 120px; height: 120px; margin-bottom: 16px; }
+        .sips-kpi-value { font-size: 1.3rem; }
+    }
 </style>
 @endsection
 
@@ -96,7 +101,7 @@
 
     {{-- KPI Cards --}}
     <div class="row g-4 mb-1">
-        <div class="col-xxl-3 col-md-6">
+        <div class="col-6 col-md-6 col-xxl-3">
             <div class="card card-h-100">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start mb-2">
@@ -113,7 +118,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-xxl-3 col-md-6">
+        <div class="col-6 col-md-6 col-xxl-3">
             <div class="card card-h-100">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start mb-2">
@@ -128,7 +133,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-xxl-3 col-md-6">
+        <div class="col-6 col-md-6 col-xxl-3">
             <div class="card card-h-100">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start mb-2">
@@ -140,7 +145,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-xxl-3 col-md-6">
+        <div class="col-6 col-md-6 col-xxl-3">
             <div class="card card-h-100">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start mb-2">
@@ -169,7 +174,7 @@
                         $pctDipilah      = $totalKgAll > 0 ? round(($kgDipilah / $totalKgAll) * 100) : 0;
                         $pctTidakDipilah = $totalKgAll > 0 ? round(($kgTidakDipilah / $totalKgAll) * 100) : 0;
                     @endphp
-                    <div class="d-flex align-items-center gap-4">
+                    <div class="d-flex align-items-center gap-4 komposisi-flex">
                         {{-- Donut chart --}}
                         <div class="donut-wrapper">
                             <canvas id="komposisiDonut"></canvas>

@@ -13,17 +13,19 @@ class PembayaranController extends Controller
     public function index(Request $request)
     {
         $validated = $request->validate([
-            'aktor' => ['nullable', Rule::in(['warga', 'petugas'])],
+            'aktor'  => ['nullable', Rule::in(['warga', 'petugas'])],
+            'dari'   => ['nullable', 'date'],
+            'sampai' => ['nullable', 'date'],
         ]);
 
         $query = Pembayaran::with(['setoran.warga', 'setoran.items', 'petugasPembayar'])
             ->latest('tanggal_bayar');
 
-        if ($request->filled('dari')) {
-            $query->whereDate('tanggal_bayar', '>=', $request->dari);
+        if (!empty($validated['dari'])) {
+            $query->whereDate('tanggal_bayar', '>=', $validated['dari']);
         }
-        if ($request->filled('sampai')) {
-            $query->whereDate('tanggal_bayar', '<=', $request->sampai);
+        if (!empty($validated['sampai'])) {
+            $query->whereDate('tanggal_bayar', '<=', $validated['sampai']);
         }
         if (!empty($validated['aktor'])) {
             $operator = $validated['aktor'] === 'warga' ? '<' : '>';
@@ -71,10 +73,13 @@ class PembayaranController extends Controller
                 'catatan'             => $validated['catatan'] ?? null,
             ]);
 
-            $setoran->update(['status_pembayaran' => 'sudah_dibayar']);
+            $setoran->update([
+                'status_pembayaran' => 'sudah_dibayar',
+                'is_selesai'        => true,
+            ]);
         });
 
-        return redirect()->route('sips.setoran.show', $setoran->id)
-            ->with('success', 'Pembayaran berhasil dicatat.');
+        return redirect()->route('sips.pembayaran.index')
+            ->with('success', 'Pembayaran berhasil dicatat. Setoran #' . str_pad($setoran->id, 5, '0', STR_PAD_LEFT) . ' telah diselesaikan.');
     }
 }

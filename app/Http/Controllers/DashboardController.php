@@ -42,6 +42,7 @@ class DashboardController extends Controller
             ->join('setoran', 'setoran.id', '=', 'item_setoran.setoran_id')
             ->join('warga', 'warga.id', '=', 'setoran.warga_id')
             ->whereBetween('setoran.tanggal_setoran', [$awalBulan, $akhirBulan])
+            ->whereNotNull('warga.rw')
             ->select([
                 DB::raw("CONCAT('RW ', LPAD(CAST(warga.rw AS CHAR), 2, '0')) as rw_display"),
                 DB::raw('SUM(item_setoran.berat_kg) as total_kg'),

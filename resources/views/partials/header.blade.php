@@ -11,7 +11,7 @@
                 </a>
 
                 <button type="button" class="vertical-toggle btn btn-light-light text-muted icon-btn fs-5 rounded-pill" id="toggleSidebar" aria-label="Toggle Sidebar">
-                    <i class="bi bi-arrow-bar-left header-icon"></i>
+                    <i class="bi bi-list header-icon"></i>
                 </button>
             </div>
 

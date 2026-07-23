@@ -28,7 +28,7 @@
     @endif
 
     <div class="row g-4">
-        <div class="col-xl-4">
+        <div class="col-12 col-xl-4">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">Ringkasan Item</h5>
@@ -81,22 +81,22 @@
             </div>
         </div>
 
-        <div class="col-xl-8">
+        <div class="col-12 col-xl-8">
             <div class="card">
                 <div class="card-header">
                     <h5 class="card-title mb-0">Riwayat Harga</h5>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table text-nowrap align-middle mb-0">
+                        <table class="table align-middle mb-0">
                             <thead class="table-light sips-table-head">
                                 <tr>
                                     <th>Harga</th>
-                                    <th>Tanggal Mulai</th>
-                                    <th>Tanggal Akhir</th>
+                                    <th>Tgl Mulai</th>
+                                    <th class="d-none d-lg-table-cell">Tgl Akhir</th>
                                     <th>Status</th>
-                                    <th>Alasan</th>
-                                    <th>Diperbarui Oleh</th>
+                                    <th class="d-none d-md-table-cell">Alasan</th>
+                                    <th class="d-none d-md-table-cell">Diperbarui Oleh</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -110,7 +110,7 @@
                                 <tr>
                                     <td class="fw-semibold">Rp {{ number_format($riwayat->harga_per_kg, 0, ',', '.') }}/kg</td>
                                     <td>{{ optional($riwayat->tanggal_mulai)->translatedFormat('d M Y') }}</td>
-                                    <td>{{ optional($riwayat->tanggal_akhir)->translatedFormat('d M Y') ?: 'Masih berlaku' }}</td>
+                                    <td class="d-none d-lg-table-cell">{{ optional($riwayat->tanggal_akhir)->translatedFormat('d M Y') ?: 'Masih berlaku' }}</td>
                                     <td>
                                         @if($isPending)
                                             <span class="badge bg-warning-subtle text-warning border border-warning-subtle">Akan Berlaku</span>
@@ -120,8 +120,8 @@
                                             <span class="badge bg-secondary-subtle text-secondary">Selesai</span>
                                         @endif
                                     </td>
-                                    <td>{{ $riwayat->alasan_perubahan ?: '-' }}</td>
-                                    <td>{{ $riwayat->pengubahUser->name ?? 'System' }}</td>
+                                    <td class="d-none d-md-table-cell">{{ $riwayat->alasan_perubahan ?: '-' }}</td>
+                                    <td class="d-none d-md-table-cell">{{ $riwayat->pengubahUser->name ?? 'System' }}</td>
                                 </tr>
                                 @empty
                                 <tr>
